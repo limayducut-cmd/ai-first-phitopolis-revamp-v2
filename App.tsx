@@ -1,20 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Moon, Sun, Search, ArrowRight, Github, Linkedin, Twitter, Sparkles } from 'lucide-react';
+import { Menu, X, Search, ArrowRight, Github, Linkedin, Twitter, Sparkles } from 'lucide-react';
 
 // Pages
-import Home from './app/page';
-import Services from './app/services/page';
-import About from './app/about/page';
-import Team from './app/team/page';
-import Careers from './app/careers/page';
-import Blog from './app/blog/page';
-import Contact from './app/contact/page';
-import JobDetail from './app/careers/[slug]/page';
-import BlogPostDetail from './app/blog/[slug]/page';
+import Home from './app/page.tsx';
+import Services from './app/services/page.tsx';
+import About from './app/about/page.tsx';
+import Team from './app/team/page.tsx';
+import Careers from './app/careers/page.tsx';
+import Blog from './app/blog/page.tsx';
+import Contact from './app/contact/page.tsx';
+import JobDetail from './app/careers/[slug]/page.tsx';
+import BlogPostDetail from './app/blog/[slug]/page.tsx';
 
-// Components
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
@@ -36,7 +35,6 @@ const Header = () => {
           <span className="text-2xl font-display font-bold tracking-tight">Phitopolis</span>
         </Link>
 
-        {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
             <Link
@@ -54,7 +52,6 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Toggle */}
         <button 
           className="md:hidden p-2 text-slate-300"
           onClick={() => setIsOpen(!isOpen)}
@@ -63,7 +60,6 @@ const Header = () => {
         </button>
       </nav>
 
-      {/* Mobile Nav */}
       {isOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-slate-900 border-b border-slate-800 p-6 space-y-4 animate-fade-in">
           {navLinks.map((link) => (
@@ -159,11 +155,15 @@ const AIChatAssistant = () => {
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setIsLoading(true);
 
-    const { askPhitopolisAI } = await import('./services/gemini');
-    const aiResponse = await askPhitopolisAI(userMsg);
-    
-    setMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
-    setIsLoading(false);
+    try {
+      const { askPhitopolisAI } = await import('./services/gemini.ts');
+      const aiResponse = await askPhitopolisAI(userMsg);
+      setMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'ai', content: "I'm having trouble connecting to my brain right now. Please try again." }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
