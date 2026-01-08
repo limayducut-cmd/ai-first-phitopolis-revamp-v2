@@ -1,19 +1,37 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { JOBS } from '../../constants';
-import { Search, MapPin, Clock, Briefcase } from 'lucide-react';
+import { MapPin, Clock, Briefcase } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function CareersPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  const filteredJobs = JOBS.filter(job => 
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const BENEFITS = [
+    {
+      emoji: "💰",
+      title: "Competitive Pay",
+      desc: "Industry leading salary and meaningful equity packages."
+    },
+    {
+      emoji: "🏠",
+      title: "Flexible Work",
+      desc: "Remote-first culture with beautiful hubs for collaboration."
+    },
+    {
+      emoji: "📚",
+      title: "Learning Budget",
+      desc: "Generous allowance for conferences, books, and courses."
+    },
+    {
+      emoji: "🩺",
+      title: "Health & Wellness",
+      desc: "Premium health coverage and mental health support."
+    }
+  ];
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Hero */}
+      {/* Hero - Static */}
       <section className="py-24 bg-primary text-white">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl">
@@ -26,37 +44,19 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Filter & Search */}
-      <section className="py-12 bg-slate-50 border-b border-slate-200">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                className="w-full bg-white border border-slate-300 rounded-full py-3 pl-12 pr-6 text-primary focus:ring-1 focus:ring-accent outline-none transition-all shadow-sm"
-                placeholder="Search by role or department..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center space-x-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-               <button className="whitespace-nowrap px-4 py-2 bg-primary text-white rounded-full text-xs font-bold hover:bg-primary-hover">All Roles</button>
-               <button className="whitespace-nowrap px-4 py-2 bg-white border border-slate-300 text-slate-600 rounded-full text-xs font-bold hover:border-accent hover:text-accent transition-colors">Engineering</button>
-               <button className="whitespace-nowrap px-4 py-2 bg-white border border-slate-300 text-slate-600 rounded-full text-xs font-bold hover:border-accent hover:text-accent transition-colors">Data Science</button>
-               <button className="whitespace-nowrap px-4 py-2 bg-white border border-slate-300 text-slate-600 rounded-full text-xs font-bold hover:border-accent hover:text-accent transition-colors">Product</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Job List */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
-          {filteredJobs.length > 0 ? (
-            <div className="space-y-6">
-              {filteredJobs.map((job) => (
+          <div className="space-y-6">
+            {JOBS.map((job, idx) => (
+              <motion.div
+                key={job.id}
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, delay: idx * 0.1, ease: "easeOut" }}
+              >
                 <Link 
-                  key={job.id} 
                   to={`/careers/${job.slug}`}
                   className="group block p-8 bg-white border border-slate-200 rounded-2xl hover:border-accent hover:shadow-lg transition-all"
                 >
@@ -81,15 +81,9 @@ export default function CareersPage() {
                     </button>
                   </div>
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-20 bg-slate-50 rounded-2xl border border-slate-200">
-              <Search className="mx-auto text-slate-300 mb-4" size={48} />
-              <h3 className="text-xl font-bold text-primary">No positions found.</h3>
-              <p className="text-slate-500 mt-2">Try adjusting your filters or search terms.</p>
-            </div>
-          )}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -101,26 +95,20 @@ export default function CareersPage() {
             <p className="text-slate-600 mt-4">We take care of our people so they can focus on what they do best.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="p-6 bg-white border border-slate-200 rounded-2xl text-center shadow-sm hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-xl">💰</div>
-              <h4 className="font-bold mb-2 text-primary">Competitive Pay</h4>
-              <p className="text-xs text-slate-500">Industry leading salary and meaningful equity packages.</p>
-            </div>
-            <div className="p-6 bg-white border border-slate-200 rounded-2xl text-center shadow-sm hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-xl">🏠</div>
-              <h4 className="font-bold mb-2 text-primary">Flexible Work</h4>
-              <p className="text-xs text-slate-500">Remote-first culture with beautiful hubs for collaboration.</p>
-            </div>
-            <div className="p-6 bg-white border border-slate-200 rounded-2xl text-center shadow-sm hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-xl">📚</div>
-              <h4 className="font-bold mb-2 text-primary">Learning Budget</h4>
-              <p className="text-xs text-slate-500">Generous allowance for conferences, books, and courses.</p>
-            </div>
-            <div className="p-6 bg-white border border-slate-200 rounded-2xl text-center shadow-sm hover:shadow-md transition-all">
-              <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-xl">🩺</div>
-              <h4 className="font-bold mb-2 text-primary">Health & Wellness</h4>
-              <p className="text-xs text-slate-500">Premium health coverage and mental health support.</p>
-            </div>
+            {BENEFITS.map((benefit, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.1, ease: "easeOut" }}
+                className="p-6 bg-white border border-slate-200 rounded-2xl text-center shadow-sm hover:shadow-md transition-all"
+              >
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-xl">{benefit.emoji}</div>
+                <h4 className="font-bold mb-2 text-primary">{benefit.title}</h4>
+                <p className="text-xs text-slate-500">{benefit.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

@@ -188,7 +188,7 @@ export default function AboutPage() {
                initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                className="relative aspect-square md:aspect-auto md:h-[600px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl"
              >
-               <img src="https://phitopolis.com/blog/wp-content/uploads/2025/05/image1.png" alt="Phitopolis Office" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+               <img src="https://phitopolis.com/blog/wp-content/uploads/2025/05/image1.png" alt="Phitopolis Office" className="w-full h-full object-cover transition-transform hover:scale-105 duration-700" />
                <div className="absolute bottom-8 left-8 text-white">
                  <div className="font-bold text-2xl">Expanding Horizons</div>
                  <div className="text-white/80">Phitopolis Unveils Its New Office</div>
@@ -196,10 +196,18 @@ export default function AboutPage() {
              </motion.div>
              <div className="space-y-8">
                <h2 className="text-4xl font-display font-bold text-primary">Rooted in High-Finance.</h2>
-               <p className="text-slate-600 text-lg leading-relaxed">
-                 Our founders spent years at the intersection of quantitative finance and distributed computing. 
-                 Building systems for JPMorgan and Morgan Stanley taught us that reliability is non-negotiable.
-               </p>
+               <div className="space-y-4 text-slate-600 text-lg leading-relaxed">
+                 <p>
+                   Our founders spent years at the intersection of quantitative finance and distributed computing. 
+                   Building systems for JPMorgan and Morgan Stanley taught us that reliability is non-negotiable 
+                   and performance is the ultimate differentiator.
+                 </p>
+                 <p>
+                   In 2021, we realized that these same challenges—massive data, low-latency requirements, 
+                   and the need for complex R&D—were moving into broader enterprise sectors. Phitopolis was born 
+                   to bring that elite expertise to you.
+                 </p>
+               </div>
                <div className="flex items-center space-x-4">
                   {['MS', 'JPM', 'DB'].map(brand => (
                     <div key={brand} className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-[10px] text-white font-bold">{brand}</div>

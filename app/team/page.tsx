@@ -57,8 +57,8 @@ const TeamMemberCard = ({ member, idx }: TeamMemberCardProps) => {
         }}
       />
 
-      <div className="relative z-10 w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-200 grayscale group-hover:grayscale-0 transition-all shadow-sm">
-        <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+      <div className="relative z-10 w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-200 transition-all shadow-sm">
+        <img src={member.image} alt={member.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
       </div>
 
       <div className="relative z-10 flex-1 space-y-4">

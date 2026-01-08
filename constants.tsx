@@ -10,29 +10,32 @@ import {
   Globe,
   Users
 } from 'lucide-react';
-import { ServiceType, Job, TeamMember, BlogPost } from './types';
+import { ServiceType, Job, TeamMember, BlogPost, Service } from './types';
 
-export const SERVICES = [
+export const SERVICES: Service[] = [
   {
     type: ServiceType.RD,
     title: "Research & Development",
     description: "Pioneering new technologies and frameworks to solve complex enterprise problems.",
     icon: <Cpu className="w-8 h-8 text-primary" />,
-    features: ["Custom Algorithm Design", "Proof of Concept Building", "Performance Optimization"]
+    features: ["Custom Algorithm Design", "Proof of Concept Building", "Performance Optimization"],
+    image: "https://phitopolis.com/img/core-competencies/innovation.jpg"
   },
   {
     type: ServiceType.DATA_SCIENCE,
     title: "Data Science",
     description: "Extracting actionable insights from vast datasets through ML and statistical modeling.",
     icon: <Database className="w-8 h-8 text-primary" />,
-    features: ["Predictive Analytics", "Natural Language Processing", "Quant Strategy Dev"]
+    features: ["Predictive Analytics", "Natural Language Processing", "Quant Strategy Dev"],
+    image: "https://phitopolis.com/img/core-competencies/technical-excellence.jpg"
   },
   {
     type: ServiceType.FULL_STACK,
     title: "Full-Stack Engineering",
     description: "Building resilient, scalable, and high-performance applications for the modern web.",
     icon: <Layout className="w-8 h-8 text-primary" />,
-    features: ["High-Frequency Systems", "Cloud-Native Architecture", "Real-time Dashboards"]
+    features: ["High-Frequency Systems", "Cloud-Native Architecture", "Real-time Dashboards"],
+    image: "https://phitopolis.com/img/core-competencies/proactive-communication.jpg"
   }
 ];
 

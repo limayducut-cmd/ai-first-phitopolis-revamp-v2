@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SERVICES } from '../../constants';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
@@ -7,12 +8,7 @@ export default function ServicesPage() {
   return (
     <div className="bg-white min-h-screen text-primary overflow-x-hidden">
       <section className="py-24 container mx-auto px-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="max-w-3xl mb-24"
-        >
+        <div className="max-w-3xl mb-24">
           <span className="text-accent font-bold tracking-widest uppercase text-xs">Capabilities</span>
           <h1 className="text-5xl md:text-7xl font-display font-bold mt-4 mb-8 text-primary">
             Technical excellence at every layer.
@@ -21,7 +17,7 @@ export default function ServicesPage() {
             Phitopolis combines deep domain knowledge in finance and technology with modern engineering practices 
             to deliver systems that are performant, scalable, and secure.
           </p>
-        </motion.div>
+        </div>
 
         <div className="space-y-32">
           {SERVICES.map((service, i) => (
@@ -56,7 +52,7 @@ export default function ServicesPage() {
               </div>
               <div className="flex-1 w-full bg-slate-100 rounded-3xl aspect-video relative overflow-hidden border border-slate-200 group shadow-lg">
                 <img 
-                  src={`https://picsum.photos/800/600?random=${i + 10}`} 
+                  src={service.image} 
                   alt={service.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                 />

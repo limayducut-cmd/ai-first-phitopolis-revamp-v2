@@ -1,8 +1,19 @@
 
+import React from 'react';
+
 export enum ServiceType {
   RD = 'R&D',
   DATA_SCIENCE = 'Data Science',
   FULL_STACK = 'Full-Stack Development'
+}
+
+export interface Service {
+  type: ServiceType;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  features: string[];
+  image: string;
 }
 
 export interface Job {
