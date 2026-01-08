@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search, ArrowRight, Github, Linkedin, Twitter, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Menu, X, ArrowRight, Github, Linkedin, Twitter, Sparkles } from 'lucide-react';
 
 // Pages
 import Home from './app/page.tsx';
@@ -13,6 +12,43 @@ import Blog from './app/blog/page.tsx';
 import Contact from './app/contact/page.tsx';
 import JobDetail from './app/careers/[slug]/page.tsx';
 import BlogPostDetail from './app/blog/[slug]/page.tsx';
+
+// Updated to use the requested external logo image
+const LOGO_PATH = 'https://phitopolis.com/img/phitopolis-logo.png';
+
+/**
+ * ScrollToTop Component: Resets scroll position on route change
+ */
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
+/**
+ * Image Shim: Mimics Next.js Image component API for the current React environment.
+ */
+const Image = ({ src, alt, width, height, className, priority, style }: {
+  src: string;
+  alt: string;
+  width?: number | string;
+  height?: number | string;
+  className?: string;
+  priority?: boolean;
+  style?: React.CSSProperties;
+}) => (
+  <img 
+    src={src} 
+    alt={alt} 
+    width={width} 
+    height={height} 
+    className={className} 
+    style={style}
+    loading={priority ? "eager" : "lazy"}
+  />
+);
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,11 +64,18 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-primary-light">
       <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary rounded-sm flex items-center justify-center font-bold text-white text-xl">P</div>
-          <span className="text-2xl font-display font-bold tracking-tight">Phitopolis</span>
+        <Link to="/" className="flex items-center space-x-3 group">
+          <Image 
+            src={LOGO_PATH}
+            alt="Phitopolis Logo" 
+            width={40}
+            height={40}
+            className="h-10 w-auto object-contain block brightness-0 invert" 
+            priority={true}
+          />
+          <span className="text-2xl font-display font-bold tracking-tight text-white group-hover:text-accent transition-colors">Phitopolis</span>
         </Link>
 
         <div className="hidden md:flex items-center space-x-8">
@@ -40,20 +83,17 @@ const Header = () => {
             <Link
               key={link.name}
               to={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === link.href ? 'text-primary' : 'text-slate-300'
+              className={`text-sm font-medium transition-colors hover:text-accent ${
+                location.pathname === link.href ? 'text-accent' : 'text-slate-100'
               }`}
             >
               {link.name}
             </Link>
           ))}
-          <button className="p-2 text-slate-400 hover:text-white transition-colors">
-            <Search size={20} />
-          </button>
         </div>
 
         <button 
-          className="md:hidden p-2 text-slate-300"
+          className="md:hidden p-2 text-white"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -61,13 +101,13 @@ const Header = () => {
       </nav>
 
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-slate-900 border-b border-slate-800 p-6 space-y-4 animate-fade-in">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-primary border-b border-primary-light p-6 space-y-4 animate-fade-in">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.href}
               onClick={() => setIsOpen(false)}
-              className="block text-lg font-medium text-slate-300 hover:text-primary"
+              className="block text-lg font-medium text-white hover:text-accent"
             >
               {link.name}
             </Link>
@@ -80,55 +120,63 @@ const Header = () => {
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-950 border-t border-slate-800 py-16">
+    <footer className="bg-primary border-t border-primary-light py-16 text-white">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center font-bold text-white text-sm">P</div>
+            <div className="flex items-center space-x-3">
+              <Image 
+                src={LOGO_PATH}
+                alt="Phitopolis Official Logo" 
+                width={32}
+                height={32}
+                className="h-8 w-auto object-contain block brightness-0 invert" 
+              />
               <span className="text-xl font-display font-bold tracking-tight">Phitopolis</span>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-xs">
+            <p className="text-slate-300 text-sm leading-relaxed max-w-xs">
               Making tomorrow's technology available today. Elite engineering for data-intensive challenges.
             </p>
             <div className="flex space-x-4">
-              <Github size={20} className="text-slate-400 hover:text-white cursor-pointer" />
-              <Linkedin size={20} className="text-slate-400 hover:text-white cursor-pointer" />
-              <Twitter size={20} className="text-slate-400 hover:text-white cursor-pointer" />
+              <Github size={20} className="text-white hover:text-accent cursor-pointer transition-colors" />
+              <Linkedin size={20} className="text-white hover:text-accent cursor-pointer transition-colors" />
+              <Twitter size={20} className="text-white hover:text-accent cursor-pointer transition-colors" />
             </div>
           </div>
           
           <div>
-            <h4 className="text-white font-bold mb-6">Services</h4>
-            <ul className="space-y-3 text-slate-400 text-sm">
-              <li><Link to="/services" className="hover:text-primary transition-colors">R&D Consulting</Link></li>
-              <li><Link to="/services" className="hover:text-primary transition-colors">Data Science</Link></li>
-              <li><Link to="/services" className="hover:text-primary transition-colors">Full-Stack Dev</Link></li>
-              <li><Link to="/services" className="hover:text-primary transition-colors">FinTech Strategy</Link></li>
+            <h4 className="text-accent font-bold mb-6">Services</h4>
+            <ul className="space-y-3 text-slate-100 text-sm">
+              <li><Link to="/services" className="hover:text-accent transition-colors">R&D Consulting</Link></li>
+              <li><Link to="/services" className="hover:text-accent transition-colors">Data Science</Link></li>
+              <li><Link to="/services" className="hover:text-accent transition-colors">Full-Stack Dev</Link></li>
+              <li><Link to="/services" className="hover:text-accent transition-colors">FinTech Strategy</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6">Company</h4>
-            <ul className="space-y-3 text-slate-400 text-sm">
-              <li><Link to="/about" className="hover:text-primary transition-colors">About Us</Link></li>
-              <li><Link to="/team" className="hover:text-primary transition-colors">Our Team</Link></li>
-              <li><Link to="/careers" className="hover:text-primary transition-colors">Careers</Link></li>
-              <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+            <h4 className="text-accent font-bold mb-6">Company</h4>
+            <ul className="space-y-3 text-slate-100 text-sm">
+              <li><Link to="/about" className="hover:text-accent transition-colors">About Us</Link></li>
+              <li><Link to="/team" className="hover:text-accent transition-colors">Our Team</Link></li>
+              <li><Link to="/careers" className="hover:text-accent transition-colors">Careers</Link></li>
+              <li><Link to="/contact" className="hover:text-accent transition-colors">Contact</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white font-bold mb-6">Contact</h4>
-            <ul className="space-y-3 text-slate-400 text-sm">
-              <li>contact@phitopolis.com</li>
-              <li>Mumbai, Maharashtra, India</li>
-              <li>New York, NY, USA</li>
+            <h4 className="text-accent font-bold mb-6">Contact</h4>
+            <ul className="space-y-3 text-slate-100 text-sm">
+              <li>info@phitopolis.com</li>
+              <li>27/F Ecotower Building</li>
+              <li>32nd St. cor. 9th Avenue</li>
+              <li>Bonifacio Global City, Taguig</li>
+              <li>Philippines, 1634</li>
             </ul>
           </div>
         </div>
         
-        <div className="mt-16 pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center text-slate-500 text-xs gap-4">
+        <div className="mt-16 pt-8 border-t border-primary-light flex flex-col md:flex-row justify-between items-center text-slate-300 text-xs gap-4">
           <p>© 2024 Phitopolis Private Limited. All rights reserved.</p>
           <div className="flex space-x-6">
             <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
@@ -169,19 +217,19 @@ const AIChatAssistant = () => {
   return (
     <div className="fixed bottom-6 right-6 z-[60]">
       {isOpen ? (
-        <div className="w-80 md:w-96 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-slide-up flex flex-col h-[500px]">
-          <div className="bg-primary p-4 flex justify-between items-center">
+        <div className="w-80 md:w-96 bg-white border border-primary/20 rounded-2xl shadow-2xl overflow-hidden animate-slide-up flex flex-col h-[500px]">
+          <div className="bg-primary p-4 flex justify-between items-center text-white">
             <div className="flex items-center space-x-2">
-              <Sparkles size={18} />
+              <Sparkles size={18} className="text-accent" />
               <span className="font-bold text-sm">Phitopolis AI</span>
             </div>
-            <button onClick={() => setIsOpen(false)}><X size={20} /></button>
+            <button onClick={() => setIsOpen(false)} aria-label="Close chat"><X size={20} /></button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/50">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] p-3 rounded-xl text-sm ${
-                  m.role === 'user' ? 'bg-primary text-white' : 'bg-slate-800 text-slate-200'
+                  m.role === 'user' ? 'bg-primary text-white' : 'bg-white border border-slate-200 text-primary'
                 }`}>
                   {m.content}
                 </div>
@@ -189,15 +237,15 @@ const AIChatAssistant = () => {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-slate-800 p-3 rounded-xl animate-pulse text-xs text-slate-400">
+                <div className="bg-white border border-slate-200 p-3 rounded-xl animate-pulse text-xs text-slate-400">
                   Thinking...
                 </div>
               </div>
             )}
           </div>
-          <div className="p-4 border-t border-slate-800 bg-slate-900 flex space-x-2">
+          <div className="p-4 border-t border-slate-100 bg-white flex space-x-2">
             <input 
-              className="flex-1 bg-slate-800 border-none rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary outline-none"
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-accent outline-none text-primary"
               placeholder="Ask anything..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -206,7 +254,7 @@ const AIChatAssistant = () => {
             <button 
               onClick={handleSend}
               disabled={isLoading}
-              className="bg-primary hover:bg-primary-hover p-2 rounded-lg"
+              className="bg-accent hover:bg-accent-hover p-2 rounded-lg transition-colors text-primary"
             >
               <ArrowRight size={18} />
             </button>
@@ -215,9 +263,10 @@ const AIChatAssistant = () => {
       ) : (
         <button 
           onClick={() => setIsOpen(true)}
-          className="bg-primary hover:bg-primary-hover w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110"
+          className="bg-accent hover:bg-accent-hover w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-accent/20 transition-transform hover:scale-110 active:scale-95"
+          aria-label="Open AI Assistant"
         >
-          <Sparkles size={28} className="text-white" />
+          <Sparkles size={28} className="text-primary" />
         </button>
       )}
     </div>
@@ -226,8 +275,9 @@ const AIChatAssistant = () => {
 
 export default function App() {
   return (
-    <HashRouter>
-      <div className="min-h-screen flex flex-col">
+    <Router>
+      <ScrollToTop />
+      <div className="min-h-screen flex flex-col bg-white">
         <Header />
         <main className="flex-grow pt-16">
           <Routes>
@@ -245,6 +295,6 @@ export default function App() {
         <Footer />
         <AIChatAssistant />
       </div>
-    </HashRouter>
+    </Router>
   );
 }

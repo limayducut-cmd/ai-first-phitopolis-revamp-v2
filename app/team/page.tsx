@@ -1,59 +1,186 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { TEAM } from '../../constants';
-import { Linkedin, Github, ExternalLink } from 'lucide-react';
+import { Linkedin, ExternalLink, Award, GraduationCap, Zap } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
+
+const TeamMemberCard = ({ member, idx }: { member: any, idx: number }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Motion values for cursor tracking
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Smooth spring physics for the blob
+  const springConfig = { damping: 25, stiffness: 150 };
+  const blobX = useSpring(mouseX, springConfig);
+  const blobY = useSpring(mouseY, springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
+
+  return (
+    <motion.div 
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: idx * 0.1 }}
+      className="group relative p-8 bg-slate-50 border border-slate-200 rounded-3xl hover:border-accent/50 hover:shadow-2xl transition-all flex flex-col md:flex-row gap-8 overflow-hidden"
+    >
+      {/* Interactive Background Blob */}
+      <motion.div 
+        className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"
+        style={{
+          left: blobX,
+          top: blobY,
+          translateX: '-50%',
+          translateY: '-50%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(255,199,44,0.15) 0%, rgba(255,199,44,0) 70%)',
+          filter: 'blur(40px)',
+        }}
+      />
+
+      <div className="relative z-10 w-48 h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-200 grayscale group-hover:grayscale-0 transition-all shadow-sm">
+        <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+      </div>
+
+      <div className="relative z-10 flex-1 space-y-4">
+        <div>
+          <h3 className="text-3xl font-bold text-primary">{member.name}</h3>
+          <p className="text-primary/70 font-bold text-sm tracking-wide uppercase">{member.role}</p>
+        </div>
+        <p className="text-slate-600 text-sm leading-relaxed">{member.bio}</p>
+        <div className="flex flex-wrap gap-2">
+          {member.expertise.map((exp: string, i: number) => (
+            <span key={i} className="text-[10px] uppercase font-bold text-primary/60 bg-accent/10 px-2 py-1 rounded">
+              {exp}
+            </span>
+          ))}
+        </div>
+        <div className="flex space-x-4 pt-2">
+          <Linkedin size={18} className="text-slate-400 hover:text-accent cursor-pointer transition-colors" />
+          <ExternalLink size={18} className="text-slate-400 hover:text-accent cursor-pointer transition-colors" />
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function TeamPage() {
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springConfig = { damping: 30, stiffness: 150 };
+  const spotlightX = useSpring(mouseX, springConfig);
+  const spotlightY = useSpring(mouseY, springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ctaRef.current) return;
+    const rect = ctaRef.current.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
+
   return (
-    <div className="bg-slate-950 min-h-screen">
+    <div className="bg-white min-h-screen text-primary">
+      {/* Header Section - Static */}
       <section className="py-24 container mx-auto px-6">
         <div className="max-w-3xl mb-20">
-          <span className="text-primary font-bold tracking-widest uppercase text-xs">The Collective</span>
-          <h1 className="text-5xl md:text-7xl font-display font-bold mt-4 mb-8">Meet the practitioners.</h1>
-          <p className="text-xl text-slate-400 font-light leading-relaxed">
-            We don't have account managers. We have engineers who talk to clients. 
-            Caliber is our only currency.
+          <span className="text-accent font-bold tracking-widest uppercase text-xs">
+            The Collective
+          </span>
+          <h1 className="text-5xl md:text-7xl font-display font-bold mt-4 mb-8 text-primary">
+            Meet the practitioners.
+          </h1>
+          <p className="text-xl text-slate-600 font-light leading-relaxed">
+            At Phitopolis, caliber is our only currency. We are a team of global technologists and entrepreneurs 
+            dedicated to solving the most complex engineering challenges.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {TEAM.map((member) => (
-            <div key={member.id} className="group p-8 bg-slate-900 border border-slate-800 rounded-3xl hover:border-primary/50 transition-all flex flex-col md:flex-row gap-8">
-              <div className="w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-800 grayscale group-hover:grayscale-0 transition-all">
-                <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 space-y-4">
-                <div>
-                  <h3 className="text-2xl font-bold">{member.name}</h3>
-                  <p className="text-primary font-medium text-sm">{member.role}</p>
-                </div>
-                <p className="text-slate-400 text-sm leading-relaxed">{member.bio}</p>
-                <div className="flex flex-wrap gap-2">
-                  {member.expertise.map((exp, i) => (
-                    <span key={i} className="text-[10px] uppercase font-bold text-slate-500 bg-slate-950 px-2 py-1 rounded">
-                      {exp}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex space-x-4 pt-2">
-                  <Linkedin size={18} className="text-slate-500 hover:text-white cursor-pointer" />
-                  <Github size={18} className="text-slate-500 hover:text-white cursor-pointer" />
-                  <ExternalLink size={18} className="text-slate-500 hover:text-white cursor-pointer" />
-                </div>
-              </div>
-            </div>
+        {/* Engineering DNA Highlights - Scroll Animations Retained */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+            className="p-8 bg-primary text-white rounded-3xl space-y-4 shadow-xl"
+          >
+            <GraduationCap className="text-accent w-10 h-10" />
+            <h3 className="text-xl font-bold">Global Presence</h3>
+            <p className="text-slate-300 text-sm">Experience across global financial hubs including Wall Street, London, Hong Kong, and Manila.</p>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="p-8 bg-slate-50 border border-slate-200 rounded-3xl space-y-4 shadow-sm"
+          >
+            <Award className="text-primary w-10 h-10" />
+            <h3 className="text-xl font-bold">Institutional Rigor</h3>
+            <p className="text-slate-600 text-sm">Leadership with senior roles at Morgan Stanley, JPMorgan, and Merrill Lynch.</p>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+            className="p-8 bg-slate-50 border border-slate-200 rounded-3xl space-y-4 shadow-sm"
+          >
+            <Zap className="text-primary w-10 h-10" />
+            <h3 className="text-xl font-bold">Local Expertise</h3>
+            <p className="text-slate-600 text-sm">Deep roots in the Philippine technology ecosystem with a history of building high-performing local teams.</p>
+          </motion.div>
+        </div>
+
+        {/* Team Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {TEAM.map((member, idx) => (
+            <TeamMemberCard key={member.id} member={member} idx={idx} />
           ))}
         </div>
 
-        {/* Culture Teaser */}
-        <div className="mt-32 p-12 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-3xl text-center">
-          <h2 className="text-3xl font-display font-bold mb-6">Want to join the collective?</h2>
-          <p className="text-slate-400 mb-8 max-w-xl mx-auto">
-            We're always looking for brilliant minds who obsess over clean code and mathematical precision.
+        {/* Culture Teaser - Now with Interactive Spotlight */}
+        <div 
+          ref={ctaRef}
+          onMouseMove={handleMouseMove}
+          className="group mt-32 p-12 bg-primary border border-primary-light rounded-3xl text-center shadow-2xl relative overflow-hidden"
+        >
+          {/* Interactive spotlight blob */}
+          <motion.div 
+            className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-0"
+            style={{
+              left: spotlightX,
+              top: spotlightY,
+              translateX: '-50%',
+              translateY: '-50%',
+              width: '600px',
+              height: '600px',
+              background: 'radial-gradient(circle, rgba(255,199,44,0.15) 0%, rgba(255,199,44,0) 70%)',
+              filter: 'blur(80px)',
+            }}
+          />
+          
+          <h2 className="text-3xl font-display font-bold mb-6 text-white relative z-10">Want to join our global team?</h2>
+          <p className="text-slate-200 mb-8 max-w-xl mx-auto relative z-10">
+            We're always looking for brilliant minds who obsess over building the next generation of financial and enterprise technology.
           </p>
-          <button className="px-8 py-4 bg-primary hover:bg-primary-hover text-white rounded-full font-bold">
+          <Link to="/careers" className="inline-block px-8 py-4 bg-accent hover:bg-accent-hover text-primary rounded-full font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-accent/20 relative z-10">
             View Career Opportunities
-          </button>
+          </Link>
         </div>
       </section>
     </div>

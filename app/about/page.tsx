@@ -1,19 +1,84 @@
 
-import React from 'react';
-import { ArrowRight, Target, Eye, Heart, Milestone } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Target, Eye, Heart, Play, X, Rocket, ShieldCheck, Globe, Building2, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 
 export default function AboutPage() {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
+  
+  // Interactive spotlight logic for the Founder's Story section
+  const founderSectionRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 30, stiffness: 150 };
+  const spotlightX = useSpring(mouseX, springConfig);
+  const spotlightY = useSpring(mouseY, springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!founderSectionRef.current) return;
+    const rect = founderSectionRef.current.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
+
+  const PHILOSOPHY = [
+    {
+      icon: <Target size={24} className="text-primary" />,
+      title: "Mission",
+      desc: "To build high-performance systems that make massive datasets actionable, empowering our clients to stay ahead in competitive markets."
+    },
+    {
+      icon: <Eye size={24} className="text-primary" />,
+      title: "Vision",
+      desc: "To be the global benchmark for elite R&D and data science services, recognized for our technical depth and proven outcomes."
+    },
+    {
+      icon: <Heart size={24} className="text-primary" />,
+      title: "Values",
+      desc: "Radical transparency, technical integrity, and a relentless pursuit of performance. We value depth over breadth."
+    }
+  ];
+
+  const JOURNEY_DATA = [
+    { 
+      year: '2021', 
+      title: 'Inception', 
+      desc: 'Phitopolis founded with a core team of quant engineers.',
+      icon: <Rocket className="text-accent" />
+    },
+    { 
+      year: '2022', 
+      title: 'Growth', 
+      desc: 'Strategic partnerships with global investment banks.',
+      icon: <ShieldCheck className="text-accent" />
+    },
+    { 
+      year: '2023', 
+      title: 'Delivery', 
+      desc: 'Scaling operations across multiple global time zones.',
+      icon: <Globe className="text-accent" />
+    },
+    { 
+      year: '2024', 
+      title: 'Ready', 
+      desc: 'Pioneering next-gen AI infrastructures in NYC.',
+      icon: <Building2 className="text-accent" />,
+      current: true
+    }
+  ];
+
   return (
-    <div className="bg-slate-950 min-h-screen">
+    <div className="bg-white min-h-screen text-primary">
       {/* Hero */}
-      <section className="py-24 border-b border-slate-900">
+      <section className="py-24 border-b border-slate-100">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl">
-            <span className="text-primary font-bold tracking-widest uppercase text-xs">Our Story</span>
-            <h1 className="text-5xl md:text-8xl font-display font-bold mt-4 mb-12 tracking-tight">
+            <span className="text-accent font-bold tracking-widest uppercase text-xs">Our Story</span>
+            <h1 className="text-5xl md:text-8xl font-display font-bold mt-4 mb-12 tracking-tight text-primary">
               Bridge the gap between vision and reality.
             </h1>
-            <p className="text-xl md:text-2xl text-slate-400 leading-relaxed font-light">
+            <p className="text-xl md:text-2xl text-slate-600 leading-relaxed font-light">
               Phitopolis was founded with a single mission: to provide elite-level technology services 
               that empower organizations to solve their most complex data and computational challenges.
             </p>
@@ -22,105 +87,187 @@ export default function AboutPage() {
       </section>
 
       {/* Philosophy */}
-      <section className="py-24 bg-slate-900">
+      <section className="py-24 bg-slate-50">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6">
-                <Target />
-              </div>
-              <h3 className="text-2xl font-bold">Mission</h3>
-              <p className="text-slate-400 leading-relaxed">
-                To build high-performance systems that make massive datasets actionable, empowering our clients to stay ahead in competitive markets.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6">
-                <Eye />
-              </div>
-              <h3 className="text-2xl font-bold">Vision</h3>
-              <p className="text-slate-400 leading-relaxed">
-                To be the global benchmark for elite R&D and data science services, recognized for our technical depth and proven outcomes.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-6">
-                <Heart />
-              </div>
-              <h3 className="text-2xl font-bold">Values</h3>
-              <p className="text-slate-400 leading-relaxed">
-                Radical transparency, technical integrity, and a relentless pursuit of performance. We value depth over breadth.
-              </p>
-            </div>
+            {PHILOSOPHY.map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+                className="space-y-4"
+              >
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center text-primary mb-6">
+                  {item.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-primary">{item.title}</h3>
+                <p className="text-slate-600 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Founder's Story */}
-      <section className="py-24 bg-slate-950">
+      {/* Video Section */}
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-primary font-bold tracking-widest uppercase text-xs">Visual Story</span>
+            <h2 className="text-4xl md:text-5xl font-display font-bold mt-2 text-primary">Engineering in Motion</h2>
+          </div>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="relative max-w-5xl mx-auto aspect-video rounded-3xl overflow-hidden shadow-2xl group cursor-pointer"
+            onClick={() => setIsVideoOpen(true)}
+          >
+            <img 
+              src="https://phitopolis.com/img/core-competencies/teamwork-and-leadership.jpg" 
+              alt="Phitopolis Team" 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-primary/40 flex items-center justify-center">
+              <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center text-primary shadow-xl">
+                <Play size={32} fill="currentColor" className="ml-1" />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {isVideoOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-primary/95 backdrop-blur-sm"
+            onClick={() => setIsVideoOpen(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+              className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center" onClick={() => setIsVideoOpen(false)}>
+                <X size={24} />
+              </button>
+              <iframe src="https://player.vimeo.com/video/799777608?autoplay=1" className="w-full h-full" frameBorder="0" allow="autoplay; fullscreen" allowFullScreen></iframe>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Founder's Story with Cursor-following Blob */}
+      <section 
+        ref={founderSectionRef}
+        onMouseMove={handleMouseMove}
+        className="py-24 bg-slate-50 relative overflow-hidden group"
+      >
+        {/* Interactive Spotlight Blob */}
+        <motion.div 
+          className="absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-0"
+          style={{
+            left: spotlightX,
+            top: spotlightY,
+            translateX: '-50%',
+            translateY: '-50%',
+            width: '600px',
+            height: '600px',
+            background: 'radial-gradient(circle, rgba(255,199,44,0.12) 0%, rgba(255,199,44,0) 70%)',
+            filter: 'blur(60px)',
+          }}
+        />
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-             <div className="relative aspect-square md:aspect-auto md:h-[600px] rounded-3xl overflow-hidden border border-slate-800">
-               <img src="https://picsum.photos/800/800?random=15" alt="Founders" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
-               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
-               <div className="absolute bottom-8 left-8">
-                 <div className="text-white font-bold text-2xl">Phitopolis Leadership</div>
-                 <div className="text-slate-400">Mumbai HQ Office</div>
+             <motion.div 
+               initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
+               className="relative aspect-square md:aspect-auto md:h-[600px] rounded-3xl overflow-hidden border border-slate-200 shadow-xl"
+             >
+               <img src="https://phitopolis.com/blog/wp-content/uploads/2025/05/image1.png" alt="Phitopolis Office" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+               <div className="absolute bottom-8 left-8 text-white">
+                 <div className="font-bold text-2xl">Expanding Horizons</div>
+                 <div className="text-white/80">Phitopolis Unveils Its New Office</div>
                </div>
-             </div>
+             </motion.div>
              <div className="space-y-8">
-               <h2 className="text-4xl font-display font-bold">Rooted in High-Finance.</h2>
-               <p className="text-slate-400 text-lg leading-relaxed">
+               <h2 className="text-4xl font-display font-bold text-primary">Rooted in High-Finance.</h2>
+               <p className="text-slate-600 text-lg leading-relaxed">
                  Our founders spent years at the intersection of quantitative finance and distributed computing. 
-                 Building systems for JPMorgan and Morgan Stanley taught us that reliability is non-negotiable and performance is the ultimate differentiator.
+                 Building systems for JPMorgan and Morgan Stanley taught us that reliability is non-negotiable.
                </p>
-               <p className="text-slate-400 text-lg leading-relaxed">
-                 In 2021, we realized that these same challenges—massive data, low-latency requirements, 
-                 and the need for complex R&D—were moving into broader enterprise sectors. Phitopolis was born to bring that elite expertise to you.
-               </p>
-               <div className="flex flex-col space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-900 font-bold p-2 overflow-hidden">
-                      <span className="text-[10px]">Morgan Stanley</span>
-                    </div>
-                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-900 font-bold p-2 overflow-hidden">
-                      <span className="text-[10px]">JPMorgan</span>
-                    </div>
-                    <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-slate-900 font-bold p-2 overflow-hidden">
-                      <span className="text-[10px]">Deutsche Bank</span>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 uppercase tracking-widest">Our Heritage</span>
+               <div className="flex items-center space-x-4">
+                  {['MS', 'JPM', 'DB'].map(brand => (
+                    <div key={brand} className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-[10px] text-white font-bold">{brand}</div>
+                  ))}
+                  <span className="text-xs text-slate-400 uppercase tracking-widest font-bold ml-2">Our Heritage</span>
                </div>
              </div>
           </div>
         </div>
       </section>
 
-      {/* Roadmap */}
-      <section className="py-24 bg-slate-900 overflow-hidden">
+      {/* STATIC Grid Journey Timeline */}
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
-           <div className="text-center mb-16">
-             <h2 className="text-3xl md:text-5xl font-display font-bold">Our Journey</h2>
-           </div>
-           <div className="relative">
-              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-800 hidden md:block"></div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                {[
-                  { year: '2021', title: 'Founded', desc: 'Started with 3 engineers in Mumbai.' },
-                  { year: '2022', title: 'FinTech Growth', desc: 'Partnered with major global banks.' },
-                  { year: '2023', title: 'Scale', desc: 'Expanded to R&D for AI startups.' },
-                  { year: '2024', title: 'Global', desc: 'Opening our first NYC office.' }
-                ].map((item, i) => (
-                  <div key={i} className="relative z-10 p-6 bg-slate-950 border border-slate-800 rounded-2xl md:bg-transparent md:border-none">
-                    <div className="w-4 h-4 bg-primary rounded-full mb-4 mx-auto hidden md:block border-4 border-slate-900"></div>
-                    <div className="text-primary font-bold mb-2 text-xl">{item.year}</div>
-                    <h4 className="font-bold text-lg mb-2">{item.title}</h4>
-                    <p className="text-sm text-slate-500">{item.desc}</p>
+          <div className="text-center mb-16">
+            <span className="text-accent font-bold tracking-widest uppercase text-xs">Milestones</span>
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-primary mt-2">Our Journey</h2>
+          </div>
+
+          <div className="relative">
+            {/* Timeline Background Line (Visible only on Large screens where grid is 1 row) */}
+            <div className="hidden lg:block absolute top-1/2 left-0 w-full h-[1px] bg-slate-100 -translate-y-1/2 z-0" />
+
+            {/* Grid Container - No scrolling needed */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 relative z-10">
+              {JOURNEY_DATA.map((item, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="relative"
+                >
+                  {/* Visual Node on the line (Desktop only) */}
+                  <div className="hidden lg:block absolute top-1/2 left-1/2 w-4 h-4 rounded-full bg-white border-2 border-primary -translate-y-1/2 -translate-x-1/2 z-20">
+                    {item.current && <div className="absolute inset-0 rounded-full bg-accent animate-ping" />}
                   </div>
-                ))}
-              </div>
-           </div>
+
+                  {/* Milestone Card */}
+                  <div 
+                    className="bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-20px_rgba(10,42,102,0.1)] transition-all duration-500 group h-full flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-4xl md:text-5xl font-display font-black text-slate-100 group-hover:text-accent/20 transition-colors">
+                          {item.year}
+                        </div>
+                        <div className="p-2 bg-slate-50 rounded-xl group-hover:bg-accent/10 transition-colors">
+                          {React.cloneElement(item.icon as React.ReactElement<any>, { size: 24 })}
+                        </div>
+                      </div>
+                      
+                      <h3 className="text-xl md:text-2xl font-bold text-primary flex items-center gap-2 mb-2">
+                        {item.title}
+                        {item.current && (
+                          <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[8px] font-black uppercase rounded-full">Now</span>
+                        )}
+                      </h3>
+                    </div>
+                    <p className="text-slate-500 text-xs md:text-sm leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -1,12 +1,10 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+// Use the official @google/genai library
+import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
+// Guideline: Obtain the API key exclusively from process.env.API_KEY and initialize inside the function
 export const askPhitopolisAI = async (prompt: string) => {
-  if (!API_KEY) return "AI Assistant is currently unavailable (API Key missing).";
-  
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -22,6 +20,7 @@ export const askPhitopolisAI = async (prompt: string) => {
         temperature: 0.7,
       },
     });
+    // Guideline: .text is a property, not a method.
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);

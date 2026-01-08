@@ -42,7 +42,7 @@ export const JOBS: Job[] = [
     slug: "senior-quant-engineer",
     title: "Senior Quantitative Engineer",
     department: "Engineering",
-    location: "Mumbai / Remote",
+    location: "BGC, Taguig / Remote",
     type: "Full-time",
     description: "We are looking for a high-caliber engineer to build low-latency trading infrastructure.",
     requirements: ["5+ years C++/Python", "Strong Mathematical background", "Experience in Finance"],
@@ -64,21 +64,21 @@ export const JOBS: Job[] = [
 export const TEAM: TeamMember[] = [
   {
     id: "1",
-    name: "Dr. Vikram Sethi",
-    role: "Founder & CEO",
-    expertise: ["FinTech", "Quantitative Analysis"],
-    bio: "Former Executive Director at JPMorgan and Morgan Stanley with 15+ years in algorithmic trading.",
-    credentials: ["Ex-JPMorgan", "Ex-Morgan Stanley", "PhD Mathematics"],
-    image: "https://picsum.photos/400/400?random=1"
+    name: "Krizel Mangana",
+    role: "CEO and Co-founder",
+    expertise: ["Entrepreneurship", "Financial Services", "Commodities"],
+    bio: "Kriz is a successful Filipina entrepreneur with a background in corporate real estate, financial services and commodities. Leveraging her extensive network of professional contacts throughout Asia, Kriz helps guide Phitopolis’ growth in the region.",
+    credentials: ["Entrepreneur", "Regional Strategy", "Network Growth"],
+    image: "https://phitopolis.com/img/testimonials-1.jpg"
   },
   {
     id: "2",
-    name: "Sarah Chen",
-    role: "Head of Engineering",
-    expertise: ["High Performance Computing", "React"],
-    bio: "Software architect specializing in low-latency systems and scalable frontend architectures.",
-    credentials: ["Ex-Deutsche Bank", "MSc Computer Science"],
-    image: "https://picsum.photos/400/400?random=2"
+    name: "Mark Walbaum",
+    role: "CTO and Co-founder",
+    expertise: ["Global Technology", "Infrastructure", "FinTech"],
+    bio: "Mark is an experienced technologist who has held senior roles at Morgan Stanley, Merrill Lynch and JPMorgan. A true global technologist, he has worked on Wall Street, in London, Hong Kong and Manila. Before co-founding Phitopolis, Mark built local technology teams in Manila for Deutsche Bank and Macquarie Bank.",
+    credentials: ["Ex-Morgan Stanley", "Ex-JPMorgan", "Ex-Merrill Lynch"],
+    image: "https://phitopolis.com/img/testimonials-2.jpg"
   }
 ];
 
@@ -88,7 +88,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "the-future-of-low-latency",
     title: "The Future of Low-Latency Systems",
     excerpt: "Exploring how sub-microsecond processing is changing the landscape of quantitative finance.",
-    author: "Dr. Vikram Sethi",
+    author: "Mark Walbaum",
     date: "Oct 12, 2023",
     readTime: "8 min read",
     category: "Engineering",
@@ -99,7 +99,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "scaling-ml-models",
     title: "Scaling ML Models for Real-time Insights",
     excerpt: "Challenges and solutions for deploying heavy models in high-throughput environments.",
-    author: "Sarah Chen",
+    author: "Phitopolis Research",
     date: "Sep 28, 2023",
     readTime: "6 min read",
     category: "Data Science",
