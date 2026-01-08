@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Menu, X, ArrowRight, Github, Linkedin, Twitter, Sparkles } from 'lucide-react';
@@ -64,18 +65,20 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-primary-light">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-primary-light group/header">
       <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-3 group">
+        <Link to="/" className="flex items-center space-x-3 group/brand">
           <Image 
             src={LOGO_PATH}
             alt="Phitopolis Logo" 
             width={40}
             height={40}
-            className="h-10 w-auto object-contain block brightness-0 invert" 
+            className="h-10 w-auto object-contain block brightness-0 invert transition-all duration-500 group-hover/header:brightness-100 group-hover/header:invert-0" 
             priority={true}
           />
-          <span className="text-2xl font-display font-bold tracking-tight text-white group-hover:text-accent transition-colors">Phitopolis</span>
+          <span className="text-2xl font-display font-bold tracking-tight text-white transition-colors uppercase">
+            PH<span className="transition-colors duration-500 group-hover/header:text-accent" style={{ color: 'inherit' }}>IT</span>OPOLIS
+          </span>
         </Link>
 
         <div className="hidden md:flex items-center space-x-8">

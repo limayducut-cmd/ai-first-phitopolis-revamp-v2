@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BLOG_POSTS } from '../../constants';
@@ -22,7 +23,7 @@ export default function BlogPage() {
             >
               <div className="aspect-video bg-slate-100 rounded-3xl overflow-hidden border border-slate-200 shadow-sm transition-shadow group-hover:shadow-lg">
                 <img 
-                  src={`https://picsum.photos/800/600?random=${post.id + 50}`} 
+                  src={post.thumbnail} 
                   alt={post.title}
                   className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" 
                 />

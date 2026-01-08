@@ -27,6 +27,8 @@ export interface BlogPost {
   readTime: string;
   category: string;
   content: string;
+  thumbnail: string;
+  contentImages?: string[];
 }
 
 export interface TeamMember {

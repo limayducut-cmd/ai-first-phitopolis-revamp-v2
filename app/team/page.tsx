@@ -4,8 +4,16 @@ import { TEAM } from '../../constants';
 import { Linkedin, ExternalLink, Award, GraduationCap, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { TeamMember } from '../../types';
 
-const TeamMemberCard = ({ member, idx }: { member: any, idx: number }) => {
+// Fixed Type: Explicitly defining props interface and including key to resolve list rendering TS error
+interface TeamMemberCardProps {
+  member: TeamMember;
+  idx: number;
+  key?: React.Key;
+}
+
+const TeamMemberCard = ({ member, idx }: TeamMemberCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Motion values for cursor tracking

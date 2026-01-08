@@ -84,25 +84,92 @@ export const TEAM: TeamMember[] = [
 
 export const BLOG_POSTS: BlogPost[] = [
   {
-    id: "1",
-    slug: "the-future-of-low-latency",
-    title: "The Future of Low-Latency Systems",
-    excerpt: "Exploring how sub-microsecond processing is changing the landscape of quantitative finance.",
-    author: "Mark Walbaum",
-    date: "Oct 12, 2023",
-    readTime: "8 min read",
-    category: "Engineering",
-    content: "Detailed post content here..."
+    id: "4",
+    slug: "phitopolis-6th-anniversary-wild-west",
+    title: "Riding into Our 6th Year: Phitopolis’ Wild West Anniversary Celebration",
+    excerpt: "Phitopolis saddled up and rode into a new frontier, celebrating six remarkable years of growth, innovation, and camaraderie.",
+    author: "Kobbie Manrique and Josua Costibolo",
+    date: "Aug 27, 2025",
+    readTime: "7 min read",
+    category: "Events & Culture",
+    thumbnail: "https://phitopolis.com/blog/wp-content/uploads/2025/08/a0a499d4-3f45-4bd7-9db5-870f125ffc91.jpg",
+    contentImages: [
+      undefined,
+      undefined,
+      undefined,
+      "https://phitopolis.com/blog/wp-content/uploads/2025/08/Screenshot-2025-08-20-083451.png",
+      undefined,
+      undefined,
+      undefined,
+      "https://phitopolis.com/blog/wp-content/uploads/2025/08/Untitled-design-10-682x1024.png",
+      "https://phitopolis.com/blog/wp-content/uploads/2025/08/42a0de2d-e49e-44f4-83e4-2f159ed7852f.png",
+      undefined,
+      "https://phitopolis.com/blog/wp-content/uploads/2025/08/fdb10fa5-93ef-4157-b656-1ab641adf7f4.png",
+      undefined,
+      undefined,
+      undefined,
+      "https://phitopolis.com/blog/wp-content/uploads/2025/08/3029999c-3cc5-4a42-8e66-c1d181babbc3.png",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "https://phitopolis.com/blog/wp-content/uploads/2025/08/cc100c93-f4c9-43f0-92bc-a9a0a401cc71.png"
+    ],
+    content: `This year, Phitopolis saddled up and rode into a new frontier, celebrating six remarkable years of growth, innovation, and camaraderie. From our humble beginnings to the thriving, tight-knit community we are today, these six years have been filled with challenges overcome, milestones achieved, and countless shared memories.
+
+To honor this incredible journey, we gathered the whole company at Buffalo Wild Wings for a Wild West–themed celebration and brought together colleagues, friends, and partners for an evening of reflection, recognition, and pure fun.
+
+Setting the Scene
+To kick off the program, our CTO, Mark Walbaum, officially opened the event by sharing reflections on how far we’ve come and expressing gratitude for the people who have made it possible. We also received a special message from Ben Cilia, Chief Data Officer of Quantbot Technologies, adding another layer of inspiration to the evening.
+
+Spotlight on Our Stars
+In true Phitopolis fashion, we took a moment to shine the spotlight on individuals and teams who have made a significant impact over the past month. Recognizing and celebrating each other’s contributions remains at the heart of our culture, a tradition that continues to strengthen our bonds.
+
+Capturing the Moment
+Before diving into dinner, everyone gathered for a group photo, capturing the spirit of togetherness that defines Phitopolis. We also had a photobooth corner, giving everyone a chance to capture the moment and take home a fun souvenir.
+
+A Feast Fit for a Cowboy
+As plates filled and glasses clinked, the room buzzed with conversation and laughter. This year’s menu was full and hearty, which fueled us for the games and activities ahead.
+
+Buffalo Wild Wings delivered the goods—plates of wings, tacos, pastas, and hearty bites that kept everyone fueled for the games ahead. Between bites, conversations flowed with ease, filled with stories, laughter, and a few lighthearted debates about which food on the menu was the best.
+
+Games That Had Us Hollerin’
+We kicked off with “Who Said It? ”, a hilarious game where employees guessed which colleague was behind memorable quotes from Slack, meetings, and team banter. Laughter echoed as we revisited a collection of one-liners that remained truly unforgettable.
+
+Next came the Company Timeline Challenge, testing everyone’s knowledge of our history. Teams pieced together milestones in the right order, from Phitopolis’s incorporation with just a few people to now occupying an entire office floor to support our growing team.. It was part memory test, part friendly competition, and 100% fun.
+
+The final challenge was “Guess That Song,” a musical showdown where snippets of lyrics had players racing to name the song and artist. From throwback classics to modern hits, the game proved that our team’s playlist knowledge is as diverse as it is impressive.
+
+Riding off into the Sunset
+As the evening drew to a close, our CTO, Mark Walbaum, gave a heartfelt closing remark, thanking everyone for their dedication and passion over the years.
+
+This 6th anniversary was more than a party; it was a celebration of the journey we’ve taken together and the exciting road ahead. To everyone who has been part of our story so far: thank you for making Phitopolis the spirited, trailblazing community it is today.
+
+Here’s to new frontiers, stronger bonds, and bigger dreams.
+
+Happy 6th Anniversary, Phitopolis! 🤠🎉`
   },
   {
-    id: "2",
-    slug: "scaling-ml-models",
-    title: "Scaling ML Models for Real-time Insights",
-    excerpt: "Challenges and solutions for deploying heavy models in high-throughput environments.",
-    author: "Phitopolis Research",
-    date: "Sep 28, 2023",
-    readTime: "6 min read",
-    category: "Data Science",
-    content: "Detailed post content here..."
+    id: "3",
+    slug: "joy-in-every-bag-christmas-gift-giving",
+    title: "Joy in Every Bag: Christmas Gift Giving at Brgy. Pinagsama",
+    excerpt: "It’s that time of the year again when giving back takes center stage, as we bring Christmas cheer to the children of Barangay Pinagsama.",
+    author: "Bea Franco",
+    date: "Dec 18, 2025",
+    readTime: "5 min read",
+    category: "Community & CSR",
+    thumbnail: "https://phitopolis.com/blog/wp-content/uploads/2025/12/001-2048x1536.jpg",
+    contentImages: [
+      "https://phitopolis.com/blog/wp-content/uploads/2025/12/2.png",
+      "https://phitopolis.com/blog/wp-content/uploads/2025/12/3.png",
+      "https://phitopolis.com/blog/wp-content/uploads/2025/12/4.png"
+    ],
+    content: `It’s that time of the year again when giving back takes center stage, as we bring Christmas cheer to the children of Barangay Pinagsama. This year, despite a light drizzle, Phitopolis brought the holiday spirit to life—donning our freshly issued 2025 Christmas shirts and coming together to share joy with the community. Excitement and festive energy filled the air, reminding us why giving back is a tradition we look forward to every year.
+
+At first, some of the children were shy, peeking from behind their parents or hesitating to join in. Denise led the opening remarks, breaking the ice with her warm and friendly approach. Soon, the children were laughing and playing, filling the area with energy. Their excitement set the perfect tone for a morning full of giving and connection.
+
+The highlight of the day was the gift-giving. Each child received a bag filled with essentials like school supplies, toiletries, and snacks. Watching them explore their gifts and express gratitude reminded us why giving back matters. Every laugh, playful gesture, and shared moment made the morning truly rewarding.
+
+This year’s Christmas gift-giving CSR was made possible through the collaboration of Phitopolis volunteers and the local officials of Barangay Pinagsama. Together, we celebrated the season through community, connection, and kindness. Joy in Every Bag truly came to life that morning, reminding us that the holiday season is best celebrated by giving back and sharing joy with others.`
   }
 ];
