@@ -139,20 +139,32 @@ export default function Home() {
               >
                 <div className="absolute inset-0 bg-accent/5 group-hover:bg-accent/10 transition-colors duration-500"></div>
                 <div className="absolute top-0 left-0 w-full h-1 bg-accent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
-                  <div className="mb-6 text-primary transform transition-transform group-hover:scale-110 duration-500">
-                    {React.cloneElement(service.icon as React.ReactElement<any>, { className: "w-8 h-8 text-primary" })}
+                <div className="relative z-10 flex flex-col md:flex-row gap-6 h-full">
+                  <div className="flex-1">
+                    <div className="mb-6 text-primary transform transition-transform group-hover:scale-110 duration-500">
+                      {React.cloneElement(service.icon as React.ReactElement<any>, { className: "w-8 h-8 text-primary" })}
+                    </div>
+                    <h3 className="text-xl font-bold mb-4 text-primary">{service.title}</h3>
+                    <p className="text-slate-600 text-sm mb-6 leading-relaxed">{service.description}</p>
+                    <ul className="space-y-3">
+                      {service.features.map((f, j) => (
+                        <li key={j} className="text-xs text-slate-500 flex items-center">
+                          <div className="w-1.5 h-1.5 bg-accent rounded-full mr-2"></div>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <h3 className="text-xl font-bold mb-4 text-primary">{service.title}</h3>
-                  <p className="text-slate-600 text-sm mb-6 leading-relaxed">{service.description}</p>
-                  <ul className="space-y-3">
-                    {service.features.map((f, j) => (
-                      <li key={j} className="text-xs text-slate-500 flex items-center">
-                        <div className="w-1.5 h-1.5 bg-accent rounded-full mr-2"></div>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+                  
+                  {service.image && (
+                    <div className="w-full md:w-32 h-32 md:h-32 shrink-0 rounded-2xl overflow-hidden shadow-lg border border-white/20">
+                      <img 
+                        src={service.image} 
+                        alt={service.title}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-125"
+                      />
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
