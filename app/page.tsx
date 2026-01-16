@@ -41,7 +41,7 @@ export default function Home() {
             playsInline
             className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-screen scale-105"
           >
-            <source src="attached_assets/generated_videos/hi-tech_blue_digital_connectivity_abstract_video.mp4" type="video/mp4" />
+            <source src="/hi-tech_blue_digital_connectivity_abstract_video.mp4" type="video/mp4" />
           </video>
           
           {/* Static & Animated Background Layers */}
