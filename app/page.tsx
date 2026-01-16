@@ -123,7 +123,7 @@ export default function Home() {
             </Link>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
             {SERVICES.map((service, i) => (
               <motion.div 
                 key={i} 
@@ -135,17 +135,17 @@ export default function Home() {
                   delay: i * 0.15,
                   ease: [0.21, 1.02, 0.47, 0.98] 
                 }}
-                className="p-8 bg-slate-50 border border-slate-200 rounded-2xl group relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1"
+                className="p-8 bg-slate-50 border border-slate-200 rounded-2xl group relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 flex flex-col h-full"
               >
                 <div className="absolute inset-0 bg-accent/5 group-hover:bg-accent/10 transition-colors duration-500"></div>
                 <div className="absolute top-0 left-0 w-full h-1 bg-accent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-col h-full">
                   <div className="mb-6 text-primary transform transition-transform group-hover:scale-110 duration-500">
                     {React.cloneElement(service.icon as React.ReactElement<any>, { className: "w-8 h-8 text-primary" })}
                   </div>
                   <h3 className="text-xl font-bold mb-4 text-primary">{service.title}</h3>
                   <p className="text-slate-600 text-sm mb-6 leading-relaxed">{service.description}</p>
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 flex-grow">
                     {service.features.map((f, j) => (
                       <li key={j} className="text-xs text-slate-500 flex items-center">
                         <div className="w-1.5 h-1.5 bg-accent rounded-full mr-2"></div>
@@ -153,18 +153,18 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                </div>
-                {/* Service Card Image */}
-                <div className="relative mt-auto -mx-8 -mb-8 overflow-hidden h-48">
-                  <img 
-                    src={[
-                      'https://phitopolis.com/img/core-competencies/innovation.jpg',
-                      'https://phitopolis.com/img/core-competencies/technical-excellence.jpg',
-                      'https://phitopolis.com/img/core-competencies/proactive-communication.jpg'
-                    ][i % 3]} 
-                    alt={service.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
+                  {/* Service Card Image moved inside relative z-10 for consistent bottom alignment */}
+                  <div className="relative mt-auto -mx-8 -mb-8 overflow-hidden h-48">
+                    <img 
+                      src={[
+                        'https://phitopolis.com/img/core-competencies/innovation.jpg',
+                        'https://phitopolis.com/img/core-competencies/technical-excellence.jpg',
+                        'https://phitopolis.com/img/core-competencies/proactive-communication.jpg'
+                      ][i % 3]} 
+                      alt={service.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  </div>
                 </div>
               </motion.div>
             ))}
