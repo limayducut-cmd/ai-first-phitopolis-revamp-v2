@@ -1,12 +1,59 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BLOG_POSTS } from '../../constants';
 import { Calendar, User } from 'lucide-react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { apolloClient } from '../../lib/apollo-client';
+import { GET_BLOGS } from '../../lib/graphql/queries';
+
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  thumbnail?: {
+    id: string;
+  };
+  tags?: string[];
+  date_created: string;
+  user_created?: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
+interface BlogsData {
+  blog: BlogPost[];
+}
 
 export default function BlogPage() {
   const newsletterRef = useRef<HTMLDivElement>(null);
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const result = await apolloClient.query<BlogsData>({
+          query: GET_BLOGS,
+          fetchPolicy: 'network-only',
+        });
+        console.log('Blog data received:', result);
+        console.log('Number of blogs:', result.data?.blog?.length || 0);
+        if (result.data?.blog) {
+          console.log('First blog:', result.data.blog[0]);
+          setBlogs(result.data.blog);
+        }
+      } catch (error: any) {
+        console.error('Error fetching blogs:', error);
+        console.error('Error details:', error.message, error.networkError);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
+  }, []);
   
   // Motion values for newsletter spotlight
   const mouseX = useMotionValue(0);
@@ -33,43 +80,67 @@ export default function BlogPage() {
           <p className="text-xl text-slate-600 font-light">Deep dives into FinTech, ML, and the future of distributed systems.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {BLOG_POSTS.map((post, idx) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.1 }}
-            >
-              <Link 
-                to={`/blog/${post.slug}`}
-                className="group block space-y-6"
-              >
-                <div className="aspect-video bg-slate-100 rounded-3xl overflow-hidden border border-slate-200 shadow-sm transition-shadow group-hover:shadow-lg">
-                  <img 
-                    src={post.thumbnail} 
-                    alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                  />
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4 text-xs font-bold uppercase tracking-widest text-accent">
-                    <span>{post.category}</span>
-                    <div className="w-1 h-1 bg-slate-300 rounded-full"></div>
-                    <span className="text-slate-400">{post.readTime}</span>
-                  </div>
-                  <h2 className="text-3xl font-display font-bold group-hover:text-primary-light transition-colors text-primary">{post.title}</h2>
-                  <p className="text-slate-600 leading-relaxed line-clamp-2">{post.excerpt}</p>
-                  <div className="flex items-center space-x-3 text-sm text-slate-500 pt-2">
-                     <User size={14} className="text-accent" /> <span>{post.author}</span>
-                     <Calendar size={14} className="ml-2 text-accent" /> <span>{post.date}</span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-slate-500">Loading blog posts...</p>
+          </div>
+        ) : blogs.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-slate-500">No blog posts available at the moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {blogs.map((post: BlogPost, idx: number) => {
+              const authorName = post.user_created
+                ? `${post.user_created.first_name} ${post.user_created.last_name}`
+                : 'Phitopolis Team';
+              const formattedDate = new Date(post.date_created).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              });
+              const thumbnailUrl = post.thumbnail?.id
+                ? `http://10.43.0.43:8055/assets/${post.thumbnail.id}`
+                : 'https://via.placeholder.com/800x450?text=Blog+Post';
+
+              return (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.1 }}
+                >
+                  <Link
+                    to={`/blog/${post.slug}`}
+                    className="group block space-y-6"
+                  >
+                    <div className="aspect-video bg-slate-100 rounded-3xl overflow-hidden border border-slate-200 shadow-sm transition-shadow group-hover:shadow-lg">
+                      <img
+                        src={thumbnailUrl}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex items-center space-x-4 text-xs font-bold uppercase tracking-widest text-accent">
+                          <span>{post.tags[0]}</span>
+                        </div>
+                      )}
+                      <h2 className="text-3xl font-display font-bold group-hover:text-primary-light transition-colors text-primary">{post.title}</h2>
+                      {post.excerpt && <p className="text-slate-600 leading-relaxed line-clamp-2">{post.excerpt}</p>}
+                      <div className="flex items-center space-x-3 text-sm text-slate-500 pt-2">
+                         <User size={14} className="text-accent" /> <span>{authorName}</span>
+                         <Calendar size={14} className="ml-2 text-accent" /> <span>{formattedDate}</span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Newsletter Section - Fade in + Spotlight */}

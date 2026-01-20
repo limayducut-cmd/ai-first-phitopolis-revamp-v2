@@ -9,6 +9,18 @@ export default defineConfig(({ mode }) => {
         port: 5000,
         host: '0.0.0.0',
         allowedHosts: true,
+        proxy: {
+          '/graphql': {
+            target: 'http://10.43.0.43:8055',
+            changeOrigin: true,
+            secure: false,
+          },
+          '/assets': {
+            target: 'http://10.43.0.43:8055',
+            changeOrigin: true,
+            secure: false,
+          }
+        }
       },
       plugins: [react()],
       define: {

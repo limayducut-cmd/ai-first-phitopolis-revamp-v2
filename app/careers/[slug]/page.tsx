@@ -1,15 +1,98 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { JOBS } from '../../../constants';
-import { ArrowLeft, Send, CheckCircle2, Info } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Info } from 'lucide-react';
+import { apolloClient } from '../../../lib/apollo-client';
+import { GET_CAREER_BY_SLUG } from '../../../lib/graphql/queries';
+
+interface Career {
+  id: string;
+  job_title: string;
+  slug: string;
+  department: string;
+  location: string;
+  job_type: string;
+  experience_level?: string;
+  short_description?: string;
+  description?: string;
+  responsibilities?: string;
+  requirements?: string;
+  nice_to_have?: string;
+  skills?: string[] | string;
+  salary_range?: string;
+  benefits?: string;
+}
+
+interface CareerBySlugData {
+  careers: Career[];
+}
 
 export default function JobDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const job = JOBS.find(j => j.slug === slug);
+  const [job, setJob] = useState<Career | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!job) {
+  useEffect(() => {
+    const fetchCareer = async () => {
+      if (!slug) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const result = await apolloClient.query<CareerBySlugData>({
+          query: GET_CAREER_BY_SLUG,
+          variables: { slug },
+        });
+
+        if (result.data.careers && result.data.careers.length > 0) {
+          setJob(result.data.careers[0]);
+        } else {
+          setNotFound(true);
+        }
+      } catch (error) {
+        console.error('Error fetching career:', error);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCareer();
+  }, [slug]);
+
+  // Helper function to render HTML content safely
+  const renderHtmlContent = (htmlContent: string) => {
+    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+  };
+
+  // Helper function to get skills array
+  const getSkillsArray = (skills: string[] | string | undefined): string[] => {
+    if (!skills) return [];
+    if (Array.isArray(skills)) return skills;
+    // If it's a string, try to parse as JSON
+    try {
+      const parsed = JSON.parse(skills);
+      return Array.isArray(parsed) ? parsed : [skills];
+    } catch {
+      return [skills];
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-slate-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !job) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -36,70 +119,85 @@ export default function JobDetail() {
               <span className="text-xs font-bold uppercase tracking-widest text-primary bg-accent/20 px-3 py-1 rounded-full">
                 {job.department}
               </span>
-              <h1 className="text-4xl md:text-6xl font-display font-bold mt-6 mb-4 text-primary">{job.title}</h1>
-              <p className="text-slate-600">{job.location} • {job.type}</p>
+              <h1 className="text-4xl md:text-6xl font-display font-bold mt-6 mb-4 text-primary">{job.job_title}</h1>
+              <p className="text-slate-600">{job.location} • {job.job_type}</p>
             </div>
 
-            <div className="prose prose-slate max-w-none">
-              <h2 className="text-2xl font-bold text-primary mb-6">Role Overview</h2>
-              <p className="text-slate-600 leading-relaxed text-lg">
-                {job.description} Join a team of elites building high-performance systems where every millisecond counts.
-              </p>
-            </div>
+            {job.description && (
+              <div className="prose prose-slate max-w-none">
+                <h2 className="text-2xl font-bold text-primary mb-6">Role Overview</h2>
+                <div className="text-slate-600 leading-relaxed wysiwyg-content">
+                  {renderHtmlContent(job.description)}
+                </div>
+              </div>
+            )}
 
-            <div>
-              <h2 className="text-2xl font-bold text-primary mb-6">Key Requirements</h2>
-              <ul className="space-y-4">
-                {job.requirements.map((req, i) => (
-                  <li key={i} className="flex items-start space-x-3 text-slate-700">
-                    <CheckCircle2 size={20} className="text-accent mt-1 flex-shrink-0" />
-                    <span>{req}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {job.responsibilities && (
+              <div>
+                <h2 className="text-2xl font-bold text-primary mb-6">Responsibilities</h2>
+                <div className="text-slate-700 wysiwyg-content">
+                  {renderHtmlContent(job.responsibilities as string)}
+                </div>
+              </div>
+            )}
 
-            <div>
-              <h2 className="text-2xl font-bold text-primary mb-6">Benefits</h2>
-              <ul className="space-y-4">
-                {job.benefits.map((benefit, i) => (
-                  <li key={i} className="flex items-start space-x-3 text-slate-700">
-                    <div className="w-1.5 h-1.5 bg-accent rounded-full mt-2 flex-shrink-0"></div>
-                    <span>{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {job.requirements && (
+              <div>
+                <h2 className="text-2xl font-bold text-primary mb-6">Requirements</h2>
+                <div className="text-slate-700 wysiwyg-content">
+                  {renderHtmlContent(job.requirements as string)}
+                </div>
+              </div>
+            )}
+
+            {job.skills && getSkillsArray(job.skills).length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold text-primary mb-6">Required Skills</h2>
+                <div className="flex flex-wrap gap-3">
+                  {getSkillsArray(job.skills).map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2.5 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 text-primary rounded-full text-sm font-semibold hover:from-accent/20 hover:to-accent/10 hover:border-accent hover:text-primary transition-all duration-300 shadow-sm hover:shadow-md"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {job.nice_to_have && (
+              <div>
+                <h2 className="text-2xl font-bold text-primary mb-6">Nice to Have</h2>
+                <div className="text-slate-700 wysiwyg-content">
+                  {renderHtmlContent(job.nice_to_have)}
+                </div>
+              </div>
+            )}
+
+            {job.benefits && (
+              <div>
+                <h2 className="text-2xl font-bold text-primary mb-6">Benefits</h2>
+                <div className="text-slate-700 wysiwyg-content">
+                  {renderHtmlContent(job.benefits)}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-8">
             <div className="p-8 bg-slate-50 border border-slate-200 rounded-3xl sticky top-24 shadow-lg">
               <h3 className="text-xl font-bold mb-6 text-primary">Apply for this role</h3>
-              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Application Submitted (Mock)'); }}>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Full Name</label>
-                  <input className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Email Address</label>
-                  <input type="email" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary" required />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Resume URL / LinkedIn</label>
-                  <input type="url" className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary" placeholder="https://" required />
-                </div>
-                <div>
-                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Message (Optional)</label>
-                   <textarea className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-accent h-24 text-primary" />
-                </div>
-                <button className="w-full py-4 bg-accent hover:bg-accent-hover text-primary rounded-full font-bold flex items-center justify-center group transition-all hover:scale-105 active:scale-95 shadow-lg shadow-accent/20">
-                  Submit Application
-                  <Send size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <p className="text-[10px] text-slate-400 text-center mt-4">
-                  By applying, you agree to our privacy policy and terms.
-                </p>
-              </form>
+
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSfx4qh0hhp-TVIWs7G3H9ezRxFSawoh14UtN7Kp858izVVydg/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-4 bg-accent hover:bg-accent-hover text-primary rounded-full font-bold flex items-center justify-center group transition-all hover:scale-105 active:scale-95 shadow-lg shadow-accent/20"
+              >
+                Submit Application
+                <ExternalLink size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </a>
 
               <div className="mt-8 pt-8 border-t border-slate-200">
                 <div className="flex items-center space-x-3 p-4 bg-primary/5 rounded-xl border border-primary/10">

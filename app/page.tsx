@@ -1,12 +1,44 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { ArrowRight, ChevronRight, Zap, Shield, TrendingUp } from 'lucide-react';
-import { SERVICES, JOBS } from '../constants.tsx';
+import { SERVICES } from '../constants.tsx';
+import { apolloClient } from '../lib/apollo-client';
+import { GET_CAREERS } from '../lib/graphql/queries';
+
+interface Career {
+  id: string;
+  job_title: string;
+  slug: string;
+  department: string;
+  location: string;
+  job_type: string;
+  short_description?: string;
+}
+
+interface CareersData {
+  careers: Career[];
+}
 
 export default function Home() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [careers, setCareers] = useState<Career[]>([]);
+
+  useEffect(() => {
+    const fetchCareers = async () => {
+      try {
+        const result = await apolloClient.query<CareersData>({
+          query: GET_CAREERS,
+        });
+        setCareers(result.data.careers || []);
+      } catch (error) {
+        console.error('Error fetching careers:', error);
+      }
+    };
+
+    fetchCareers();
+  }, []);
   
   // Motion values for interactive spotlight
   const mouseX = useMotionValue(0);
@@ -241,7 +273,7 @@ export default function Home() {
             </p>
           </motion.div>
           <div className="max-w-4xl mx-auto space-y-4 text-left">
-            {JOBS.map((job, idx) => (
+            {careers.slice(0, 5).map((job: Career, idx: number) => (
               <motion.div
                 key={job.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -249,12 +281,12 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1, duration: 0.5 }}
               >
-                <Link 
+                <Link
                   to={`/careers/${job.slug}`}
                   className="group block p-6 bg-white border border-slate-200 rounded-xl hover:border-accent hover:shadow-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
                   <div>
-                    <h3 className="font-bold text-xl text-primary group-hover:text-primary transition-colors">{job.title}</h3>
+                    <h3 className="font-bold text-xl text-primary group-hover:text-primary transition-colors">{job.job_title}</h3>
                     <p className="text-sm text-slate-500">{job.department} • {job.location}</p>
                   </div>
                   <div className="px-4 py-2 bg-slate-100 text-primary text-sm font-bold rounded-full group-hover:bg-accent group-hover:text-primary transition-all group-hover:scale-105 active:scale-95">
@@ -265,7 +297,9 @@ export default function Home() {
             ))}
           </div>
           <div className="mt-12">
-            <Link to="/careers" className="text-primary hover:text-accent font-bold transition-all underline decoration-accent underline-offset-4">View all 12 openings</Link>
+            <Link to="/careers" className="text-primary hover:text-accent font-bold transition-all underline decoration-accent underline-offset-4">
+              View all {careers.length} opening{careers.length !== 1 ? 's' : ''}
+            </Link>
           </div>
         </div>
       </section>
