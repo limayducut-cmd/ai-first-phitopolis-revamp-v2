@@ -1,8 +1,7 @@
-// Get the base URL for assets
-// Use Vite proxy in development, Directus directly in production
+// Use Vite proxy in development to avoid CORS, direct URL in production
 const ASSETS_BASE_URL = import.meta.env.DEV
   ? '/assets'
-  : 'https://directus.phitopolis.io/assets';
+  : `${import.meta.env.VITE_DIRECTUS_URL}/assets`;
 
 export function getAssetUrl(assetId: string | undefined): string {
   if (!assetId) {
