@@ -89,8 +89,8 @@ export default function CareersPage() {
       <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-slate-500">Loading careers...</p>
+            <div className="flex items-center justify-center py-16">
+              <div className="w-12 h-12 border-4 border-primary/20 border-t-accent rounded-full animate-spin"></div>
             </div>
           ) : error ? (
             <div className="text-center py-12">

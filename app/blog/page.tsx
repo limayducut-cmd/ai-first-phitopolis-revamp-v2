@@ -90,8 +90,8 @@ export default function BlogPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-slate-500">Loading blog posts...</p>
+          <div className="flex items-center justify-center py-16">
+            <div className="w-12 h-12 border-4 border-primary/20 border-t-accent rounded-full animate-spin"></div>
           </div>
         ) : error ? (
           <div className="text-center py-12">
