@@ -1,0 +1,46 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        VITE_DIRECTUS_URL: "${VITE_DIRECTUS_URL}"
+    container_name: phitopolis-website
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      directus:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  directus:
+    image: directus/directus:11.14.1
+    container_name: phitopolis-directus
+    ports:
+      - "8055:8055"
+    volumes:
+      - ./database:/directus/database
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+    environment:
+      SECRET: "${DIRECTUS_SECRET}"
+      DB_CLIENT: "sqlite3"
+      DB_FILENAME: "/directus/database/data.db"
+      WEBSOCKETS_ENABLED: "true"
+      ADMIN_EMAIL: "${DIRECTUS_ADMIN_EMAIL}"
+      ADMIN_PASSWORD: "${DIRECTUS_ADMIN_PASSWORD}"
+      PUBLIC_URL: "https://directus.phitopolis.io"
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: "https://uat.phitopolis.io"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
