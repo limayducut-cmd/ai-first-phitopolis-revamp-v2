@@ -71,7 +71,7 @@ const Header = () => {
             alt="Phitopolis Logo" 
             width={40}
             height={40}
-            className="h-10 w-auto object-contain block brightness-0 invert transition-all duration-500 group-hover/header:brightness-100 group-hover/header:invert-0" 
+            className="h-10 w-auto object-contain block" 
             priority={true}
           />
           <span className="text-2xl font-display font-bold tracking-tight text-white transition-colors uppercase">
