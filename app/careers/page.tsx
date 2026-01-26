@@ -52,19 +52,25 @@ export default function CareersPage() {
 
   const BENEFITS = [
     {
-      emoji: "💰",
-      title: "Competitive Pay",
-      desc: "Industry leading salary and meaningful equity packages.",
+      label: "Compensation",
+      headline: "Rewarded for impact, not hours",
+      description: "Industry-leading base salary paired with meaningful equity participation. Your contributions directly shape our success—and you share in the upside.",
+      bestFor: "Includes annual performance reviews, transparent pay bands, and equity refresh grants.",
+      metric: "Top 10% of market rates"
     },
     {
-      emoji: "📚",
-      title: "Learning Budget",
-      desc: "Generous allowance for conferences, certifications, courses, and source materials.",
+      label: "Growth",
+      headline: "Never stop learning",
+      description: "A generous annual budget for conferences, certifications, courses, and books. We invest in your growth because your expertise is our competitive advantage.",
+      bestFor: "Covers tuition, conferences, online courses, technical certifications, and learning materials.",
+      metric: "Dedicated learning budget per year"
     },
     {
-      emoji: "🩺",
-      title: "Health & Wellness",
-      desc: "Premium health coverage and mental health support.",
+      label: "Wellbeing",
+      headline: "Your health comes first",
+      description: "Comprehensive health coverage for you and your family, plus mental wellness support. We believe sustainable performance starts with genuine care.",
+      bestFor: "Includes medical, dental, vision, and access to mental health resources.",
+      metric: "100% premium coverage"
     },
   ];
 
@@ -160,40 +166,92 @@ export default function CareersPage() {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-24 bg-slate-50 border-t border-slate-200">
+      {/* Benefits Section — Calm Premium Design (matching Partnerships section) */}
+      <section className="py-28 md:py-36 bg-[#fafafa] border-t border-slate-100">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-primary">
-              Perks & Benefits
+          {/* Section Header */}
+          <motion.header
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-2xl mb-20"
+          >
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-semibold text-primary leading-tight tracking-tight">
+              Built for people<br />
+              who build.
             </h2>
-            <p className="text-slate-600 mt-4">
-              We take care of our people so they can focus on what they do best.
+            <p className="text-base md:text-lg text-slate-500 mt-6 leading-relaxed max-w-xl">
+              We take care of our team so they can focus on solving hard problems and doing their best work.
             </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          </motion.header>
+
+          {/* Benefits Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {BENEFITS.map((benefit, idx) => (
-              <motion.div
+              <motion.article
                 key={idx}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{
-                  duration: 0.5,
-                  delay: idx * 0.1,
-                  ease: "easeOut",
-                }}
-                className="p-6 bg-white border border-slate-200 rounded-2xl text-center shadow-sm hover:shadow-md transition-all"
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                className={`group bg-white rounded-2xl border border-slate-200 p-8 lg:p-10 flex flex-col benefit-card ${idx === 0 ? 'benefit-card-featured' : ''}`}
               >
-                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-xl">
-                  {benefit.emoji}
+                {/* Subtle top accent */}
+                <div className={`w-12 h-0.5 mb-8 transition-colors duration-300 ${idx === 0 ? 'bg-primary/20 group-hover:bg-primary/40' : 'bg-slate-200 group-hover:bg-slate-300'}`} />
+
+                {/* Label */}
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-4">
+                  {benefit.label}
+                </span>
+
+                {/* Headline */}
+                <h3 className="text-xl lg:text-2xl font-display font-semibold text-primary leading-snug mb-4">
+                  {benefit.headline}
+                </h3>
+
+                {/* Description */}
+                <p className="text-sm text-slate-500 leading-relaxed mb-6 flex-grow">
+                  {benefit.description}
+                </p>
+
+                {/* Best For / Includes */}
+                <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                  {benefit.bestFor}
+                </p>
+
+                {/* Micro-metric */}
+                <div className="pt-6 border-t border-slate-100">
+                  <span className="text-xs font-medium text-slate-400">{benefit.metric}</span>
                 </div>
-                <h4 className="font-bold mb-2 text-primary">{benefit.title}</h4>
-                <p className="text-xs text-slate-500">{benefit.desc}</p>
-              </motion.div>
+              </motion.article>
             ))}
           </div>
         </div>
+
+        {/* Subtle hover styles */}
+        <style>{`
+          .benefit-card {
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+          }
+          .benefit-card:hover {
+            border-color: #cbd5e1;
+            background-color: #ffffff;
+          }
+          .benefit-card-featured {
+            border-color: #e2e8f0;
+            background-color: #ffffff;
+          }
+          .benefit-card-featured:hover {
+            border-color: #94a3b8;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .benefit-card {
+              transition: none;
+            }
+          }
+        `}</style>
       </section>
     </div>
   );

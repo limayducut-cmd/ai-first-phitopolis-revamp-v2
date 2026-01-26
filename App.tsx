@@ -13,8 +13,8 @@ import Contact from './app/contact/page.tsx';
 import JobDetail from './app/careers/[slug]/page.tsx';
 import BlogPostDetail from './app/blog/[slug]/page.tsx';
 
-// Updated to use the requested external logo image
-const LOGO_PATH = 'https://phitopolis.com/img/phitopolis-logo.png';
+// Logo path - white SVG for dark backgrounds
+const LOGO_PATH = '/phitopolis_logo_white.svg';
 
 /**
  * ScrollToTop Component: Resets scroll position on route change

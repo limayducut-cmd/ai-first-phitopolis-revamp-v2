@@ -23,6 +23,7 @@ interface CareersData {
 
 export default function Home() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const practitionersSectionRef = useRef<HTMLDivElement>(null);
   const [careers, setCareers] = useState<Career[]>([]);
 
   useEffect(() => {
@@ -39,8 +40,8 @@ export default function Home() {
 
     fetchCareers();
   }, []);
-  
-  // Motion values for interactive spotlight
+
+  // Motion values for interactive spotlight (Hero section)
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -54,6 +55,19 @@ export default function Home() {
     const rect = sectionRef.current.getBoundingClientRect();
     mouseX.set(e.clientX - rect.left);
     mouseY.set(e.clientY - rect.top);
+  };
+
+  // Motion values for practitioners section spotlight
+  const practitionersMouseX = useMotionValue(0);
+  const practitionersMouseY = useMotionValue(0);
+  const practitionersSpotlightX = useSpring(practitionersMouseX, springConfig);
+  const practitionersSpotlightY = useSpring(practitionersMouseY, springConfig);
+
+  const handlePractitionersMouseMove = (e: React.MouseEvent) => {
+    if (!practitionersSectionRef.current) return;
+    const rect = practitionersSectionRef.current.getBoundingClientRect();
+    practitionersMouseX.set(e.clientX - rect.left);
+    practitionersMouseY.set(e.clientY - rect.top);
   };
 
   return (
@@ -205,22 +219,74 @@ export default function Home() {
       </section>
 
       {/* Trust / Credentials Section */}
-      <section className="py-24 bg-primary relative overflow-hidden text-white">
-        <div className="container mx-auto px-6">
+      <section
+        ref={practitionersSectionRef}
+        onMouseMove={handlePractitionersMouseMove}
+        className="py-24 bg-primary relative overflow-hidden text-white practitioners-section group/section"
+      >
+        {/* Interactive Spotlight Orb */}
+        <motion.div
+          className="absolute opacity-0 group-hover/section:opacity-100 transition-opacity duration-1000 pointer-events-none practitioners-spotlight"
+          style={{
+            left: practitionersSpotlightX,
+            top: practitionersSpotlightY,
+            translateX: '-50%',
+            translateY: '-50%',
+            width: '600px',
+            height: '600px',
+            background: 'radial-gradient(circle, rgba(255,199,44,0.15) 0%, rgba(255,199,44,0) 70%)',
+            filter: 'blur(40px)',
+            zIndex: 1
+          }}
+        />
+
+        {/* Animated Background Layer - Grid & Nodes */}
+        <div className="absolute inset-0 pointer-events-none practitioners-bg">
+          {/* Grid Pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: '60px 60px'
+            }}
+          />
+          {/* Drifting Nodes */}
+          <div className="absolute w-2 h-2 bg-accent/20 rounded-full practitioners-node-1" style={{ top: '20%', left: '15%' }} />
+          <div className="absolute w-1.5 h-1.5 bg-white/15 rounded-full practitioners-node-2" style={{ top: '60%', left: '25%' }} />
+          <div className="absolute w-2.5 h-2.5 bg-accent/15 rounded-full practitioners-node-3" style={{ top: '35%', left: '80%' }} />
+          <div className="absolute w-1.5 h-1.5 bg-white/10 rounded-full practitioners-node-4" style={{ top: '75%', left: '70%' }} />
+          <div className="absolute w-2 h-2 bg-accent/10 rounded-full practitioners-node-5" style={{ top: '45%', left: '45%' }} />
+          {/* Faint Connecting Lines */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.04]" preserveAspectRatio="none">
+            <line x1="15%" y1="20%" x2="25%" y2="60%" stroke="white" strokeWidth="1" className="practitioners-line-1" />
+            <line x1="25%" y1="60%" x2="45%" y2="45%" stroke="white" strokeWidth="1" className="practitioners-line-2" />
+            <line x1="45%" y1="45%" x2="80%" y2="35%" stroke="white" strokeWidth="1" className="practitioners-line-3" />
+            <line x1="80%" y1="35%" x2="70%" y2="75%" stroke="white" strokeWidth="1" className="practitioners-line-4" />
+          </svg>
+        </div>
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="space-y-8"
+              className="space-y-6"
             >
-              <h2 className="text-4xl md:text-5xl font-display font-bold">Built by practitioners, for practitioners.</h2>
-              <p className="text-slate-200 text-lg">
-                Our leadership team brings decades of experience from Morgan Stanley, JPMorgan, and Deutsche Bank. 
+              {/* Kicker Text */}
+              <span className="text-xs font-bold tracking-[0.2em] uppercase text-slate-400">
+                Built in Live Markets
+              </span>
+              <h2 className="text-4xl md:text-5xl font-display font-bold leading-tight max-w-lg">Built by practitioners, for practitioners.</h2>
+              <p className="text-slate-200 text-lg max-w-md leading-relaxed">
+                Our leadership team brings decades of experience from Morgan Stanley, JPMorgan, and Deutsche Bank.
                 We understand the rigors of high-frequency, data-intensive environments.
               </p>
-              <div className="grid grid-cols-1 gap-8">
+              <div className="grid grid-cols-1 gap-8 pt-2">
                 <div className="space-y-2">
                   <div className="text-4xl font-display font-bold text-accent">7+</div>
                   <div className="text-sm text-slate-300 uppercase tracking-wide">Years Exp</div>
@@ -230,32 +296,219 @@ export default function Home() {
                 Our Story <ArrowRight size={18} className="ml-2 group-hover:translate-x-2 transition-transform" />
               </Link>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="bg-white/5 p-8 rounded-3xl border border-white/10 relative overflow-hidden shadow-2xl backdrop-blur-sm"
+              className="relative"
             >
                <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 blur-3xl rounded-full"></div>
-               <div className="space-y-6">
-                 {[
-                   { icon: <Zap className="text-accent" />, title: "Ultra Low Latency", desc: "Sub-microsecond execution systems" },
-                   { icon: <Shield className="text-accent" />, title: "Enterprise Security", desc: "Military grade encryption standards" },
-                   { icon: <TrendingUp className="text-accent" />, title: "Scalable Alpha", desc: "Statistical arbitrage & ML strategy" }
-                 ].map((item, idx) => (
-                   <div key={idx} className="flex items-center space-x-4 p-4 bg-primary/50 border border-white/10 rounded-xl hover:bg-primary transition-colors duration-300">
-                     {item.icon}
-                     <div>
-                       <div className="font-bold text-sm text-white">{item.title}</div>
-                       <div className="text-xs text-slate-300">{item.desc}</div>
+               <div className="space-y-5">
+                 {/* Ultra Low Latency Card */}
+                 <div className="group practitioners-card practitioners-card-latency relative p-5 rounded-2xl border border-white/10 backdrop-blur-md bg-white/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:bg-white/[0.08] hover:border-white/20 hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)] transition-all duration-500 hover:scale-[1.02] overflow-hidden">
+                   <div className="flex items-center space-x-4">
+                     <div className="relative">
+                       <Zap className="text-accent w-6 h-6 practitioners-icon-pulse" />
+                       {/* Waveform Animation Behind Icon */}
+                       <div className="absolute inset-0 -z-10 practitioners-waveform">
+                         <svg width="24" height="24" viewBox="0 0 24 24" className="absolute -left-2 -top-2 w-10 h-10 opacity-30">
+                           <path d="M2 12 L6 8 L10 16 L14 6 L18 14 L22 12" fill="none" stroke="#FFC72C" strokeWidth="1" className="practitioners-wave-path" />
+                         </svg>
+                       </div>
+                     </div>
+                     <div className="flex-1">
+                       <div className="font-bold text-sm text-white">Ultra Low Latency</div>
+                       <div className="text-xs text-slate-300">Sub-microsecond execution systems</div>
                      </div>
                    </div>
-                 ))}
+                   {/* Hover Expansion Content */}
+                   <div className="practitioners-expand max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100 transition-all duration-500 ease-out overflow-hidden">
+                     <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-white/5">
+                       FPGA-accelerated order routing with nanosecond-level precision for competitive edge.
+                     </p>
+                   </div>
+                 </div>
+
+                 {/* Enterprise Security Card */}
+                 <div className="group practitioners-card practitioners-card-security relative p-5 rounded-2xl border border-white/10 backdrop-blur-md bg-white/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:bg-white/[0.08] hover:border-white/20 hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)] transition-all duration-500 hover:scale-[1.02] overflow-hidden">
+                   <div className="flex items-center space-x-4">
+                     <div className="relative">
+                       <Shield className="text-accent w-6 h-6 practitioners-icon-breathe" />
+                       {/* Rotating Outline Glow */}
+                       <div className="absolute inset-0 -z-10 practitioners-shield-glow">
+                         <div className="absolute -inset-2 rounded-full border border-accent/20 practitioners-rotate-slow" />
+                         <div className="absolute -inset-3 rounded-full border border-accent/10 practitioners-rotate-slower" style={{ animationDirection: 'reverse' }} />
+                       </div>
+                     </div>
+                     <div className="flex-1">
+                       <div className="font-bold text-sm text-white">Enterprise Security</div>
+                       <div className="text-xs text-slate-300">Military grade encryption standards</div>
+                     </div>
+                   </div>
+                   {/* Hover Expansion Content */}
+                   <div className="practitioners-expand max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100 transition-all duration-500 ease-out overflow-hidden">
+                     <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-white/5">
+                       SOC2 Type II compliant with end-to-end encryption and zero-trust architecture.
+                     </p>
+                   </div>
+                 </div>
+
+                 {/* Scalable Alpha Card */}
+                 <div className="group practitioners-card practitioners-card-alpha relative p-5 rounded-2xl border border-white/10 backdrop-blur-md bg-white/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:bg-white/[0.08] hover:border-white/20 hover:shadow-[0_12px_40px_rgba(0,0,0,0.2)] transition-all duration-500 hover:scale-[1.02] overflow-hidden">
+                   <div className="flex items-center space-x-4">
+                     <div className="relative">
+                       <TrendingUp className="text-accent w-6 h-6" />
+                       {/* Upward Trend Animation */}
+                       <div className="absolute inset-0 -z-10 practitioners-trend">
+                         <svg width="24" height="24" viewBox="0 0 24 24" className="absolute -left-1 -top-1 w-8 h-8 opacity-25">
+                           <path d="M4 18 L10 12 L14 15 L20 6" fill="none" stroke="#FFC72C" strokeWidth="1.5" className="practitioners-trend-path" />
+                         </svg>
+                       </div>
+                     </div>
+                     <div className="flex-1">
+                       <div className="font-bold text-sm text-white">Scalable Alpha</div>
+                       <div className="text-xs text-slate-300">Statistical arbitrage & ML strategy</div>
+                     </div>
+                   </div>
+                   {/* Hover Expansion Content */}
+                   <div className="practitioners-expand max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100 transition-all duration-500 ease-out overflow-hidden">
+                     <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-white/5">
+                       Adaptive algorithms that evolve with market conditions, deployed across global venues.
+                     </p>
+                   </div>
+                 </div>
                </div>
             </motion.div>
           </div>
         </div>
+
+        {/* Section-scoped CSS for animations */}
+        <style>{`
+          /* Reduced motion support */
+          @media (prefers-reduced-motion: reduce) {
+            .practitioners-section .practitioners-bg,
+            .practitioners-section .practitioners-node-1,
+            .practitioners-section .practitioners-node-2,
+            .practitioners-section .practitioners-node-3,
+            .practitioners-section .practitioners-node-4,
+            .practitioners-section .practitioners-node-5,
+            .practitioners-section .practitioners-icon-pulse,
+            .practitioners-section .practitioners-icon-breathe,
+            .practitioners-section .practitioners-rotate-slow,
+            .practitioners-section .practitioners-rotate-slower,
+            .practitioners-section .practitioners-wave-path,
+            .practitioners-section .practitioners-trend-path {
+              animation: none !important;
+            }
+            .practitioners-section .practitioners-expand,
+            .practitioners-section .practitioners-spotlight {
+              transition: none !important;
+            }
+            .practitioners-section .practitioners-spotlight {
+              opacity: 0 !important;
+            }
+          }
+
+          /* Drifting node animations */
+          .practitioners-node-1 {
+            animation: practitioners-drift-1 25s ease-in-out infinite;
+          }
+          .practitioners-node-2 {
+            animation: practitioners-drift-2 30s ease-in-out infinite;
+          }
+          .practitioners-node-3 {
+            animation: practitioners-drift-3 28s ease-in-out infinite;
+          }
+          .practitioners-node-4 {
+            animation: practitioners-drift-4 32s ease-in-out infinite;
+          }
+          .practitioners-node-5 {
+            animation: practitioners-drift-5 26s ease-in-out infinite;
+          }
+
+          @keyframes practitioners-drift-1 {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(15px, 10px); }
+            50% { transform: translate(5px, 20px); }
+            75% { transform: translate(-10px, 8px); }
+          }
+          @keyframes practitioners-drift-2 {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-12px, -8px); }
+            50% { transform: translate(8px, -15px); }
+            75% { transform: translate(15px, 5px); }
+          }
+          @keyframes practitioners-drift-3 {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-20px, 12px); }
+            50% { transform: translate(-10px, -10px); }
+            75% { transform: translate(10px, -5px); }
+          }
+          @keyframes practitioners-drift-4 {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(10px, -15px); }
+            50% { transform: translate(-15px, -8px); }
+            75% { transform: translate(-5px, 12px); }
+          }
+          @keyframes practitioners-drift-5 {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(12px, 12px); }
+            66% { transform: translate(-8px, 8px); }
+          }
+
+          /* Icon micro-animations */
+          .practitioners-icon-pulse {
+            animation: practitioners-pulse 3s ease-in-out infinite;
+          }
+          .practitioners-icon-breathe {
+            animation: practitioners-breathe 4s ease-in-out infinite;
+          }
+
+          @keyframes practitioners-pulse {
+            0%, 100% { opacity: 1; filter: drop-shadow(0 0 0px transparent); }
+            50% { opacity: 0.85; filter: drop-shadow(0 0 6px rgba(255, 199, 44, 0.4)); }
+          }
+          @keyframes practitioners-breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+
+          /* Rotating security outlines */
+          .practitioners-rotate-slow {
+            animation: practitioners-rotate 20s linear infinite;
+          }
+          .practitioners-rotate-slower {
+            animation: practitioners-rotate 30s linear infinite;
+          }
+          @keyframes practitioners-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+
+          /* Waveform animation */
+          .practitioners-wave-path {
+            stroke-dasharray: 60;
+            stroke-dashoffset: 60;
+            animation: practitioners-wave-draw 2s ease-in-out infinite;
+          }
+          @keyframes practitioners-wave-draw {
+            0%, 100% { stroke-dashoffset: 60; }
+            50% { stroke-dashoffset: 0; }
+          }
+
+          /* Trend line animation */
+          .practitioners-trend-path {
+            stroke-dasharray: 40;
+            stroke-dashoffset: 40;
+            animation: practitioners-trend-draw 3s ease-out infinite;
+          }
+          @keyframes practitioners-trend-draw {
+            0% { stroke-dashoffset: 40; opacity: 0.1; }
+            50% { stroke-dashoffset: 0; opacity: 0.4; }
+            100% { stroke-dashoffset: 40; opacity: 0.1; }
+          }
+        `}</style>
       </section>
 
       {/* Featured Jobs */}
