@@ -525,35 +525,59 @@ export default function Home() {
               We're looking for world-class engineers and data scientists to solve impossible problems.
             </p>
           </motion.div>
-          <div className="max-w-4xl mx-auto space-y-4 text-left">
-            {careers.slice(0, 5).map((job: Career, idx: number) => (
-              <motion.div
-                key={job.id}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1, duration: 0.5 }}
-              >
-                <Link
-                  to={`/careers/${job.slug}`}
-                  className="group block p-6 bg-white border border-slate-200 rounded-xl hover:border-accent hover:shadow-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
-                >
-                  <div>
-                    <h3 className="font-bold text-xl text-primary group-hover:text-primary transition-colors">{job.job_title}</h3>
-                    <p className="text-sm text-slate-500">{job.department} • {job.location}</p>
-                  </div>
-                  <div className="px-4 py-2 bg-slate-100 text-primary text-sm font-bold rounded-full group-hover:bg-accent group-hover:text-primary transition-all group-hover:scale-105 active:scale-95">
-                    View Position
-                  </div>
+
+          {careers.length > 0 ? (
+            <>
+              <div className="max-w-4xl mx-auto space-y-4 text-left">
+                {careers.slice(0, 5).map((job: Career, idx: number) => (
+                  <motion.div
+                    key={job.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1, duration: 0.5 }}
+                  >
+                    <Link
+                      to={`/careers/${job.slug}`}
+                      className="group block p-6 bg-white border border-slate-200 rounded-xl hover:border-accent hover:shadow-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div>
+                        <h3 className="font-bold text-xl text-primary group-hover:text-primary transition-colors">{job.job_title}</h3>
+                        <p className="text-sm text-slate-500">{job.department} • {job.location}</p>
+                      </div>
+                      <div className="px-4 py-2 bg-slate-100 text-primary text-sm font-bold rounded-full group-hover:bg-accent group-hover:text-primary transition-all group-hover:scale-105 active:scale-95">
+                        View Position
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+              <div className="mt-12">
+                <Link to="/careers" className="text-primary hover:text-accent font-bold transition-all underline decoration-accent underline-offset-4">
+                  View all {careers.length} opening{careers.length !== 1 ? 's' : ''}
                 </Link>
-              </motion.div>
-            ))}
-          </div>
-          <div className="mt-12">
-            <Link to="/careers" className="text-primary hover:text-accent font-bold transition-all underline decoration-accent underline-offset-4">
-              View all {careers.length} opening{careers.length !== 1 ? 's' : ''}
-            </Link>
-          </div>
+              </div>
+            </>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mt-8"
+            >
+              <p className="text-slate-500 mb-8">
+                No open positions at the moment, but we're always looking for exceptional talent.
+              </p>
+              <Link
+                to="/contact"
+                className="inline-flex items-center px-8 py-4 bg-accent hover:bg-accent-hover text-primary rounded-full font-bold shadow-lg shadow-accent/30 transition-all hover:scale-105 active:scale-95"
+              >
+                Get in Touch
+                <ArrowRight className="ml-2" />
+              </Link>
+            </motion.div>
+          )}
         </div>
       </section>
     </div>
