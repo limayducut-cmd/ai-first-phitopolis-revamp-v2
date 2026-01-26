@@ -14,6 +14,7 @@ export interface Service {
   icon: React.ReactNode;
   features: string[];
   image: string;
+  story: string;
 }
 
 export interface Job {

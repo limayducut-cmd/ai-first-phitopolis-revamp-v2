@@ -2,10 +2,296 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { ArrowRight, ChevronRight, Zap, Shield, TrendingUp } from 'lucide-react';
+import { ArrowRight, ChevronRight, Zap, Shield, TrendingUp, Hexagon, Circle, Triangle } from 'lucide-react';
 import { SERVICES } from '../constants.tsx';
 import { apolloClient } from '../lib/apollo-client';
 import { GET_CAREERS } from '../lib/graphql/queries';
+
+// Floating shapes for the practitioners section
+const PractitionersFloatingShapes = () => {
+  const shapes = [
+    { Icon: Hexagon, size: 30, x: '5%', y: '20%', duration: 18, delay: 0 },
+    { Icon: Circle, size: 20, x: '95%', y: '30%', duration: 15, delay: 1 },
+    { Icon: Triangle, size: 24, x: '90%', y: '70%', duration: 20, delay: 2 },
+    { Icon: Hexagon, size: 18, x: '8%', y: '75%', duration: 16, delay: 1.5 },
+    { Icon: Circle, size: 14, x: '50%', y: '15%', duration: 22, delay: 0.5 },
+  ];
+
+  return (
+    <>
+      {shapes.map((shape, i) => (
+        <motion.div
+          key={i}
+          className="absolute pointer-events-none"
+          style={{ left: shape.x, top: shape.y }}
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 180, 360],
+            opacity: [0.1, 0.25, 0.1],
+          }}
+          transition={{
+            duration: shape.duration,
+            delay: shape.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <shape.Icon
+            size={shape.size}
+            className="text-accent"
+            strokeWidth={1}
+          />
+        </motion.div>
+      ))}
+    </>
+  );
+};
+
+// Lightning effect icon (for Zap)
+const LightningIcon = ({ isHovered }: { isHovered: boolean }) => (
+  <motion.div className="relative w-10 h-10 flex items-center justify-center">
+    {/* Electric field effect */}
+    <motion.div
+      className="absolute inset-0 rounded-full"
+      style={{
+        background: 'radial-gradient(circle, rgba(255,199,44,0.4) 0%, transparent 70%)',
+      }}
+      animate={{
+        scale: isHovered ? [1, 1.8, 1.5, 2, 1.3] : [1, 1.3, 1],
+        opacity: isHovered ? [0.5, 0.8, 0.4, 1, 0.5] : [0.3, 0.5, 0.3],
+      }}
+      transition={{
+        duration: isHovered ? 0.5 : 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+    {/* Lightning bolts */}
+    {isHovered && (
+      <>
+        <motion.div
+          className="absolute w-6 h-0.5 bg-accent rounded-full"
+          style={{ rotate: '45deg', left: '-8px', top: '12px' }}
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: [0, 1, 0], opacity: [0, 1, 0] }}
+          transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 0.2 }}
+        />
+        <motion.div
+          className="absolute w-5 h-0.5 bg-accent rounded-full"
+          style={{ rotate: '-45deg', right: '-6px', bottom: '12px' }}
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: [0, 1, 0], opacity: [0, 1, 0] }}
+          transition={{ duration: 0.3, delay: 0.15, repeat: Infinity, repeatDelay: 0.2 }}
+        />
+        <motion.div
+          className="absolute w-4 h-0.5 bg-accent rounded-full"
+          style={{ rotate: '30deg', left: '-4px', bottom: '8px' }}
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: [0, 1, 0], opacity: [0, 1, 0] }}
+          transition={{ duration: 0.25, delay: 0.1, repeat: Infinity, repeatDelay: 0.3 }}
+        />
+      </>
+    )}
+    {/* Icon */}
+    <motion.div
+      animate={{
+        scale: isHovered ? [1, 1.2, 1] : 1,
+        rotate: isHovered ? [0, -5, 5, 0] : 0,
+      }}
+      transition={{ duration: 0.3, repeat: isHovered ? Infinity : 0, repeatDelay: 0.2 }}
+    >
+      <Zap className="text-accent w-5 h-5 relative z-10" />
+    </motion.div>
+  </motion.div>
+);
+
+// Shield pulse effect icon
+const ShieldIcon = ({ isHovered }: { isHovered: boolean }) => (
+  <motion.div className="relative w-10 h-10 flex items-center justify-center">
+    {/* Ripple effects - only on hover */}
+    {isHovered && (
+      <>
+        <motion.div
+          className="absolute inset-0 rounded-full border-2 border-accent/40"
+          initial={{ scale: 1, opacity: 0.6 }}
+          animate={{
+            scale: [1, 1.8, 2.2],
+            opacity: [0.6, 0.2, 0],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeOut",
+          }}
+        />
+        <motion.div
+          className="absolute inset-0 rounded-full border-2 border-accent/40"
+          initial={{ scale: 1, opacity: 0.6 }}
+          animate={{
+            scale: [1, 1.8, 2.2],
+            opacity: [0.6, 0.2, 0],
+          }}
+          transition={{
+            duration: 1.5,
+            delay: 0.5,
+            repeat: Infinity,
+            ease: "easeOut",
+          }}
+        />
+      </>
+    )}
+    {/* Shield glow */}
+    <motion.div
+      className="absolute inset-0 rounded-full"
+      style={{
+        background: 'radial-gradient(circle, rgba(255,199,44,0.3) 0%, transparent 70%)',
+      }}
+      animate={{
+        scale: isHovered ? [1, 1.5, 1.2] : [1, 1.15, 1],
+        opacity: isHovered ? [0.5, 0.8, 0.5] : [0.2, 0.35, 0.2],
+      }}
+      transition={{
+        duration: isHovered ? 0.8 : 3,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+    {/* Icon */}
+    <motion.div
+      animate={{
+        scale: isHovered ? [1, 1.15, 1.1] : 1,
+      }}
+      transition={{ duration: 0.3 }}
+    >
+      <Shield className="text-accent w-5 h-5 relative z-10" />
+    </motion.div>
+  </motion.div>
+);
+
+// Trending up growth effect icon
+const TrendingIcon = ({ isHovered }: { isHovered: boolean }) => (
+  <motion.div className="relative w-10 h-10 flex items-center justify-center">
+    {/* Upward particles */}
+    {isHovered && (
+      <>
+        {[...Array(4)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-accent rounded-full"
+            initial={{ y: 10, x: -5 + i * 4, opacity: 0 }}
+            animate={{
+              y: [-5, -20],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 0.8,
+              delay: i * 0.15,
+              repeat: Infinity,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+      </>
+    )}
+    {/* Growth glow */}
+    <motion.div
+      className="absolute inset-0 rounded-full"
+      style={{
+        background: 'linear-gradient(to top, rgba(255,199,44,0.4) 0%, transparent 100%)',
+      }}
+      animate={{
+        scale: isHovered ? [1, 1.4, 1.2] : [1, 1.2, 1],
+        opacity: isHovered ? [0.4, 0.7, 0.4] : [0.2, 0.4, 0.2],
+      }}
+      transition={{
+        duration: isHovered ? 0.6 : 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+    {/* Icon */}
+    <motion.div
+      animate={{
+        y: isHovered ? [0, -3, 0] : 0,
+        scale: isHovered ? 1.1 : 1,
+      }}
+      transition={{ duration: 0.4, repeat: isHovered ? Infinity : 0 }}
+    >
+      <TrendingUp className="text-accent w-5 h-5 relative z-10" />
+    </motion.div>
+  </motion.div>
+);
+
+// Interactive Credential Card with hover text swap
+const CredentialCard = ({
+  iconType,
+  title,
+  description,
+  index,
+}: {
+  iconType: 'zap' | 'shield' | 'trending';
+  title: string;
+  description: string;
+  index: number;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const IconComponent = {
+    zap: LightningIcon,
+    shield: ShieldIcon,
+    trending: TrendingIcon,
+  }[iconType];
+
+  return (
+    <motion.div
+      className="flex items-center space-x-4 p-4 bg-primary/50 border border-white/10 rounded-xl hover:bg-primary/70 hover:border-accent/30 transition-all duration-300 cursor-default overflow-hidden"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      whileHover={{ scale: 1.02, x: 5 }}
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 + 0.3 }}
+    >
+      <IconComponent isHovered={isHovered} />
+      <div className="relative flex-1 h-10 overflow-hidden">
+        {/* Title - slides up and fades on hover */}
+        <motion.div
+          className="absolute inset-0 flex items-center"
+          animate={{
+            y: isHovered ? -30 : 0,
+            opacity: isHovered ? 0 : 1,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <span className="font-bold text-sm text-white">{title}</span>
+        </motion.div>
+        {/* Description - slides up from below on hover */}
+        <motion.div
+          className="absolute inset-0 flex items-center"
+          initial={{ y: 30, opacity: 0 }}
+          animate={{
+            y: isHovered ? 0 : 30,
+            opacity: isHovered ? 1 : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <span className="text-sm text-accent font-medium">{description}</span>
+        </motion.div>
+      </div>
+      {/* Hover indicator arrow */}
+      <motion.div
+        animate={{
+          x: isHovered ? 0 : -10,
+          opacity: isHovered ? 1 : 0,
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        <ChevronRight className="w-4 h-4 text-accent" />
+      </motion.div>
+    </motion.div>
+  );
+};
 
 interface Career {
   id: string;
@@ -206,9 +492,137 @@ export default function Home() {
 
       {/* Trust / Credentials Section */}
       <section className="py-24 bg-primary relative overflow-hidden text-white">
-        <div className="container mx-auto px-6">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Large watermark background text with pulsing outline */}
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            {/* Glowing outline layer */}
+            <motion.div
+              className="absolute text-[6rem] sm:text-[8rem] md:text-[12rem] lg:text-[18rem] xl:text-[24rem] 2xl:text-[28rem] font-display font-bold whitespace-nowrap select-none leading-none tracking-tight"
+              style={{
+                WebkitTextStroke: '1px rgba(255,199,44,0.1)',
+                WebkitTextFillColor: 'transparent',
+              }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              animate={{
+                WebkitTextStroke: [
+                  '1px rgba(255,199,44,0.05)',
+                  '2px rgba(255,199,44,0.15)',
+                  '1px rgba(255,199,44,0.05)',
+                ],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              7 YEARS
+            </motion.div>
+            {/* Main text with subtle pulse */}
+            <motion.div
+              className="text-[6rem] sm:text-[8rem] md:text-[12rem] lg:text-[18rem] xl:text-[24rem] 2xl:text-[28rem] font-display font-bold text-white/[0.03] whitespace-nowrap select-none leading-none tracking-tight"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              animate={{
+                opacity: [0.03, 0.045, 0.03],
+              }}
+              style={{
+                textShadow: '0 0 80px rgba(255,199,44,0.05)',
+              }}
+            >
+              7 YEARS
+            </motion.div>
+            {/* Ambient glow behind text */}
+            <motion.div
+              className="absolute w-full h-full"
+              style={{
+                background: 'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,199,44,0.03) 0%, transparent 70%)',
+              }}
+              animate={{
+                opacity: [0.5, 1, 0.5],
+                scale: [1, 1.05, 1],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </div>
+          <div className="absolute inset-0 flex items-end justify-center overflow-hidden pb-4 sm:pb-6 md:pb-8">
+            <motion.div
+              className="text-[0.7rem] sm:text-[1rem] md:text-[1.5rem] lg:text-[2rem] xl:text-[2.5rem] 2xl:text-[3rem] font-display font-bold text-white/[0.04] whitespace-nowrap select-none uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em]"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+            >
+              Building Tomorrow's Technology
+            </motion.div>
+          </div>
+
+          {/* Animated gradient orbs */}
+          <motion.div
+            className="absolute w-[500px] h-[500px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(255,199,44,0.1) 0%, transparent 70%)',
+              filter: 'blur(80px)',
+              left: '-10%',
+              top: '20%',
+            }}
+            animate={{
+              x: [0, 50, 0],
+              y: [0, -30, 0],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <motion.div
+            className="absolute w-[400px] h-[400px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)',
+              filter: 'blur(60px)',
+              right: '-5%',
+              bottom: '10%',
+            }}
+            animate={{
+              x: [0, -40, 0],
+              y: [0, 40, 0],
+            }}
+            transition={{
+              duration: 18,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+
+          {/* Floating geometric shapes */}
+          <PractitionersFloatingShapes />
+
+          {/* Subtle grid overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)
+              `,
+              backgroundSize: '80px 80px',
+            }}
+          />
+        </div>
+
+        <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -217,42 +631,67 @@ export default function Home() {
             >
               <h2 className="text-4xl md:text-5xl font-display font-bold">Built by practitioners, for practitioners.</h2>
               <p className="text-slate-200 text-lg">
-                Our leadership team brings decades of experience from Morgan Stanley, JPMorgan, and Deutsche Bank. 
+                Our leadership team brings decades of experience from Morgan Stanley, JPMorgan, and Deutsche Bank.
                 We understand the rigors of high-frequency, data-intensive environments.
               </p>
-              <div className="grid grid-cols-1 gap-8">
-                <div className="space-y-2">
-                  <div className="text-4xl font-display font-bold text-accent">7+</div>
-                  <div className="text-sm text-slate-300 uppercase tracking-wide">Years Exp</div>
-                </div>
-              </div>
               <Link to="/about" className="inline-flex items-center text-accent font-bold hover:underline group">
                 Our Story <ArrowRight size={18} className="ml-2 group-hover:translate-x-2 transition-transform" />
               </Link>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="bg-white/5 p-8 rounded-3xl border border-white/10 relative overflow-hidden shadow-2xl backdrop-blur-sm"
+              className="bg-white/5 p-8 rounded-3xl border border-white/10 relative overflow-hidden shadow-2xl backdrop-blur-sm group"
             >
-               <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 blur-3xl rounded-full"></div>
-               <div className="space-y-6">
-                 {[
-                   { icon: <Zap className="text-accent" />, title: "Ultra Low Latency", desc: "Sub-microsecond execution systems" },
-                   { icon: <Shield className="text-accent" />, title: "Enterprise Security", desc: "Military grade encryption standards" },
-                   { icon: <TrendingUp className="text-accent" />, title: "Scalable Alpha", desc: "Statistical arbitrage & ML strategy" }
-                 ].map((item, idx) => (
-                   <div key={idx} className="flex items-center space-x-4 p-4 bg-primary/50 border border-white/10 rounded-xl hover:bg-primary transition-colors duration-300">
-                     {item.icon}
-                     <div>
-                       <div className="font-bold text-sm text-white">{item.title}</div>
-                       <div className="text-xs text-slate-300">{item.desc}</div>
-                     </div>
-                   </div>
-                 ))}
-               </div>
+              {/* Animated corner glow */}
+              <motion.div
+                className="absolute top-0 right-0 w-32 h-32 bg-accent/20 blur-3xl rounded-full"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.2, 0.4, 0.2],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+              <motion.div
+                className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/10 blur-2xl rounded-full"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.1, 0.3, 0.1],
+                }}
+                transition={{
+                  duration: 5,
+                  delay: 1,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+
+              <div className="space-y-4 relative z-10">
+                <CredentialCard
+                  iconType="zap"
+                  title="Ultra Low Latency"
+                  description="Sub-microsecond execution systems"
+                  index={0}
+                />
+                <CredentialCard
+                  iconType="shield"
+                  title="Enterprise Security"
+                  description="Military grade encryption standards"
+                  index={1}
+                />
+                <CredentialCard
+                  iconType="trending"
+                  title="Scalable Alpha"
+                  description="Statistical arbitrage & ML strategy"
+                  index={2}
+                />
+              </div>
             </motion.div>
           </div>
         </div>

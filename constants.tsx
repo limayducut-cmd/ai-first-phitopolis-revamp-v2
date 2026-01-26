@@ -19,7 +19,8 @@ export const SERVICES: Service[] = [
     description: "Pioneering new technologies and frameworks to solve complex enterprise problems.",
     icon: <Cpu className="w-8 h-8 text-primary" />,
     features: ["Custom Algorithm Design", "Proof of Concept Building", "Performance Optimization"],
-    image: "https://phitopolis.com/img/core-competencies/innovation.jpg"
+    image: "https://phitopolis.com/img/core-competencies/innovation.jpg",
+    story: "A trading firm needed to reduce their order execution latency from milliseconds to microseconds. Traditional approaches had hit a wall. We dove deep into kernel-bypass networking, custom memory allocators, and lock-free data structures. After months of research and prototyping, we delivered a system that processed orders 100x faster than before—giving our client a decisive edge in the market."
   },
   {
     type: ServiceType.DATA_SCIENCE,
@@ -27,7 +28,8 @@ export const SERVICES: Service[] = [
     description: "Extracting actionable insights from vast datasets through ML and statistical modeling.",
     icon: <Database className="w-8 h-8 text-primary" />,
     features: ["Predictive Analytics", "Natural Language Processing", "Quant Strategy Dev"],
-    image: "https://phitopolis.com/img/core-competencies/technical-excellence.jpg"
+    image: "https://phitopolis.com/img/core-competencies/technical-excellence.jpg",
+    story: "We were asked to analyze hundreds of research papers with a tight deadline. This was going to be a recurring ask, so planning ahead, we built a tool that would programmatically analyze the papers and sort similar ones through custom logic. We were now able to allocate human resources more efficiently through the initial lift done by AI."
   },
   {
     type: ServiceType.FULL_STACK,
@@ -35,7 +37,8 @@ export const SERVICES: Service[] = [
     description: "Building resilient, scalable, and high-performance applications for the modern web.",
     icon: <Layout className="w-8 h-8 text-primary" />,
     features: ["High-Frequency Systems", "Cloud-Native Architecture", "Real-time Dashboards"],
-    image: "https://phitopolis.com/img/core-competencies/proactive-communication.jpg"
+    image: "https://phitopolis.com/img/core-competencies/proactive-communication.jpg",
+    story: "A financial institution needed a real-time dashboard to monitor millions of transactions per second. Legacy systems couldn't keep up. We architected a cloud-native solution with WebSocket streaming, event-driven microservices, and intelligent caching. The result: a responsive interface that updates in under 50ms, giving traders the visibility they need when every moment counts."
   }
 ];
 

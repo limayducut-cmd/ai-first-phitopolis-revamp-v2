@@ -1,10 +1,70 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SERVICES } from '../../constants';
 import { CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Star Wars crawl component
+function StarWarsCrawl({ story, isVisible }: { story: string; isVisible: boolean }) {
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="absolute inset-0 bg-primary/80 flex items-end justify-center overflow-hidden"
+          style={{ perspective: '400px' }}
+        >
+          {/* Gradient fade at top */}
+          <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-primary/90 to-transparent z-10 pointer-events-none" />
+
+          {/* Crawling text container */}
+          <div
+            className="absolute inset-0 flex justify-center"
+            style={{
+              perspective: '300px',
+              perspectiveOrigin: '50% 100%'
+            }}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: '-100%' }}
+              transition={{
+                duration: 15,
+                ease: 'linear',
+                repeat: Infinity
+              }}
+              className="w-full px-6 text-center"
+              style={{
+                transformStyle: 'preserve-3d',
+                transform: 'rotateX(25deg)',
+                transformOrigin: '50% 100%'
+              }}
+            >
+              <p className="text-amber-300 font-display text-lg md:text-xl leading-relaxed tracking-wide">
+                {story}
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Subtle star effect */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none"
+            style={{
+              backgroundImage: 'radial-gradient(1px 1px at 20px 30px, white, transparent), radial-gradient(1px 1px at 40px 70px, white, transparent), radial-gradient(1px 1px at 50px 160px, white, transparent), radial-gradient(1px 1px at 90px 40px, white, transparent), radial-gradient(1px 1px at 130px 80px, white, transparent), radial-gradient(1px 1px at 160px 120px, white, transparent)',
+              backgroundSize: '200px 200px'
+            }}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export default function ServicesPage() {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   return (
     <div className="bg-white min-h-screen text-primary overflow-x-hidden">
       <section className="py-24 container mx-auto px-6">
@@ -14,15 +74,15 @@ export default function ServicesPage() {
             Technical excellence at every layer.
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed font-light">
-            Phitopolis combines deep domain knowledge in finance and technology with modern engineering practices 
+            Phitopolis combines deep domain knowledge in finance and technology with modern engineering practices
             to deliver systems that are performant, scalable, and secure.
           </p>
         </div>
 
         <div className="space-y-32">
           {SERVICES.map((service, i) => (
-            <motion.div 
-              key={i} 
+            <motion.div
+              key={i}
               initial={{ opacity: 0, x: i % 2 === 0 ? -100 : 100 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -47,13 +107,22 @@ export default function ServicesPage() {
                   ))}
                 </div>
               </div>
-              <div className="flex-1 w-full bg-slate-100 rounded-3xl aspect-video relative overflow-hidden border border-slate-200 group shadow-lg">
-                <img 
-                  src={service.image} 
+              <div
+                className="flex-1 w-full bg-slate-100 rounded-3xl aspect-video relative overflow-hidden border border-slate-200 group shadow-lg cursor-pointer"
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              >
+                <img
+                  src={service.image}
                   alt={service.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                  className={`w-full h-full object-cover transition-all duration-500 ${
+                    hoveredIndex === i ? 'scale-110 grayscale' : 'scale-100'
+                  }`}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent"></div>
+                <div className={`absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent transition-opacity duration-300 ${
+                  hoveredIndex === i ? 'opacity-0' : 'opacity-100'
+                }`}></div>
+                <StarWarsCrawl story={service.story} isVisible={hoveredIndex === i} />
               </div>
             </motion.div>
           ))}
