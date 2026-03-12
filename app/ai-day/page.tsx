@@ -370,30 +370,95 @@ const CanvasBackground = () => {
     const ctx = canvas.getContext('2d'); if (!ctx) return;
     let raf: number;
     const mouse = { x: -9999, y: -9999 };
-    type P = { x: number; y: number; vx: number; vy: number; r: number };
+    type P = { x: number; y: number; hx: number; hy: number; vx: number; vy: number; r: number; blink: number; blinkSpeed: number; anchored: boolean };
     let pts: P[] = [];
     const W = () => canvas.offsetWidth, H = () => canvas.offsetHeight;
-    const init = () => { pts = Array.from({ length: 72 }, () => ({ x: Math.random() * W(), y: Math.random() * H(), vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, r: Math.random() * 1.4 + 0.6 })); };
+    const init = () => { pts = Array.from({ length: 260 }, () => { const big = Math.random() < 0.12; const hx = Math.random() * W(), hy = Math.random() * H(); return { x: hx, y: hy, hx, hy, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, r: big ? 2.0 + Math.random() * 2.5 : Math.random() * 1.4 + 0.6, blink: Math.random() * Math.PI * 2, blinkSpeed: 0.8 + Math.random() * 2.5, anchored: Math.random() < 0.4 }; }); };
+    // ── Text outline sampling — extracts edge points from "future" & "with" ──
+    type TextTarget = { el: Element; anchors: { x: number; y: number }[] };
+    let textTargets: TextTarget[] = [];
+    const sampleOutlines = () => {
+      textTargets = [];
+      document.querySelectorAll('[data-connect-dots]').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const cs = getComputedStyle(el);
+        const fs = parseFloat(cs.fontSize);
+        const off = document.createElement('canvas');
+        off.width = Math.ceil(rect.width); off.height = Math.ceil(rect.height);
+        const oc = off.getContext('2d')!;
+        oc.font = `${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
+        oc.letterSpacing = cs.letterSpacing;
+        oc.textBaseline = 'top';
+        oc.fillStyle = '#fff';
+        oc.fillText(el.textContent || '', 0, fs * 0.05);
+        const img = oc.getImageData(0, 0, off.width, off.height);
+        const d = img.data, ow = off.width, oh = off.height;
+        // Collect all edge pixels, then randomly pick ~4 per letter
+        const edgePixels: { x: number; y: number }[] = [];
+        const step = 3;
+        for (let y = 0; y < oh; y += step) for (let x = 0; x < ow; x += step) {
+          if (d[(y * ow + x) * 4 + 3] < 128) continue;
+          let edge = false;
+          for (const [ex, ey] of [[-step,0],[step,0],[0,-step],[0,step]]) {
+            const nx = x + ex, ny = y + ey;
+            if (nx < 0 || nx >= ow || ny < 0 || ny >= oh || d[(ny * ow + nx) * 4 + 3] < 128) { edge = true; break; }
+          }
+          if (edge) edgePixels.push({ x, y });
+        }
+        // Randomly pick ~4 anchors per letter
+        const letterCount = (el.textContent || '').replace(/\s/g, '').length;
+        const target = letterCount * 7;
+        const anchors: { x: number; y: number }[] = [];
+        for (let i = edgePixels.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [edgePixels[i], edgePixels[j]] = [edgePixels[j], edgePixels[i]]; }
+        anchors.push(...edgePixels.slice(0, target));
+        textTargets.push({ el, anchors });
+      });
+    };
+
     const resize = () => { const dpr = window.devicePixelRatio || 1; canvas.width = W() * dpr; canvas.height = H() * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); init(); };
     const tick = () => {
       const w = W(), h = H(); ctx.clearRect(0, 0, w, h);
       for (const p of pts) {
         const dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx * dx + dy * dy;
         if (d2 < 130 * 130 && d2 > 0) { const d = Math.sqrt(d2), f = (130 - d) / 130; p.vx += (dx / d) * f * 0.85; p.vy += (dy / d) * f * 0.85; }
-        p.vx *= 0.97; p.vy *= 0.97; p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0; if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+        if (p.anchored) { p.vx += (p.hx - p.x) * 0.003; p.vy += (p.hy - p.y) * 0.003; }
+        p.vx *= 0.95; p.vy *= 0.95; p.x += p.vx; p.y += p.vy;
+        if (!p.anchored) { if (p.x < 0) p.x = w; if (p.x > w) p.x = 0; if (p.y < 0) p.y = h; if (p.y > h) p.y = 0; }
       }
       for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
         const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y, d2 = dx * dx + dy * dy;
         if (d2 < 120 * 120) { ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.strokeStyle = `rgba(255,199,44,${(1 - Math.sqrt(d2) / 120) * 0.22})`; ctx.lineWidth = 0.6; ctx.stroke(); }
       }
-      for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,199,44,0.5)'; ctx.fill(); }
+
+      // ── Draw connections from particles to text outline anchor points ──
+      const cRect = canvas.getBoundingClientRect();
+      for (const tt of textTargets) {
+        const eRect = tt.el.getBoundingClientRect();
+        const ox = eRect.left - cRect.left, oy = eRect.top - cRect.top;
+        for (const a of tt.anchors) {
+          const ax = ox + a.x, ay = oy + a.y;
+          // Dot at anchor point
+          ctx.beginPath(); ctx.arc(ax, ay, 1.8, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,199,44,0.35)'; ctx.fill();
+          // Lines from nearby particles
+          for (const p of pts) {
+            const adx = p.x - ax, ady = p.y - ay, ad2 = adx * adx + ady * ady;
+            if (ad2 < 140 * 140 && ad2 > 4) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(ax, ay); ctx.strokeStyle = `rgba(255,199,44,${(1 - Math.sqrt(ad2) / 140) * 0.28})`; ctx.lineWidth = 0.6; ctx.stroke(); }
+          }
+        }
+      }
+
+      const now = performance.now() * 0.001;
+      for (const p of pts) { const alpha = 0.15 + 0.45 * (0.5 + 0.5 * Math.sin(now * p.blinkSpeed + p.blink)); ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(255,199,44,${alpha})`; ctx.fill(); }
       raf = requestAnimationFrame(tick);
     };
     const onMouse = (e: MouseEvent) => { const r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; };
     resize(); tick();
-    window.addEventListener('resize', resize); canvas.addEventListener('mousemove', onMouse);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); canvas.removeEventListener('mousemove', onMouse); };
+    // Sample text outlines after fonts are loaded, and on resize
+    document.fonts.ready.then(() => setTimeout(sampleOutlines, 200));
+    const onResize = () => { resize(); sampleOutlines(); };
+    window.addEventListener('resize', onResize); window.addEventListener('mousemove', onMouse);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); window.removeEventListener('mousemove', onMouse); };
   }, []);
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
 };
@@ -707,10 +772,44 @@ const Hero = () => {
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
   const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
 
+  // Cursor-driven parallax: track mouse position as -1 to 1 range
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springConfig = { stiffness: 50, damping: 20 };
+  const sx = useSpring(mouseX, springConfig);
+  const sy = useSpring(mouseY, springConfig);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      // Normalize to -1..1 from center of hero
+      mouseX.set((e.clientX - rect.left - rect.width / 2) / (rect.width / 2));
+      mouseY.set((e.clientY - rect.top - rect.height / 2) / (rect.height / 2));
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [mouseX, mouseY]);
+
+  // Each layer moves at a different intensity — deeper layers move more
+  // Line 1 "future" (outline, feels farthest back) — strongest shift
+  const l1x = useTransform(sx, v => v * -28);
+  const l1y = useTransform(sy, v => v * -14);
+  // Line 2 "proofing" (solid, middle depth)
+  const l2x = useTransform(sx, v => v * -16);
+  const l2y = useTransform(sy, v => v * -8);
+  // Line 3 "with ai" (closest to viewer) — least shift
+  const l3x = useTransform(sx, v => v * -6);
+  const l3y = useTransform(sy, v => v * -3);
+  // Sub-row (tagline) — subtle, closest layer
+  const l4x = useTransform(sx, v => v * -3);
+  const l4y = useTransform(sy, v => v * -1.5);
+
   return (
     <section id="sec-hero" ref={containerRef} style={{ minHeight: '100vh', background: C.charcoal, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 'clamp(60px,8vw,100px) 40px clamp(64px,9vw,100px)', position: 'relative', overflow: 'hidden' }}>
       <SectionTag name="hero" />
-      <motion.div style={{ position: 'absolute', inset: 0, y: bgY }}>
+      <motion.div style={{ position: 'absolute', inset: 0, y: bgY, zIndex: 2, pointerEvents: 'none' }}>
         <CanvasBackground />
       </motion.div>
 
@@ -733,85 +832,99 @@ const Hero = () => {
         phitopolis
       </motion.div>
 
-      {/* HERO TYPOGRAPHY — mixed stroke + fill */}
+      {/* HERO TYPOGRAPHY — mixed stroke + fill with cursor parallax */}
       <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Line 1: OUTLINE text — "future" */}
-        <div style={{ overflow: 'hidden' }}>
-          <motion.div
-            initial={{ y: '110%' }} animate={{ y: 0 }}
-            transition={{ delay: 0.15, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-            style={{
-              fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-              fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-              letterSpacing: '-0.045em', textTransform: 'lowercase',
-              WebkitTextStroke: `2px ${C.base}`,
-              WebkitTextFillColor: 'transparent',
-              display: 'block',
-            }}
-          >
-            future
-          </motion.div>
-        </div>
-
-        {/* Line 2: SOLID text — "proofing" */}
-        <div style={{ overflow: 'hidden', paddingBottom: '0.12em', marginBottom: '-0.12em' }}>
-          <motion.div
-            initial={{ y: '110%' }} animate={{ y: 0 }}
-            transition={{ delay: 0.3, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-            style={{
-              fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-              fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-              letterSpacing: '-0.045em', textTransform: 'lowercase',
-              color: C.base, display: 'block',
-            }}
-          >
-            proofing
-          </motion.div>
-        </div>
-
-        {/* Line 3: MIXED — "with" (outline) + "ai" (accent solid) */}
-        <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'baseline', gap: '0.18em' }}>
-          <motion.span
-            initial={{ y: '110%' }} animate={{ y: 0 }}
-            transition={{ delay: 0.45, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-            style={{
-              fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-              fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-              letterSpacing: '-0.045em', textTransform: 'lowercase',
-              WebkitTextStroke: `2px ${C.base}`,
-              WebkitTextFillColor: 'transparent',
-              display: 'inline-block',
-            }}
-          >
-            with
-          </motion.span>
-          <motion.span
-            initial={{ y: '110%' }} animate={{ y: 0 }}
-            transition={{ delay: 0.52, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-            style={{
-              fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-              fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-              letterSpacing: '-0.045em', textTransform: 'lowercase',
-              color: C.accent, display: 'inline-block',
-            }}
-          >
-            ai
-          </motion.span>
-        </div>
-
-        {/* Sub-row: tagline + scroll cue */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85, duration: 0.7 }}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 48 }}
-        >
-          <p style={{ color: 'rgba(255,255,255,0.42)', fontFamily: 'Inter, sans-serif', fontSize: 'clamp(0.85rem, 1.2vw, 1rem)', maxWidth: 380, lineHeight: 1.8, textTransform: 'lowercase' }}>
-            redefining what's possible at the intersection of human ingenuity and artificial intelligence.
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-            <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase' }}>scroll</span>
-            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}>
-              <div style={{ width: 1, height: 48, background: `linear-gradient(to bottom, ${C.accent}, transparent)` }} />
+        {/* Line 1: OUTLINE text — "future" (deepest layer, most parallax) */}
+        <motion.div style={{ x: l1x, y: l1y }}>
+          <div style={{ overflow: 'hidden' }}>
+            <motion.div
+              initial={{ y: '110%' }} animate={{ y: 0 }}
+              transition={{ delay: 0.15, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
+              style={{
+                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
+                letterSpacing: '-0.045em', textTransform: 'lowercase',
+                WebkitTextStroke: `2px ${C.base}`,
+                WebkitTextFillColor: 'transparent',
+                display: 'block',
+              }}
+              data-connect-dots
+            >
+              future
             </motion.div>
           </div>
+        </motion.div>
+
+        {/* Line 2: SOLID text — "proofing" (mid layer) */}
+        <motion.div style={{ x: l2x, y: l2y }}>
+          <motion.div
+            initial={{ overflow: 'hidden' }}
+            animate={{ overflow: 'visible' }}
+            transition={{ delay: 1.3 }}
+          >
+            <motion.div
+              initial={{ y: '110%' }} animate={{ y: 0 }}
+              transition={{ delay: 0.3, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
+              style={{
+                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
+                letterSpacing: '-0.045em', textTransform: 'lowercase',
+                color: C.base, display: 'block',
+              }}
+            >
+              proofing
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* Line 3: MIXED — "with" (outline) + "ai" (accent solid) (front layer) */}
+        <motion.div style={{ x: l3x, y: l3y }}>
+          <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'baseline', gap: '0.18em' }}>
+            <motion.span
+              initial={{ y: '110%' }} animate={{ y: 0 }}
+              transition={{ delay: 0.45, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
+              style={{
+                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
+                letterSpacing: '-0.045em', textTransform: 'lowercase',
+                WebkitTextStroke: `2px ${C.base}`,
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+              }}
+              data-connect-dots
+            >
+              with
+            </motion.span>
+            <motion.span
+              initial={{ y: '110%' }} animate={{ y: 0 }}
+              transition={{ delay: 0.52, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
+              style={{
+                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
+                letterSpacing: '-0.045em', textTransform: 'lowercase',
+                color: C.accent, display: 'inline-block',
+              }}
+            >
+              ai
+            </motion.span>
+          </div>
+        </motion.div>
+
+        {/* Sub-row: tagline + scroll cue (closest layer, minimal shift) */}
+        <motion.div style={{ x: l4x, y: l4y }}>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85, duration: 0.7 }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 48 }}
+          >
+            <p style={{ color: 'rgba(255,255,255,0.42)', fontFamily: 'Inter, sans-serif', fontSize: 'clamp(0.85rem, 1.2vw, 1rem)', maxWidth: 380, lineHeight: 1.8, textTransform: 'lowercase' }}>
+              redefining what's possible at the intersection of human ingenuity and artificial intelligence.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase' }}>scroll</span>
+              <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}>
+                <div style={{ width: 1, height: 48, background: `linear-gradient(to bottom, ${C.accent}, transparent)` }} />
+              </motion.div>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </section>
