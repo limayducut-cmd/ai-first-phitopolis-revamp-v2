@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   motion, AnimatePresence,
   useScroll, useTransform, useInView, useVelocity,
@@ -244,6 +244,203 @@ const CustomCursor = () => {
         )}
       </AnimatePresence>
     </>
+  );
+};
+
+// ── IRIS SECTION TRANSITION ───────────────────────────────────────────────────
+const ALL_SECTION_IDS = [
+  'sec-hero', 'sec-statement', 'sec-vision', 'sec-expertise',
+  'sec-techstack', 'sec-stats', 'sec-process', 'sec-people',
+  'sec-showcase', 'sec-closing',
+];
+
+const IRIS_SECTIONS: Record<string, { n: string; title: string }> = {
+  'sec-statement': { n: '00', title: 'Manifesto'    },
+  'sec-vision':    { n: '01', title: 'Vision'       },
+  'sec-expertise': { n: '02', title: 'Expertise'    },
+  'sec-techstack': { n: '03', title: 'Tech Stack'   },
+  'sec-stats':     { n: '04', title: 'Impact'       },
+  'sec-process':   { n: '05', title: 'Process'      },
+  'sec-people':    { n: '06', title: 'Our People'   },
+  'sec-showcase':  { n: '07', title: 'Projects'     },
+  'sec-closing':   { n: '08', title: "Let's Build"  },
+};
+
+const SectionTransition = () => {
+  const [iris, setIris] = useState<{ key: number; n: string; title: string } | null>(null);
+  const locked    = useRef(false);
+  const activeId  = useRef('sec-hero');
+  const touchStartY = useRef(0);
+
+  // Fire iris + instant-scroll while covered
+  const goTo = useCallback((targetId: string) => {
+    if (locked.current) return;
+    const cfg = IRIS_SECTIONS[targetId];
+    locked.current = true;
+
+    // 1. Trigger iris immediately — section not yet visible
+    if (cfg) setIris(prev => ({ key: (prev?.key ?? 0) + 1, ...cfg }));
+
+    // 2. Instant-scroll while iris is fully open (~380ms in)
+    setTimeout(() => {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+      activeId.current = targetId;
+    }, 380);
+
+    // 3. Unlock after full iris animation completes
+    setTimeout(() => { locked.current = false; }, 1550);
+  }, []);
+
+  useEffect(() => {
+    // Track active section (for knowing where we are)
+    // Track active section — threshold 0.5 works for all 100vh sections
+    const tracker = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[id^="sec-"]:not(#sec-showcase)').forEach(el => tracker.observe(el));
+
+    // Tall sections need a low threshold since they can't reach 50% intersection
+    const tallTracker = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
+    }, { threshold: 0.05 });
+    ['sec-people', 'sec-showcase'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) tallTracker.observe(el);
+    });
+
+    const navigate = (dir: 1 | -1) => {
+      const idx = ALL_SECTION_IDS.indexOf(activeId.current);
+      const next = ALL_SECTION_IDS[idx + dir];
+      if (next) goTo(next);
+    };
+
+    // Scroll progress (0–1) within any section taller than the viewport
+    const sectionProgress = (id: string) => {
+      const el = document.getElementById(id);
+      if (!el) return 0;
+      const max = el.offsetHeight - window.innerHeight;
+      return max > 0 ? Math.max(0, Math.min(1, (window.scrollY - el.offsetTop) / max)) : 1;
+    };
+
+    // Sections taller than 100vh that need scroll-through before transitioning
+    const TALL_SECTIONS = new Set(['sec-people', 'sec-showcase']);
+
+    // Wheel — pass through tall sections mid-scroll; intercept at boundaries
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < 15) return;
+      if (TALL_SECTIONS.has(activeId.current)) {
+        const p = sectionProgress(activeId.current);
+        if (e.deltaY > 0 && p >= 0.98) { e.preventDefault(); navigate(1);  return; }
+        if (e.deltaY < 0 && p <= 0.02) { e.preventDefault(); navigate(-1); return; }
+        return; // mid-section: pass through
+      }
+      e.preventDefault();
+      navigate(e.deltaY > 0 ? 1 : -1);
+    };
+
+    // Touch swipe
+    const onTouchStart = (e: TouchEvent) => { touchStartY.current = e.touches[0].clientY; };
+    const onTouchEnd   = (e: TouchEvent) => {
+      const diff = touchStartY.current - e.changedTouches[0].clientY;
+      if (Math.abs(diff) < 60) return;
+      if (TALL_SECTIONS.has(activeId.current)) {
+        const p = sectionProgress(activeId.current);
+        if (diff > 0 && p >= 0.98) { navigate(1);  return; }
+        if (diff < 0 && p <= 0.02) { navigate(-1); return; }
+        return;
+      }
+      navigate(diff > 0 ? 1 : -1);
+    };
+
+    // Keyboard arrows / Page Up / Down
+    const onKey = (e: KeyboardEvent) => {
+      if (TALL_SECTIONS.has(activeId.current)) {
+        const p = sectionProgress(activeId.current);
+        if (['ArrowDown', 'PageDown'].includes(e.key) && p >= 0.98) { e.preventDefault(); navigate(1);  return; }
+        if (['ArrowUp',  'PageUp'  ].includes(e.key) && p <= 0.02) { e.preventDefault(); navigate(-1); return; }
+        return;
+      }
+      if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); navigate(1);  }
+      if (['ArrowUp',  'PageUp'  ].includes(e.key)) { e.preventDefault(); navigate(-1); }
+    };
+
+    window.addEventListener('wheel',      onWheel,      { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true  });
+    window.addEventListener('touchend',   onTouchEnd,   { passive: true  });
+    window.addEventListener('keydown',    onKey);
+
+    return () => {
+      window.removeEventListener('wheel',      onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend',   onTouchEnd);
+      window.removeEventListener('keydown',    onKey);
+      tracker.disconnect();
+      tallTracker.disconnect();
+    };
+  }, [goTo]);
+
+  if (!iris) return null;
+
+  const OPEN  = 'circle(150% at 50% 50%)';
+  const CLOSE = 'circle(0%   at 50% 50%)';
+  const T     = [0, 0.38, 1] as [number, number, number];
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 250 }}>
+
+      {/* Layer 1: charcoal — leads, creates halo border */}
+      <motion.div
+        key={`ring-${iris.key}`}
+        initial={{ clipPath: CLOSE }}
+        animate={{ clipPath: [CLOSE, OPEN, CLOSE] }}
+        transition={{ duration: 1.35, times: T, ease: ['circIn', 'circOut'] }}
+        style={{ position: 'absolute', inset: 0, background: C.charcoal }}
+      />
+
+      {/* Layer 2: accent — 0.07s delayed, fills inside charcoal ring */}
+      <motion.div
+        key={`fill-${iris.key}`}
+        initial={{ clipPath: CLOSE }}
+        animate={{ clipPath: [CLOSE, OPEN, CLOSE] }}
+        transition={{ duration: 1.2, times: T, ease: ['circIn', 'circOut'], delay: 0.07 }}
+        style={{ position: 'absolute', inset: 0, background: C.accent }}
+      />
+
+      {/* Label — visible at peak */}
+      <motion.div
+        key={`label-${iris.key}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 1, 1, 0] }}
+        transition={{ duration: 1.2, times: [0, 0.28, 0.52, 0.72] }}
+        style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <span style={{
+          fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+          fontSize: 'clamp(7rem, 18vw, 16rem)',
+          color: C.charcoal, opacity: 0.07,
+          lineHeight: 1, letterSpacing: '-0.06em',
+          position: 'absolute', userSelect: 'none',
+        }}>
+          {iris.n}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative', zIndex: 1 }}>
+          <div style={{ width: 28, height: 1.5, background: C.charcoal, opacity: 0.35 }} />
+          <span style={{
+            fontFamily: 'Outfit, sans-serif', fontWeight: 700,
+            fontSize: 11, letterSpacing: '0.32em', textTransform: 'uppercase',
+            color: C.charcoal,
+          }}>
+            {iris.title}
+          </span>
+          <div style={{ width: 28, height: 1.5, background: C.charcoal, opacity: 0.35 }} />
+        </div>
+      </motion.div>
+
+    </div>
   );
 };
 
@@ -1491,7 +1688,7 @@ const Closing = () => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
   return (
-    <section ref={ref} style={{ background: C.charcoal, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+    <section id="sec-closing" ref={ref} style={{ background: C.charcoal, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
       <SectionTag name="closing" />
       {/* Background accent */}
       <motion.div animate={{ scale: [1, 1.12, 1], opacity: [0.25, 0.55, 0.25] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
@@ -1536,9 +1733,20 @@ export default function AIDayPage() {
     document.title = 'Phitopolis | AI Day 2026';
     document.body.style.cursor = 'none';
     document.body.style.backgroundColor = C.charcoal;
+
+    // Hide scrollbar — navigation is handled via wheel interceptor
+    const style = document.createElement('style');
+    style.id = 'ai-day-scroll';
+    style.textContent = `
+      html::-webkit-scrollbar { display: none; }
+      html { scrollbar-width: none; -ms-overflow-style: none; }
+    `;
+    document.head.appendChild(style);
+
     return () => {
       document.body.style.cursor = '';
       document.body.style.backgroundColor = '';
+      document.getElementById('ai-day-scroll')?.remove();
     };
   }, []);
 
@@ -1549,6 +1757,7 @@ export default function AIDayPage() {
       <div>
         <ScrollProgressBar />
         <CustomCursor />
+        <SectionTransition />
         <FloatNav />
         <Hero />
         <Statement />
