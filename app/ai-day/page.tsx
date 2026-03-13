@@ -963,6 +963,286 @@ const Stats = () => {
   );
 };
 
+// ── PARTICLE LOGO — particles assemble into Phitopolis P logo ────────────────
+const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
+  scrollProgress: import('framer-motion').MotionValue<number>;
+  mouseX: import('framer-motion').MotionValue<number>;
+  mouseY: import('framer-motion').MotionValue<number>;
+  containerRef: React.RefObject<HTMLElement | null>;
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let raf: number;
+    let mounted = true;
+    const mouse = { x: -9999, y: -9999 };
+
+    type Particle = {
+      x: number; y: number;       // current position
+      tx: number; ty: number;     // target position (on logo)
+      sx: number; sy: number;     // start position (random)
+      vx: number; vy: number;     // velocity
+      r: number;                  // radius
+      color: string;              // particle color
+      blink: number;              // blink phase offset
+      blinkSpeed: number;
+      delay: number;              // assembly delay (staggered fly-in)
+    };
+
+    let particles: Particle[] = [];
+    let assembled = false;
+    let assembleStart = 0;
+    let logoCx = 0, logoCy = 0; // logo center, set after image loads
+    const ASSEMBLE_DURATION = 2200; // ms for particles to reach targets
+    const LOGO_SIZE = Math.min(280, Math.max(140, window.innerWidth * 0.18));
+
+    // Load SVG and sample edge points
+    const img = new Image();
+    img.src = '/phitopolis_logo_white_vector.svg';
+    img.onload = () => {
+      if (!mounted) return;
+      // Render SVG to offscreen canvas at target size
+      const aspect = img.naturalHeight / img.naturalWidth;
+      const w = Math.round(LOGO_SIZE);
+      const h = Math.round(LOGO_SIZE * aspect);
+      const off = document.createElement('canvas');
+      off.width = w;
+      off.height = h;
+      const oc = off.getContext('2d')!;
+      oc.drawImage(img, 0, 0, w, h);
+      const imgData = oc.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      // Sample edge pixels
+      const step = 3;
+      const edgePixels: { x: number; y: number; isGold: boolean }[] = [];
+      for (let y = 0; y < h; y += step) {
+        for (let x = 0; x < w; x += step) {
+          const idx = (y * w + x) * 4;
+          if (d[idx + 3] < 100) continue; // transparent
+          // Check if edge pixel
+          let edge = false;
+          for (const [ex, ey] of [[-step, 0], [step, 0], [0, -step], [0, step]]) {
+            const nx = x + ex, ny = y + ey;
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h || d[(ny * w + nx) * 4 + 3] < 100) {
+              edge = true;
+              break;
+            }
+          }
+          if (!edge) continue;
+          // Determine color: golden parts have high R, high G, low B
+          const r = d[idx], g = d[idx + 1], b = d[idx + 2];
+          const isGold = r > 180 && g > 140 && b < 100;
+          edgePixels.push({ x, y, isGold });
+        }
+      }
+
+      // Also sample some interior points for density
+      const interiorPixels: { x: number; y: number; isGold: boolean }[] = [];
+      const interiorStep = 5;
+      for (let y = 0; y < h; y += interiorStep) {
+        for (let x = 0; x < w; x += interiorStep) {
+          const idx = (y * w + x) * 4;
+          if (d[idx + 3] < 100) continue;
+          const r = d[idx], g = d[idx + 1], b = d[idx + 2];
+          const isGold = r > 180 && g > 140 && b < 100;
+          interiorPixels.push({ x, y, isGold });
+        }
+      }
+
+      // Shuffle and pick particles — more edges, fewer interior
+      const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+      shuffle(edgePixels);
+      shuffle(interiorPixels);
+      const maxParticles = 420;
+      const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.7));
+      const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
+      const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
+
+      // Position logo on the right side of the canvas
+      const cw = canvas.offsetWidth;
+      const ch = canvas.offsetHeight;
+      const ox = cw - w - cw * 0.08; // right-aligned with some padding
+      const oy = (ch - h) / 2;
+
+      particles = selected.map((p, i) => {
+        // Random start position — spread around the canvas
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 300 + Math.random() * 500;
+        return {
+          x: ox + p.x + Math.cos(angle) * dist,
+          y: oy + p.y + Math.sin(angle) * dist,
+          tx: ox + p.x,
+          ty: oy + p.y,
+          sx: ox + p.x + Math.cos(angle) * dist,
+          sy: oy + p.y + Math.sin(angle) * dist,
+          vx: 0,
+          vy: 0,
+          r: p.isGold ? (0.8 + Math.random() * 1.2) : (0.6 + Math.random() * 1.0),
+          color: p.isGold ? 'rgba(255,199,44,' : 'rgba(240,242,250,',
+          blink: Math.random() * Math.PI * 2,
+          blinkSpeed: 0.6 + Math.random() * 2.0,
+          delay: Math.random() * 800, // staggered fly-in
+        };
+      });
+
+      logoCx = ox + w / 2;
+      logoCy = oy + h / 2;
+      assembleStart = performance.now();
+      assembled = true;
+    };
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const tick = () => {
+      if (!mounted) return;
+      const cw = canvas.offsetWidth;
+      const ch = canvas.offsetHeight;
+      ctx.clearRect(0, 0, cw, ch);
+
+      if (!assembled || particles.length === 0) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      const now = performance.now();
+      const elapsed = now - assembleStart;
+      const scroll = scrollProgress.get(); // 0 at top, 1 when hero scrolled past
+
+      // Update mouse position relative to canvas
+      const container = containerRef.current;
+      if (container) {
+        const cRect = canvas.getBoundingClientRect();
+        // mouseX/mouseY are -1 to 1 from hero center
+        const hRect = container.getBoundingClientRect();
+        const mx = (mouseX.get() * hRect.width / 2) + hRect.width / 2 + hRect.left - cRect.left;
+        const my = (mouseY.get() * hRect.height / 2) + hRect.height / 2 + hRect.top - cRect.top;
+        mouse.x = mx;
+        mouse.y = my;
+      }
+
+      // Scroll scatter — stronger as we scroll down
+      const scatterStrength = Math.min(scroll * 3, 1); // reaches full scatter at 33% scroll
+
+      for (const p of particles) {
+        const particleElapsed = Math.max(0, elapsed - p.delay);
+        const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
+        // Smooth ease-out cubic
+        const ease = 1 - Math.pow(1 - assembleT, 3);
+
+        // Target is the logo position
+        let goalX = p.tx;
+        let goalY = p.ty;
+
+        // On scroll, scatter outward from logo center
+        if (scatterStrength > 0) {
+          const dx = p.tx - logoCx;
+          const dy = p.ty - logoCy;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          goalX = p.tx + (dx / dist) * scatterStrength * 500;
+          goalY = p.ty + (dy / dist) * scatterStrength * 500;
+        }
+
+        // During assembly, interpolate from start to goal
+        if (assembleT < 1) {
+          p.x = p.sx + (goalX - p.sx) * ease;
+          p.y = p.sy + (goalY - p.sy) * ease;
+        } else {
+          // After assembly, use spring physics toward goal
+          const springForce = 0.035;
+          p.vx += (goalX - p.x) * springForce;
+          p.vy += (goalY - p.y) * springForce;
+
+          // Cursor repulsion
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const d2 = dx * dx + dy * dy;
+          const repelRadius = 80;
+          if (d2 < repelRadius * repelRadius && d2 > 0) {
+            const d = Math.sqrt(d2);
+            const f = (repelRadius - d) / repelRadius;
+            p.vx += (dx / d) * f * 3.5;
+            p.vy += (dy / d) * f * 3.5;
+          }
+
+          p.vx *= 0.88;
+          p.vy *= 0.88;
+          p.x += p.vx;
+          p.y += p.vy;
+        }
+      }
+
+      // Draw connections between close particles
+      const connectDist = 28;
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < connectDist * connectDist) {
+            const alpha = (1 - Math.sqrt(d2) / connectDist) * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(255,199,44,${alpha})`;
+            ctx.lineWidth = 0.4;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw particles with blink
+      const t = now * 0.001;
+      for (const p of particles) {
+        const particleElapsed = Math.max(0, elapsed - p.delay);
+        const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
+        const fadeIn = Math.min(1, assembleT * 2); // fade in during first half of assembly
+        const blinkAlpha = 0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * p.blinkSpeed + p.blink));
+        const alpha = fadeIn * blinkAlpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + alpha.toFixed(3) + ')';
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    resize();
+    tick();
+    window.addEventListener('resize', resize);
+    return () => {
+      mounted = false;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+    };
+  }, [scrollProgress, mouseX, mouseY, containerRef]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 3,
+      }}
+    />
+  );
+};
+
 // ── HERO — massive mixed outline + fill typography ────────────────────────────
 const Hero = () => {
   const containerRef = useRef<HTMLElement>(null);
@@ -1009,6 +1289,9 @@ const Hero = () => {
       <motion.div style={{ position: 'absolute', inset: 0, y: bgY, zIndex: 2, pointerEvents: 'none' }}>
         <CanvasBackground />
       </motion.div>
+
+      {/* Particle Logo */}
+      <ParticleLogo scrollProgress={scrollYProgress} mouseX={mouseX} mouseY={mouseY} containerRef={containerRef} />
 
       {/* Glow */}
       <motion.div animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.45, 0.2] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
