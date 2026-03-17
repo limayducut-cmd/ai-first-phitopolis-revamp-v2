@@ -999,7 +999,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
     let assembleStart = 0;
     let logoCx = 0, logoCy = 0; // logo center, set after image loads
     const ASSEMBLE_DURATION = 2200; // ms for particles to reach targets
-    const LOGO_SIZE = Math.min(280, Math.max(140, window.innerWidth * 0.18));
+    const LOGO_SIZE = Math.min(480, Math.max(260, window.innerWidth * 0.32));
 
     // Load SVG and sample edge points
     const img = new Image();
@@ -1064,10 +1064,10 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
       const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
       const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
 
-      // Position logo on the right side of the canvas
+      // Position logo in the center of the canvas
       const cw = canvas.offsetWidth;
       const ch = canvas.offsetHeight;
-      const ox = cw - w - cw * 0.08; // right-aligned with some padding
+      const ox = (cw - w) / 2;
       const oy = (ch - h) / 2;
 
       particles = selected.map((p, i) => {
@@ -1243,21 +1243,16 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
   );
 };
 
-// ── HERO — massive mixed outline + fill typography ────────────────────────────
+// ── HERO ──────────────────────────────────────────────────────────────────────
 const Hero = () => {
   const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const proofingRef = useRef<HTMLDivElement>(null);
-  const proofingCanvasRef = useRef<HTMLCanvasElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
   const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
 
   // Cursor-driven parallax: track mouse position as -1 to 1 range
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const springConfig = { stiffness: 50, damping: 20 };
-  const sx = useSpring(mouseX, springConfig);
-  const sy = useSpring(mouseY, springConfig);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -1272,88 +1267,11 @@ const Hero = () => {
     return () => window.removeEventListener('mousemove', onMove);
   }, [mouseX, mouseY]);
 
-  // Video-in-text: draw video masked to text shape using canvas compositing
-  useEffect(() => {
-    const video = videoRef.current;
-    const canvas = proofingCanvasRef.current;
-    const textEl = proofingRef.current;
-    if (!video || !canvas || !textEl) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    let raf: number;
-    const draw = () => {
-      if (video.readyState >= 2) {
-        const rect = textEl.getBoundingClientRect();
-        const heroRect = containerRef.current?.getBoundingClientRect();
-        if (heroRect && rect.width > 0) {
-          const dpr = window.devicePixelRatio || 1;
-          const w = Math.round(rect.width);
-          const h = Math.round(rect.height);
-          if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-            canvas.width = w * dpr;
-            canvas.height = h * dpr;
-          }
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          ctx.clearRect(0, 0, w, h);
-
-          // Step 1: Draw video mapped to match the full-hero bg video position
-          const vw = video.videoWidth, vh = video.videoHeight;
-          const heroW = heroRect.width, heroH = heroRect.height;
-          const scale = Math.max(heroW / vw, heroH / vh);
-          const sw = vw * scale, sh = vh * scale;
-          const vox = heroRect.left + (heroW - sw) / 2;
-          const voy = heroRect.top + (heroH - sh) / 2;
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.drawImage(video, 0, 0, vw, vh, vox - rect.left, voy - rect.top, sw, sh);
-
-          // Step 2: Mask — keep only video pixels where text is drawn
-          ctx.globalCompositeOperation = 'destination-in';
-          const cs = getComputedStyle(textEl);
-          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-          ctx.letterSpacing = cs.letterSpacing;
-          ctx.textBaseline = 'top';
-          ctx.fillStyle = '#fff';
-          ctx.fillText('proofing', 0, parseFloat(cs.fontSize) * 0.03);
-
-          // Step 3: Apply blue tint to match hero background
-          ctx.globalCompositeOperation = 'source-atop';
-          ctx.fillStyle = 'rgba(10, 42, 102, 0.45)';
-          ctx.fillRect(0, 0, w, h);
-          // Step 4: White stroke outline for readability
-          ctx.globalCompositeOperation = 'destination-over';
-          ctx.strokeStyle = C.base;
-          ctx.lineWidth = 2;
-          ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-          ctx.letterSpacing = cs.letterSpacing;
-          ctx.textBaseline = 'top';
-          ctx.strokeText('proofing', 0, parseFloat(cs.fontSize) * 0.03);
-          ctx.globalCompositeOperation = 'source-over';
-        }
-      }
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  // Each layer moves at a different intensity — deeper layers move more
-  // Line 1 "future" (outline, feels farthest back) — strongest shift
-  const l1x = useTransform(sx, v => v * -28);
-  const l1y = useTransform(sy, v => v * -14);
-  // Line 2 "proofing" (solid, middle depth)
-  const l2x = useTransform(sx, v => v * -16);
-  const l2y = useTransform(sy, v => v * -8);
-  // Line 3 "with ai" (closest to viewer) — least shift
-  const l3x = useTransform(sx, v => v * -6);
-  const l3y = useTransform(sy, v => v * -3);
-  // Sub-row (tagline) — subtle, closest layer
-  const l4x = useTransform(sx, v => v * -3);
-  const l4y = useTransform(sy, v => v * -1.5);
-
   return (
-    <section id="sec-hero" ref={containerRef} style={{ minHeight: '100vh', background: C.charcoal, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 'clamp(60px,8vw,100px) 40px clamp(64px,9vw,100px)', position: 'relative', overflow: 'hidden' }}>
+    <section id="sec-hero" ref={containerRef} style={{ minHeight: '100vh', background: C.charcoal, position: 'relative', overflow: 'hidden' }}>
       <SectionTag name="hero" />
-      {/* Background video — full width, visually faded on left via gradient */}
+
+      {/* Background video */}
       <motion.div style={{ position: 'absolute', inset: 0, y: bgY, zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
         <video
           ref={videoRef}
@@ -1362,139 +1280,76 @@ const Hero = () => {
         >
           <source src="/seamless-tech-loop.mp4" type="video/mp4" />
         </video>
-        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, ${C.charcoal} 0%, ${C.charcoal} 35%, transparent 60%), linear-gradient(to bottom, ${C.charcoal}cc 0%, transparent 30%, transparent 70%, ${C.charcoal} 100%)` }} />
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${C.charcoal}cc 0%, transparent 30%, transparent 70%, ${C.charcoal} 100%)` }} />
       </motion.div>
+
+      {/* Canvas particle network */}
       <motion.div style={{ position: 'absolute', inset: 0, y: bgY, zIndex: 2, pointerEvents: 'none' }}>
         <CanvasBackground />
       </motion.div>
 
-      {/* Particle Logo */}
+      {/* Particle Logo — centered */}
       <ParticleLogo scrollProgress={scrollYProgress} mouseX={mouseX} mouseY={mouseY} containerRef={containerRef} />
 
       {/* Glow */}
       <motion.div animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.45, 0.2] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ position: 'absolute', width: 700, height: 700, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}10 0%, transparent 70%)`, top: '-15%', right: '-10%', filter: 'blur(100px)', pointerEvents: 'none' }}
+        style={{ position: 'absolute', width: 900, height: 900, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}08 0%, transparent 70%)`, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', filter: 'blur(120px)', pointerEvents: 'none', zIndex: 2 }}
       />
 
       {/* Top-left label */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }}
-        style={{ position: 'absolute', top: 44, left: 44, color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase' }}
+        style={{ position: 'absolute', top: 44, left: 44, color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase', zIndex: 10 }}
       >
         ai day — 2026
       </motion.div>
 
       {/* Top-right label */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}
-        style={{ position: 'absolute', top: 44, right: 44, color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase' }}
+        style={{ position: 'absolute', top: 44, right: 44, color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase', zIndex: 10 }}
       >
         phitopolis
       </motion.div>
 
-      {/* HERO TYPOGRAPHY — mixed stroke + fill with cursor parallax */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Line 1: OUTLINE text — "future" (deepest layer, most parallax) */}
-        <motion.div style={{ x: l1x, y: l1y }}>
-          <div style={{ overflow: 'hidden' }}>
-            <motion.div
-              initial={{ y: '110%' }} animate={{ y: 0 }}
-              transition={{ delay: 0.15, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-              style={{
-                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-                letterSpacing: '-0.045em', textTransform: 'lowercase',
-                WebkitTextStroke: `2px ${C.base}`,
-                WebkitTextFillColor: 'transparent',
-                display: 'block',
-              }}
-              data-connect-dots
-            >
-              future
-            </motion.div>
-          </div>
-        </motion.div>
+      {/* Narrator AI placeholder — lower left */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.8 }}
+        style={{
+          position: 'absolute',
+          bottom: 'clamp(80px, 11vh, 120px)',
+          left: 56,
+          width: 'clamp(180px, 20vw, 260px)',
+          height: 'clamp(90px, 12vh, 140px)',
+          border: '1px dashed rgba(255,199,44,0.2)',
+          borderRadius: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          zIndex: 10,
+        }}
+      >
+        <div style={{ width: 28, height: 28, borderRadius: '50%', border: `1px solid rgba(255,199,44,0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,199,44,0.2)' }} />
+        </div>
+        <span style={{ color: 'rgba(255,199,44,0.3)', fontFamily: 'Inter, sans-serif', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase' }}>narrator ai</span>
+        <span style={{ color: 'rgba(255,255,255,0.12)', fontFamily: 'Inter, sans-serif', fontSize: 8, letterSpacing: '0.1em' }}>coming soon</span>
+      </motion.div>
 
-        {/* Line 2: SOLID text — "proofing" with video texture (mid layer) */}
-        <motion.div style={{ x: l2x, y: l2y, marginTop: '-0.12em', marginBottom: '-0.22em' }}>
-          <motion.div
-            initial={{ overflow: 'hidden' }}
-            animate={{ overflow: 'visible' }}
-            transition={{ delay: 1.3 }}
-          >
-            <motion.div
-              ref={proofingRef}
-              initial={{ y: '110%' }} animate={{ y: 0 }}
-              transition={{ delay: 0.3, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-              style={{
-                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-                letterSpacing: '-0.045em', textTransform: 'lowercase',
-                color: 'transparent', display: 'block',
-                position: 'relative', paddingBottom: '0.22em',
-              }}
-            >
-              proofing
-              {/* Canvas draws video masked to text shape — looks like bg video extends through the word */}
-              <canvas
-                ref={proofingCanvasRef}
-                style={{
-                  position: 'absolute', inset: 0, width: '100%', height: '100%',
-                  pointerEvents: 'none',
-                }}
-              />
-            </motion.div>
-          </motion.div>
+      {/* Scroll cue — bottom right */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.85, duration: 0.7 }}
+        style={{ position: 'absolute', bottom: 'clamp(32px, 5vh, 48px)', right: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, zIndex: 10 }}
+      >
+        <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase' }}>scroll</span>
+        <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}>
+          <div style={{ width: 1, height: 48, background: `linear-gradient(to bottom, ${C.accent}, transparent)` }} />
         </motion.div>
-
-        {/* Line 3: MIXED — "with" (outline) + "ai" (accent solid) (front layer) */}
-        <motion.div style={{ x: l3x, y: l3y }}>
-          <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'baseline', gap: '0.18em' }}>
-            <motion.span
-              initial={{ y: '110%' }} animate={{ y: 0 }}
-              transition={{ delay: 0.45, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-              style={{
-                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-                letterSpacing: '-0.045em', textTransform: 'lowercase',
-                WebkitTextStroke: `2px ${C.base}`,
-                WebkitTextFillColor: 'transparent',
-                display: 'inline-block',
-              }}
-              data-connect-dots
-            >
-              with
-            </motion.span>
-            <motion.span
-              initial={{ y: '110%' }} animate={{ y: 0 }}
-              transition={{ delay: 0.52, duration: 0.9, ease: [0.21, 0.47, 0.32, 0.98] }}
-              style={{
-                fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-                fontSize: 'clamp(5rem, 18vw, 16rem)', lineHeight: 0.88,
-                letterSpacing: '-0.045em', textTransform: 'lowercase',
-                color: C.accent, display: 'inline-block',
-              }}
-            >
-              ai
-            </motion.span>
-          </div>
-        </motion.div>
-
-        {/* Sub-row: tagline + scroll cue (closest layer, minimal shift) */}
-        <motion.div style={{ x: l4x, y: l4y }}>
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85, duration: 0.7 }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 48 }}
-          >
-            <p style={{ color: 'rgba(255,255,255,0.42)', fontFamily: 'Inter, sans-serif', fontSize: 'clamp(0.85rem, 1.2vw, 1rem)', maxWidth: 380, lineHeight: 1.8, textTransform: 'lowercase' }}>
-              redefining what's possible at the intersection of human ingenuity and artificial intelligence.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase' }}>scroll</span>
-              <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}>
-                <div style={{ width: 1, height: 48, background: `linear-gradient(to bottom, ${C.accent}, transparent)` }} />
-              </motion.div>
-            </div>
-          </motion.div>
-        </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 };
