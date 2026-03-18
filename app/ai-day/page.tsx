@@ -249,16 +249,15 @@ const CustomCursor = () => {
 
 // ── IRIS SECTION TRANSITION ───────────────────────────────────────────────────
 const ALL_SECTION_IDS = [
-  'sec-hero', 'sec-statement', 'sec-vision', 'sec-expertise',
-  'sec-techstack', 'sec-stats', 'sec-process', 'sec-people',
+  'sec-hero', 'sec-statement', 'sec-vision',
+  'sec-services', 'sec-techstack', 'sec-stats', 'sec-process', 'sec-people',
   'sec-showcase', 'sec-closing',
 ];
 
 const IRIS_SECTIONS: Record<string, { n: string; title: string }> = {
   'sec-statement': { n: '00', title: 'Manifesto'    },
   'sec-vision':    { n: '01', title: 'Vision'       },
-  'sec-expertise': { n: '02', title: 'Expertise'    },
-  'sec-techstack': { n: '03', title: 'Tech Stack'   },
+  'sec-techstack': { n: '04', title: 'Tech Stack'   },
   'sec-stats':     { n: '04', title: 'Impact'       },
   'sec-process':   { n: '05', title: 'Process'      },
   'sec-people':    { n: '06', title: 'Our People'   },
@@ -297,13 +296,13 @@ const SectionTransition = () => {
     const tracker = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
     }, { threshold: 0.5 });
-    document.querySelectorAll('[id^="sec-"]:not(#sec-showcase)').forEach(el => tracker.observe(el));
+    document.querySelectorAll('[id^="sec-"]:not(#sec-showcase):not(#sec-services)').forEach(el => tracker.observe(el));
 
     // Tall sections need a low threshold since they can't reach 50% intersection
     const tallTracker = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
     }, { threshold: 0.05 });
-    ['sec-people', 'sec-showcase'].forEach(id => {
+    ['sec-services', 'sec-people', 'sec-showcase'].forEach(id => {
       const el = document.getElementById(id);
       if (el) tallTracker.observe(el);
     });
@@ -323,17 +322,30 @@ const SectionTransition = () => {
     };
 
     // Sections taller than 100vh that need scroll-through before transitioning
-    const TALL_SECTIONS = new Set(['sec-people', 'sec-showcase']);
+    const TALL_SECTIONS = new Set(['sec-services', 'sec-people', 'sec-showcase']);
+
+    // Sections where natural browser scroll is used to cross the boundary (both directions)
+    const FREE_SCROLL_PAIRS = new Set(['sec-hero', 'sec-vision', 'sec-services']);
+    // Sections where only upward scroll is natural (preserves iris going down)
+    const FREE_SCROLL_UP_SECTIONS = new Set(['sec-statement', 'sec-techstack']);
 
     // Wheel — pass through tall sections mid-scroll; intercept at boundaries
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) < 15) return;
       if (TALL_SECTIONS.has(activeId.current)) {
         const p = sectionProgress(activeId.current);
-        if (e.deltaY > 0 && p >= 0.98) { e.preventDefault(); navigate(1);  return; }
-        if (e.deltaY < 0 && p <= 0.02) { e.preventDefault(); navigate(-1); return; }
+        if (e.deltaY > 0 && p >= 0.98) {
+          if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
+          e.preventDefault(); navigate(1); return;
+        }
+        if (e.deltaY < 0 && p <= 0.02) {
+          if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
+          e.preventDefault(); navigate(-1); return;
+        }
         return; // mid-section: pass through
       }
+      if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
+      if (FREE_SCROLL_UP_SECTIONS.has(activeId.current) && e.deltaY < 0) return;
       e.preventDefault();
       navigate(e.deltaY > 0 ? 1 : -1);
     };
@@ -345,10 +357,12 @@ const SectionTransition = () => {
       if (Math.abs(diff) < 60) return;
       if (TALL_SECTIONS.has(activeId.current)) {
         const p = sectionProgress(activeId.current);
-        if (diff > 0 && p >= 0.98) { navigate(1);  return; }
-        if (diff < 0 && p <= 0.02) { navigate(-1); return; }
+        if (diff > 0 && p >= 0.98) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { navigate(1); } return; }
+        if (diff < 0 && p <= 0.02) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { navigate(-1); } return; }
         return;
       }
+      if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
+      if (FREE_SCROLL_UP_SECTIONS.has(activeId.current) && diff < 0) return;
       navigate(diff > 0 ? 1 : -1);
     };
 
@@ -356,10 +370,12 @@ const SectionTransition = () => {
     const onKey = (e: KeyboardEvent) => {
       if (TALL_SECTIONS.has(activeId.current)) {
         const p = sectionProgress(activeId.current);
-        if (['ArrowDown', 'PageDown'].includes(e.key) && p >= 0.98) { e.preventDefault(); navigate(1);  return; }
-        if (['ArrowUp',  'PageUp'  ].includes(e.key) && p <= 0.02) { e.preventDefault(); navigate(-1); return; }
+        if (['ArrowDown', 'PageDown'].includes(e.key) && p >= 0.98) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { e.preventDefault(); navigate(1); } return; }
+        if (['ArrowUp',  'PageUp'  ].includes(e.key) && p <= 0.02) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { e.preventDefault(); navigate(-1); } return; }
         return;
       }
+      if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
+      if (FREE_SCROLL_UP_SECTIONS.has(activeId.current) && ['ArrowUp', 'PageUp'].includes(e.key)) return;
       if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); navigate(1);  }
       if (['ArrowUp',  'PageUp'  ].includes(e.key)) { e.preventDefault(); navigate(-1); }
     };
@@ -449,7 +465,7 @@ const FLOAT_SECTIONS = [
   { id: 'sec-hero',      label: 'Intro' },
   { id: 'sec-statement', label: 'Statement' },
   { id: 'sec-vision',    label: 'Vision' },
-  { id: 'sec-expertise',  label: 'Expertise' },
+  { id: 'sec-services',   label: 'Services'  },
   { id: 'sec-techstack',  label: 'Tech Stack' },
   { id: 'sec-stats',      label: 'Impact' },
   { id: 'sec-process',   label: 'Process' },
@@ -964,13 +980,23 @@ const Stats = () => {
 };
 
 // ── PARTICLE LOGO — particles assemble into Phitopolis P logo ────────────────
-const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
+const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
   scrollProgress: import('framer-motion').MotionValue<number>;
   mouseX: import('framer-motion').MotionValue<number>;
   mouseY: import('framer-motion').MotionValue<number>;
   containerRef: React.RefObject<HTMLElement | null>;
+  ready: boolean;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const assembleStartRef = useRef<number>(Infinity); // set when preloader completes
+  const svgLoadedAtRef   = useRef<number>(0);        // set when SVG finishes loading
+
+  // Start assembly countdown once the hero is revealed by the preloader
+  useEffect(() => {
+    if (ready && assembleStartRef.current === Infinity) {
+      assembleStartRef.current = performance.now() + 900;
+    }
+  }, [ready]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -992,13 +1018,15 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
       blink: number;              // blink phase offset
       blinkSpeed: number;
       delay: number;              // assembly delay (staggered fly-in)
+      sAngle: number;             // random scatter direction (not radial)
+      sDist: number;              // random scatter distance
     };
 
     let particles: Particle[] = [];
+    let neighborPairs: [number, number][] = []; // precomputed pairs of logo-adjacent particles
     let assembled = false;
-    let assembleStart = 0;
-    let logoCx = 0, logoCy = 0; // logo center, set after image loads
     const ASSEMBLE_DURATION = 2200; // ms for particles to reach targets
+    const LOGO_CONNECT_DIST = 12;   // px between target positions to be considered neighbors
     const LOGO_SIZE = Math.min(480, Math.max(260, window.innerWidth * 0.32));
 
     // Load SVG and sample edge points
@@ -1059,7 +1087,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
       const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       shuffle(edgePixels);
       shuffle(interiorPixels);
-      const maxParticles = 420;
+      const maxParticles = 700;
       const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.7));
       const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
       const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
@@ -1070,31 +1098,58 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
       const ox = (cw - w) / 2;
       const oy = (ch - h) / 2;
 
-      particles = selected.map((p, i) => {
-        // Random start position — spread around the canvas
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 300 + Math.random() * 500;
+      particles = selected.map((p) => {
+        // Each particle starts at its scatter position and flies to the logo on load
+        const sAngle = Math.random() * Math.PI * 2;
+        const sDist  = 600 + Math.random() * 1000;
+        const sx = ox + p.x + Math.cos(sAngle) * sDist;
+        const sy = oy + p.y + Math.sin(sAngle) * sDist;
         return {
-          x: ox + p.x + Math.cos(angle) * dist,
-          y: oy + p.y + Math.sin(angle) * dist,
-          tx: ox + p.x,
-          ty: oy + p.y,
-          sx: ox + p.x + Math.cos(angle) * dist,
-          sy: oy + p.y + Math.sin(angle) * dist,
-          vx: 0,
-          vy: 0,
+          x: sx, y: sy,
+          tx: ox + p.x, ty: oy + p.y,
+          sx, sy,
+          vx: 0, vy: 0,
           r: p.isGold ? (0.8 + Math.random() * 1.2) : (0.6 + Math.random() * 1.0),
           color: p.isGold ? 'rgba(255,199,44,' : 'rgba(240,242,250,',
           blink: Math.random() * Math.PI * 2,
           blinkSpeed: 0.6 + Math.random() * 2.0,
-          delay: Math.random() * 800, // staggered fly-in
+          delay: Math.random() * 600, // staggered fly-in
+          sAngle,
+          sDist,
         };
       });
 
-      logoCx = ox + w / 2;
-      logoCy = oy + h / 2;
-      assembleStart = performance.now();
+      // Precompute which particles are logo-neighbors (close target positions)
+      neighborPairs = [];
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].tx - particles[j].tx;
+          const dy = particles[i].ty - particles[j].ty;
+          if (dx * dx + dy * dy < LOGO_CONNECT_DIST * LOGO_CONNECT_DIST) {
+            neighborPairs.push([i, j]);
+          }
+        }
+      }
+
+      // Record when SVG loaded; assembly timer is started externally when hero is revealed
+      svgLoadedAtRef.current = performance.now();
       assembled = true;
+    };
+
+    // ── Background ambient dots (invisible at rest, connect to P dots on scroll) ──
+    type BgDot = { x: number; y: number; vx: number; vy: number; r: number; blink: number; blinkSpeed: number };
+    let bgDots: BgDot[] = [];
+    const initBgDots = () => {
+      const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+      bgDots = Array.from({ length: 200 }, () => ({
+        x: Math.random() * cw,
+        y: Math.random() * ch,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: 0.5 + Math.random() * 1.1,
+        blink: Math.random() * Math.PI * 2,
+        blinkSpeed: 0.4 + Math.random() * 1.5,
+      }));
     };
 
     const resize = () => {
@@ -1102,6 +1157,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
       canvas.width = canvas.offsetWidth * dpr;
       canvas.height = canvas.offsetHeight * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      initBgDots();
     };
 
     const tick = () => {
@@ -1116,7 +1172,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
       }
 
       const now = performance.now();
-      const elapsed = now - assembleStart;
+      const elapsed = now - assembleStartRef.current;
       const scroll = scrollProgress.get(); // 0 at top, 1 when hero scrolled past
 
       // Update mouse position relative to canvas
@@ -1134,6 +1190,20 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
       // Scroll scatter — stronger as we scroll down
       const scatterStrength = Math.min(scroll * 3, 1); // reaches full scatter at 33% scroll
 
+      // Load-time scatter visibility: full during hold, fades out as logo forms
+      const tSinceLoad = now - svgLoadedAtRef.current; // ms since SVG loaded
+      const loadFadeIn = Math.min(1, Math.max(0, tSinceLoad / 400));
+      const assemblyProgress = Math.min(1, Math.max(0, elapsed / ASSEMBLE_DURATION));
+      const loadScatter = loadFadeIn * (1 - assemblyProgress);
+      const bgVisibility = Math.max(scatterStrength, loadScatter);
+
+      // Update background ambient dots
+      for (const b of bgDots) {
+        b.x += b.vx; b.y += b.vy;
+        if (b.x < 0) b.x = cw; if (b.x > cw) b.x = 0;
+        if (b.y < 0) b.y = ch; if (b.y > ch) b.y = 0;
+      }
+
       for (const p of particles) {
         const particleElapsed = Math.max(0, elapsed - p.delay);
         const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
@@ -1144,13 +1214,10 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
         let goalX = p.tx;
         let goalY = p.ty;
 
-        // On scroll, scatter outward from logo center
+        // On scroll, scatter in each particle's own random direction — chaotic explosion
         if (scatterStrength > 0) {
-          const dx = p.tx - logoCx;
-          const dy = p.ty - logoCy;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          goalX = p.tx + (dx / dist) * scatterStrength * 500;
-          goalY = p.ty + (dy / dist) * scatterStrength * 500;
+          goalX = p.tx + Math.cos(p.sAngle) * scatterStrength * p.sDist;
+          goalY = p.ty + Math.sin(p.sAngle) * scatterStrength * p.sDist;
         }
 
         // During assembly, interpolate from start to goal
@@ -1159,7 +1226,8 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
           p.y = p.sy + (goalY - p.sy) * ease;
         } else {
           // After assembly, use spring physics toward goal
-          const springForce = 0.035;
+          // Spring force weakens during scatter for a slow drift outward
+          const springForce = 0.035 - scatterStrength * 0.031; // 0.035 at rest → 0.004 at full scatter
           p.vx += (goalX - p.x) * springForce;
           p.vy += (goalY - p.y) * springForce;
 
@@ -1175,38 +1243,98 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
             p.vy += (dy / d) * f * 3.5;
           }
 
-          p.vx *= 0.88;
-          p.vy *= 0.88;
+          // Lower damping during scatter = more friction = slower movement
+          const damping = 0.88 - scatterStrength * 0.08; // 0.88 at rest → 0.80 at full scatter
+          p.vx *= damping;
+          p.vy *= damping;
           p.x += p.vx;
           p.y += p.vy;
         }
       }
 
-      // Draw connections between close particles
-      const connectDist = 28;
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < connectDist * connectDist) {
-            const alpha = (1 - Math.sqrt(d2) / connectDist) * 0.15;
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(255,199,44,${alpha})`;
-            ctx.lineWidth = 0.4;
-            ctx.stroke();
+      // Logo-network connections: fade in as each pair of neighbors arrives at the logo
+      const logoFade = 1 - scatterStrength;
+      if (logoFade > 0.01 && neighborPairs.length > 0) {
+        for (const [i, j] of neighborPairs) {
+          const pi = particles[i], pj = particles[j];
+          const ti = Math.min(1, Math.max(0, (elapsed - pi.delay) / ASSEMBLE_DURATION));
+          const tj = Math.min(1, Math.max(0, (elapsed - pj.delay) / ASSEMBLE_DURATION));
+          const arrivalA = Math.min(ti, tj);
+          if (arrivalA < 0.02) continue;
+          const tdx = pi.tx - pj.tx, tdy = pi.ty - pj.ty;
+          const tDist = Math.sqrt(tdx * tdx + tdy * tdy);
+          const alpha = arrivalA * logoFade * (1 - tDist / LOGO_CONNECT_DIST) * 0.42;
+          if (alpha < 0.01) continue;
+          ctx.beginPath();
+          ctx.moveTo(pi.x, pi.y);
+          ctx.lineTo(pj.x, pj.y);
+          ctx.strokeStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
+          ctx.lineWidth = 0.4;
+          ctx.stroke();
+        }
+      }
+
+      // Scatter connections: expand and brighten as particles explode on scroll
+      if (scatterStrength > 0.05) {
+        const connectDist = 28 + scatterStrength * 80;
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < connectDist * connectDist) {
+              const alpha = (1 - Math.sqrt(d2) / connectDist) * scatterStrength * 0.35;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
+              ctx.lineWidth = 0.4;
+              ctx.stroke();
+            }
           }
         }
       }
 
-      // Draw particles with blink
+      // Draw connections: P particles ↔ background dots (on scroll AND during initial load)
+      if (bgVisibility > 0.05) {
+        const bgConnectDist = 160;
+        for (const p of particles) {
+          for (const b of bgDots) {
+            const dx = p.x - b.x, dy = p.y - b.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < bgConnectDist * bgConnectDist) {
+              const dist = Math.sqrt(d2);
+              const alpha = (1 - dist / bgConnectDist) * bgVisibility * 0.28;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
+              ctx.lineWidth = 0.4;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // Draw background dots (visible on scroll AND during initial load assembly)
       const t = now * 0.001;
+      if (bgVisibility > 0) {
+        for (const b of bgDots) {
+          const blinkAlpha = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t * b.blinkSpeed + b.blink));
+          const alpha = bgVisibility * blinkAlpha * 0.55;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
+          ctx.fill();
+        }
+      }
+
+      // Draw P particles — visible at scatter positions during hold, fade in during assembly
       for (const p of particles) {
         const particleElapsed = Math.max(0, elapsed - p.delay);
         const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
-        const fadeIn = Math.min(1, assembleT * 2); // fade in during first half of assembly
+        // Before assembleStart: show at full opacity; during assembly: fade in with assembleT
+        const fadeIn = elapsed < 0 ? loadFadeIn : Math.min(1, assembleT * 2);
         const blinkAlpha = 0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * p.blinkSpeed + p.blink));
         const alpha = fadeIn * blinkAlpha;
         ctx.beginPath();
@@ -1244,7 +1372,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef }: {
 };
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
-const Hero = () => {
+const Hero = ({ ready }: { ready: boolean }) => {
   const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
@@ -1289,7 +1417,7 @@ const Hero = () => {
       </motion.div>
 
       {/* Particle Logo — centered */}
-      <ParticleLogo scrollProgress={scrollYProgress} mouseX={mouseX} mouseY={mouseY} containerRef={containerRef} />
+      <ParticleLogo scrollProgress={scrollYProgress} mouseX={mouseX} mouseY={mouseY} containerRef={containerRef} ready={ready} />
 
       {/* Glow */}
       <motion.div animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0.45, 0.2] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
@@ -1443,54 +1571,162 @@ const Vision = () => {
   );
 };
 
-// ── 02 EXPERTISE ──────────────────────────────────────────────────────────────
-const EXPERTISE = [
-  { title: 'Data Science', icon: '◈', color: C.accent, img: 'https://phitopolis.com/img/core-competencies/technical-excellence.jpg', desc: 'from raw data to actionable intelligence. we build end-to-end ml pipelines, statistical models, and real-time analytics systems that turn complexity into competitive advantage.' },
-  { title: 'Full-Stack AI', icon: '⬡', color: '#6C63FF', img: 'https://phitopolis.com/img/core-competencies/proactive-communication.jpg', desc: 'seamlessly integrating models into production-grade apps. from LLM orchestration to agentic workflows — we bridge research and deployment with precision.' },
+// ── SERVICES SCROLL STORY ─────────────────────────────────────────────────────
+const SCROLL_ITEMS = [
+  {
+    image: 'https://phitopolis.com/img/core-competencies/innovation.jpg',
+    label: '01 / R&D',
+    title: 'Research & Development',
+    desc:  'Pioneering new technologies and frameworks to solve complex enterprise problems.',
+  },
+  {
+    image: 'https://phitopolis.com/img/core-competencies/technical-excellence.jpg',
+    label: '02 / Data',
+    title: 'Data Science',
+    desc:  'Extracting actionable insights from vast datasets through ML and statistical modeling.',
+  },
+  {
+    image: 'https://phitopolis.com/img/core-competencies/proactive-communication.jpg',
+    label: '03 / Eng',
+    title: 'Full-Stack Engineering',
+    desc:  'Building resilient, scalable, and high-performance applications for the modern web.',
+  },
 ];
 
-const ExpertiseCard = ({ card, index, inView }: { card: typeof EXPERTISE[0]; index: number; inView: boolean }) => {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <motion.div initial={{ opacity: 0, y: 48 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.85, delay: index * 0.15, ease: [0.21, 1.02, 0.47, 0.98] }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${hovered ? card.color : 'rgba(255,255,255,0.08)'}`, borderRadius: 56, overflow: 'hidden', transition: 'border-color 0.3s' }}
-    >
-      <div style={{ height: 270, overflow: 'hidden', position: 'relative' }}>
-        <motion.img src={card.img} alt={card.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} animate={{ scale: hovered ? 1.07 : 1 }} transition={{ duration: 0.55 }} />
-        {/* Hover overlay */}
-        <motion.div animate={{ opacity: hovered ? 1 : 0 }} transition={{ duration: 0.3 }}
-          style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${card.color}44)` }}
-        />
-      </div>
-      <div style={{ padding: '44px 52px 60px' }}>
-        <div style={{ color: card.color, fontSize: 22, marginBottom: 14 }}>{card.icon}</div>
-        <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2.1rem', color: C.base, marginBottom: 18, letterSpacing: '-0.02em' }}>{card.title}</h3>
-        <p style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'Inter, sans-serif', fontSize: '0.93rem', lineHeight: 1.85 }}>{card.desc}</p>
-      </div>
-    </motion.div>
-  );
-};
+// Image base: 44vw × 88vh at left: 25vw, top: 6vh (centered layout with right caption area)
+// Base image: top: 6vh, left: 25vw, width: 44vw, height: 88vh → right: 69vw, bottom: 94vh
+// Thumbnail scale 0.22 → rendered size: 9.68vw × 19.36vh
+// Left slot (prev): top-aligned with main, snug to left edge
+//   → x = (25vw - 9.68vw - 1vw) - 25vw = -10.68vw ≈ -11vw, y = 0vh
+// Right slot (next): bottom-aligned with main, snug to right edge
+//   → x = (69vw + 1vw) - 25vw = 45vw → 46vw with gap, y = (94vh - 19.36vh) - 6vh ≈ 69vh
+const ServicesScrollStory = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] });
 
-const Expertise = () => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
+  // ── Heading ──────────────────────────────────────────────────────────────────
+  const headingOpacity = useTransform(scrollYProgress, [0, 0.15, 0.26], [1, 1, 0]);
+  const headingScale   = useTransform(scrollYProgress, [0.15, 0.26], [1, 0.4]);
+  const headingY       = useTransform(scrollYProgress, [0.15, 0.26], ['0vh', '-6vh']);
+
+  // ── Image 1: tiny bottom-center → full → thumbnail top-left → disappears ─────
+  // Initial tiny: scale=0.08 → 4vw×7.04vh; center at (50vw,90vh):
+  //   x = 50vw - 25vw(base) - 2vw(half) = 23vw  |  y = 90vh - 7.04vh - 6vh = 76.96vh
+  const img1Scale   = useTransform(scrollYProgress, [0, 0.22, 0.38, 0.58, 0.75, 0.90], [0.08, 1, 1, 0.22, 0.22, 0]);
+  const img1X       = useTransform(scrollYProgress, [0, 0.22, 0.38, 0.58, 0.90], ['23vw', '0vw', '0vw', '-11vw', '-11vw']);
+  const img1Y       = useTransform(scrollYProgress, [0, 0.22, 0.58, 0.90], ['77vh', '0vh', '0vh', '0vh']);
+  const img1Opacity = useTransform(scrollYProgress, [0.75, 0.90], [1, 0]);
+
+  // ── Caption 1 ────────────────────────────────────────────────────────────────
+  const cap1Opacity = useTransform(scrollYProgress, [0.35, 0.43, 0.50, 0.58], [0, 1, 1, 0]);
+
+  // ── Image 2: tiny bottom-right → full → slides to img1's top-left slot ───────
+  const img2Opacity = useTransform(scrollYProgress, [0.33, 0.41], [0, 1]);
+  const img2Scale   = useTransform(scrollYProgress, [0.38, 0.58, 0.75, 0.90], [0.22, 1, 1, 0.22]);
+  const img2X       = useTransform(scrollYProgress, [0.38, 0.58, 0.75, 0.90], ['46vw', '0vw', '0vw', '-11vw']);
+  const img2Y       = useTransform(scrollYProgress, [0.38, 0.58, 0.75, 0.90], ['69vh', '0vh', '0vh', '0vh']);
+
+  // ── Caption 2 ────────────────────────────────────────────────────────────────
+  const cap2Opacity = useTransform(scrollYProgress, [0.62, 0.70, 0.77, 0.85], [0, 1, 1, 0]);
+
+  // ── Image 3: thumbnail appears while img2 is full → grows to full ────────────
+  const img3Opacity = useTransform(scrollYProgress, [0.48, 0.56], [0, 1]);
+  const img3Scale   = useTransform(scrollYProgress, [0.50, 0.75, 0.96], [0.22, 0.22, 1]);
+  const img3X       = useTransform(scrollYProgress, [0.50, 0.75, 0.96], ['46vw', '46vw', '0vw']);
+  const img3Y       = useTransform(scrollYProgress, [0.50, 0.75, 0.96], ['69vh', '69vh', '0vh']);
+
+  // ── Caption 3 ────────────────────────────────────────────────────────────────
+  const cap3Opacity = useTransform(scrollYProgress, [0.88, 0.96], [0, 1]);
+
+  // ── Compensated border radius (visual = 20px regardless of scale) ─────────
+  const img1Radius = useTransform(img1Scale, (s: number) => 20 / Math.max(s, 0.01));
+  const img2Radius = useTransform(img2Scale, (s: number) => 20 / Math.max(s, 0.01));
+  const img3Radius = useTransform(img3Scale, (s: number) => 20 / Math.max(s, 0.01));
+
+  const captionStyle: React.CSSProperties = {
+    position: 'absolute', right: '5%', top: '50%',
+    zIndex: 6, maxWidth: '22%', pointerEvents: 'none',
+  };
+
+  const imgWrapStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '6vh', left: '25vw',
+    width: '44vw', height: '88vh',
+    transformOrigin: 'top left',
+  };
+
+  const imgInnerStyle: React.CSSProperties = {
+    width: '100%', height: '100%',
+    overflow: 'hidden',
+    position: 'relative',
+  };
+
   return (
-    <section id="sec-expertise" ref={ref} style={{ background: C.charcoal, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', display: 'flex', alignItems: 'center' }}>
-      <SectionTag name="expertise" />
-      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-        <Divider inView={inView} />
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7 }} style={{ marginBottom: 72 }}>
-          <Badge n="02" label="Core Expertise" />
-          <SplitHeading outline="what we" solid="do best" inView={inView} color={C.base} />
+    <section id="sec-services" ref={containerRef} style={{ height: '500vh', position: 'relative' }}>
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', background: C.charcoal }}>
+        <SectionTag name="services" />
+
+        {/* ── Heading ── */}
+        <motion.div style={{
+          position: 'absolute', top: '8%', left: '50%', x: '-50%',
+          opacity: headingOpacity, scale: headingScale, y: headingY,
+          transformOrigin: 'center top', zIndex: 10, textAlign: 'center', whiteSpace: 'nowrap', pointerEvents: 'none',
+        }}>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>
+            what we{' '}
+          </span>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>
+            do best.
+          </span>
         </motion.div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 36 }}>
-          {EXPERTISE.map((card, i) => <ExpertiseCard key={i} card={card} index={i} inView={inView} />)}
-        </div>
+
+        {/* ── Caption 1 ── */}
+        <motion.div style={{ ...captionStyle, opacity: cap1Opacity, y: '-50%' }}>
+          <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[0].label}</p>
+          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[0].title}</h3>
+          <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[0].desc}</p>
+        </motion.div>
+
+        {/* ── Caption 2 ── */}
+        <motion.div style={{ ...captionStyle, opacity: cap2Opacity, y: '-50%' }}>
+          <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[1].label}</p>
+          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[1].title}</h3>
+          <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[1].desc}</p>
+        </motion.div>
+
+        {/* ── Caption 3 ── */}
+        <motion.div style={{ ...captionStyle, opacity: cap3Opacity, y: '-50%' }}>
+          <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[2].label}</p>
+          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[2].title}</h3>
+          <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[2].desc}</p>
+        </motion.div>
+
+        {/* ── Image 3 (lowest z) ── */}
+        <motion.div style={{ ...imgWrapStyle, scale: img3Scale, x: img3X, y: img3Y, opacity: img3Opacity, zIndex: 1 }}>
+          <motion.div style={{ ...imgInnerStyle, borderRadius: img3Radius }}>
+            <img src={SCROLL_ITEMS[2].image} alt={SCROLL_ITEMS[2].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </motion.div>
+        </motion.div>
+
+        {/* ── Image 2 — slides into img1's top-left slot when img3 grows ── */}
+        <motion.div style={{ ...imgWrapStyle, scale: img2Scale, x: img2X, y: img2Y, opacity: img2Opacity, zIndex: 2 }}>
+          <motion.div style={{ ...imgInnerStyle, borderRadius: img2Radius }}>
+            <img src={SCROLL_ITEMS[1].image} alt={SCROLL_ITEMS[1].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </motion.div>
+        </motion.div>
+
+        {/* ── Image 1 — shrinks to top-left thumbnail then disappears ── */}
+        <motion.div style={{ ...imgWrapStyle, scale: img1Scale, x: img1X, y: img1Y, opacity: img1Opacity, zIndex: 3 }}>
+          <motion.div style={{ ...imgInnerStyle, borderRadius: img1Radius }}>
+            <img src={SCROLL_ITEMS[0].image} alt={SCROLL_ITEMS[0].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </motion.div>
+        </motion.div>
+
       </div>
     </section>
   );
 };
+
 
 // ── 05 PROCESS + SERVICE WHEEL ────────────────────────────────────────────────
 const WHEEL = [
@@ -1954,7 +2190,8 @@ const Closing = () => {
 
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 export default function AIDayPage() {
-  const [ready, setReady] = useState(false); // kept for potential future use
+  const [ready, setReady] = useState(false);
+  const handlePreloaderComplete = useCallback(() => setReady(true), []);
   useEffect(() => {
     document.title = 'Phitopolis | AI Day 2026';
     document.body.style.cursor = 'none';
@@ -1979,17 +2216,17 @@ export default function AIDayPage() {
   return (
     <>
       <GrainOverlay />
-      <Preloader onComplete={() => setReady(true)} />
+      <Preloader onComplete={handlePreloaderComplete} />
       <div>
         <ScrollProgressBar />
         <CustomCursor />
         <SectionTransition />
         <FloatNav />
-        <Hero />
+        <Hero ready={ready} />
         <Statement />
         <Vision />
         <MarqueeSection />
-        <Expertise />
+        <ServicesScrollStory />
         <TechStack />
         <Stats />
         <Process />
