@@ -6,6 +6,9 @@ import {
   useMotionValue, useSpring, useMotionValueEvent,
   useAnimationFrame, animate,
 } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+gsap.registerPlugin(ScrollTrigger);
 import TextScramble from '../../components/TextScramble';
 import MagneticWrapper from '../../components/MagneticWrapper';
 
@@ -296,13 +299,13 @@ const SectionTransition = () => {
     const tracker = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
     }, { threshold: 0.5 });
-    document.querySelectorAll('[id^="sec-"]:not(#sec-showcase):not(#sec-services)').forEach(el => tracker.observe(el));
+    document.querySelectorAll('[id^="sec-"]:not(#sec-showcase):not(#sec-services):not(#sec-process)').forEach(el => tracker.observe(el));
 
     // Tall sections need a low threshold since they can't reach 50% intersection
     const tallTracker = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
     }, { threshold: 0.05 });
-    ['sec-services', 'sec-people', 'sec-showcase'].forEach(id => {
+    ['sec-services', 'sec-process', 'sec-people', 'sec-showcase'].forEach(id => {
       const el = document.getElementById(id);
       if (el) tallTracker.observe(el);
     });
@@ -322,7 +325,7 @@ const SectionTransition = () => {
     };
 
     // Sections taller than 100vh that need scroll-through before transitioning
-    const TALL_SECTIONS = new Set(['sec-services', 'sec-people', 'sec-showcase']);
+    const TALL_SECTIONS = new Set(['sec-services', 'sec-process', 'sec-people', 'sec-showcase']);
 
     // Sections where natural browser scroll is used to cross the boundary (both directions)
     const FREE_SCROLL_PAIRS = new Set(['sec-hero', 'sec-vision', 'sec-services']);
@@ -1602,49 +1605,69 @@ const SCROLL_ITEMS = [
 //   → x = (69vw + 1vw) - 25vw = 45vw → 46vw with gap, y = (94vh - 19.36vh) - 6vh ≈ 69vh
 const ServicesScrollStory = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] });
+  const headingRef   = useRef<HTMLDivElement>(null);
+  const img1Ref      = useRef<HTMLDivElement>(null);
+  const img2Ref      = useRef<HTMLDivElement>(null);
+  const img3Ref      = useRef<HTMLDivElement>(null);
+  const cap1Ref      = useRef<HTMLDivElement>(null);
+  const cap2Ref      = useRef<HTMLDivElement>(null);
+  const cap3Ref      = useRef<HTMLDivElement>(null);
 
-  // ── Heading ──────────────────────────────────────────────────────────────────
-  const headingOpacity = useTransform(scrollYProgress, [0, 0.15, 0.26], [1, 1, 0]);
-  const headingScale   = useTransform(scrollYProgress, [0.15, 0.26], [1, 0.4]);
-  const headingY       = useTransform(scrollYProgress, [0.15, 0.26], ['0vh', '-6vh']);
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Set initial states before ScrollTrigger takes over
+      gsap.set(headingRef.current,  { transformOrigin: '50% 0%' });
+      gsap.set(img1Ref.current,     { scale: 0.08, x: '23vw', y: '77vh', transformOrigin: '0% 0%', willChange: 'transform' });
+      gsap.set(img2Ref.current,     { opacity: 0, scale: 0.22, x: '46vw', y: '69vh', transformOrigin: '0% 0%', willChange: 'transform' });
+      gsap.set(img3Ref.current,     { opacity: 0, scale: 0.22, x: '46vw', y: '69vh', transformOrigin: '0% 0%', willChange: 'transform' });
+      gsap.set(cap1Ref.current,     { opacity: 0 });
+      gsap.set(cap2Ref.current,     { opacity: 0 });
+      gsap.set(cap3Ref.current,     { opacity: 0 });
 
-  // ── Image 1: tiny bottom-center → full → thumbnail top-left → disappears ─────
-  // Initial tiny: scale=0.08 → 4vw×7.04vh; center at (50vw,90vh):
-  //   x = 50vw - 25vw(base) - 2vw(half) = 23vw  |  y = 90vh - 7.04vh - 6vh = 76.96vh
-  const img1Scale   = useTransform(scrollYProgress, [0, 0.22, 0.38, 0.58, 0.75, 0.90], [0.08, 1, 1, 0.22, 0.22, 0]);
-  const img1X       = useTransform(scrollYProgress, [0, 0.22, 0.38, 0.58, 0.90], ['23vw', '0vw', '0vw', '-11vw', '-11vw']);
-  const img1Y       = useTransform(scrollYProgress, [0, 0.22, 0.58, 0.90], ['77vh', '0vh', '0vh', '0vh']);
-  const img1Opacity = useTransform(scrollYProgress, [0.75, 0.90], [1, 0]);
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1.5,
+        },
+        defaults: { ease: 'none' },
+      });
 
-  // ── Caption 1 ────────────────────────────────────────────────────────────────
-  const cap1Opacity = useTransform(scrollYProgress, [0.35, 0.43, 0.50, 0.58], [0, 1, 1, 0]);
+      // ── Heading fades out ─────────────────────────────────────────────────────
+      tl.to(headingRef.current, { opacity: 0, scale: 0.4, y: '-6vh', duration: 0.11 }, 0.15);
 
-  // ── Image 2: tiny bottom-right → full → slides to img1's top-left slot ───────
-  const img2Opacity = useTransform(scrollYProgress, [0.33, 0.41], [0, 1]);
-  const img2Scale   = useTransform(scrollYProgress, [0.38, 0.58, 0.75, 0.90], [0.22, 1, 1, 0.22]);
-  const img2X       = useTransform(scrollYProgress, [0.38, 0.58, 0.75, 0.90], ['46vw', '0vw', '0vw', '-11vw']);
-  const img2Y       = useTransform(scrollYProgress, [0.38, 0.58, 0.75, 0.90], ['69vh', '0vh', '0vh', '0vh']);
+      // ── Image 1: tiny → full → thumbnail → fade ───────────────────────────────
+      tl.to(img1Ref.current,   { scale: 1, x: '0vw', y: '0vh', duration: 0.22 }, 0);
+      tl.to(img1Ref.current,   { scale: 0.22, x: '-11vw', duration: 0.20 }, 0.38);
+      tl.to(img1Ref.current,   { opacity: 0, duration: 0.15 }, 0.75);
 
-  // ── Caption 2 ────────────────────────────────────────────────────────────────
-  const cap2Opacity = useTransform(scrollYProgress, [0.62, 0.70, 0.77, 0.85], [0, 1, 1, 0]);
+      // ── Caption 1 ─────────────────────────────────────────────────────────────
+      tl.to(cap1Ref.current,   { opacity: 1, duration: 0.08 }, 0.35);
+      tl.to(cap1Ref.current,   { opacity: 0, duration: 0.08 }, 0.50);
 
-  // ── Image 3: thumbnail appears while img2 is full → grows to full ────────────
-  const img3Opacity = useTransform(scrollYProgress, [0.48, 0.56], [0, 1]);
-  const img3Scale   = useTransform(scrollYProgress, [0.50, 0.75, 0.96], [0.22, 0.22, 1]);
-  const img3X       = useTransform(scrollYProgress, [0.50, 0.75, 0.96], ['46vw', '46vw', '0vw']);
-  const img3Y       = useTransform(scrollYProgress, [0.50, 0.75, 0.96], ['69vh', '69vh', '0vh']);
+      // ── Image 2: appears → full → thumbnail ───────────────────────────────────
+      tl.to(img2Ref.current,   { opacity: 1, duration: 0.08 }, 0.33);
+      tl.to(img2Ref.current,   { scale: 1, x: '0vw', y: '0vh', duration: 0.20 }, 0.38);
+      tl.to(img2Ref.current,   { scale: 0.22, x: '-11vw', duration: 0.15 }, 0.75);
 
-  // ── Caption 3 ────────────────────────────────────────────────────────────────
-  const cap3Opacity = useTransform(scrollYProgress, [0.88, 0.96], [0, 1]);
+      // ── Caption 2 ─────────────────────────────────────────────────────────────
+      tl.to(cap2Ref.current,   { opacity: 1, duration: 0.08 }, 0.62);
+      tl.to(cap2Ref.current,   { opacity: 0, duration: 0.08 }, 0.77);
 
-  // ── Compensated border radius (visual = 20px regardless of scale) ─────────
-  const img1Radius = useTransform(img1Scale, (s: number) => 20 / Math.max(s, 0.01));
-  const img2Radius = useTransform(img2Scale, (s: number) => 20 / Math.max(s, 0.01));
-  const img3Radius = useTransform(img3Scale, (s: number) => 20 / Math.max(s, 0.01));
+      // ── Image 3: appears small → grows to full ────────────────────────────────
+      tl.to(img3Ref.current,   { opacity: 1, duration: 0.08 }, 0.48);
+      tl.to(img3Ref.current,   { scale: 1, x: '0vw', y: '0vh', duration: 0.21 }, 0.75);
+
+      // ── Caption 3 ─────────────────────────────────────────────────────────────
+      tl.to(cap3Ref.current,   { opacity: 1, duration: 0.08 }, 0.88);
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const captionStyle: React.CSSProperties = {
-    position: 'absolute', right: '5%', top: '50%',
+    position: 'absolute', right: '5%', top: '50%', transform: 'translateY(-50%)',
     zIndex: 6, maxWidth: '22%', pointerEvents: 'none',
   };
 
@@ -1652,12 +1675,12 @@ const ServicesScrollStory = () => {
     position: 'absolute',
     top: '6vh', left: '25vw',
     width: '44vw', height: '88vh',
-    transformOrigin: 'top left',
+    willChange: 'transform',
   };
 
   const imgInnerStyle: React.CSSProperties = {
     width: '100%', height: '100%',
-    overflow: 'hidden',
+    overflow: 'hidden', borderRadius: 20,
     position: 'relative',
   };
 
@@ -1667,10 +1690,9 @@ const ServicesScrollStory = () => {
         <SectionTag name="services" />
 
         {/* ── Heading ── */}
-        <motion.div style={{
-          position: 'absolute', top: '8%', left: '50%', x: '-50%',
-          opacity: headingOpacity, scale: headingScale, y: headingY,
-          transformOrigin: 'center top', zIndex: 10, textAlign: 'center', whiteSpace: 'nowrap', pointerEvents: 'none',
+        <div ref={headingRef} style={{
+          position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)',
+          zIndex: 10, textAlign: 'center', whiteSpace: 'nowrap', pointerEvents: 'none',
         }}>
           <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>
             what we{' '}
@@ -1678,49 +1700,49 @@ const ServicesScrollStory = () => {
           <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>
             do best.
           </span>
-        </motion.div>
+        </div>
 
         {/* ── Caption 1 ── */}
-        <motion.div style={{ ...captionStyle, opacity: cap1Opacity, y: '-50%' }}>
+        <div ref={cap1Ref} style={captionStyle}>
           <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[0].label}</p>
           <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[0].title}</h3>
           <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[0].desc}</p>
-        </motion.div>
+        </div>
 
         {/* ── Caption 2 ── */}
-        <motion.div style={{ ...captionStyle, opacity: cap2Opacity, y: '-50%' }}>
+        <div ref={cap2Ref} style={captionStyle}>
           <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[1].label}</p>
           <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[1].title}</h3>
           <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[1].desc}</p>
-        </motion.div>
+        </div>
 
         {/* ── Caption 3 ── */}
-        <motion.div style={{ ...captionStyle, opacity: cap3Opacity, y: '-50%' }}>
+        <div ref={cap3Ref} style={captionStyle}>
           <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[2].label}</p>
           <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[2].title}</h3>
           <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[2].desc}</p>
-        </motion.div>
+        </div>
 
         {/* ── Image 3 (lowest z) ── */}
-        <motion.div style={{ ...imgWrapStyle, scale: img3Scale, x: img3X, y: img3Y, opacity: img3Opacity, zIndex: 1 }}>
-          <motion.div style={{ ...imgInnerStyle, borderRadius: img3Radius }}>
+        <div ref={img3Ref} style={{ ...imgWrapStyle, zIndex: 1 }}>
+          <div style={imgInnerStyle}>
             <img src={SCROLL_ITEMS[2].image} alt={SCROLL_ITEMS[2].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
-        {/* ── Image 2 — slides into img1's top-left slot when img3 grows ── */}
-        <motion.div style={{ ...imgWrapStyle, scale: img2Scale, x: img2X, y: img2Y, opacity: img2Opacity, zIndex: 2 }}>
-          <motion.div style={{ ...imgInnerStyle, borderRadius: img2Radius }}>
+        {/* ── Image 2 ── */}
+        <div ref={img2Ref} style={{ ...imgWrapStyle, zIndex: 2 }}>
+          <div style={imgInnerStyle}>
             <img src={SCROLL_ITEMS[1].image} alt={SCROLL_ITEMS[1].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
-        {/* ── Image 1 — shrinks to top-left thumbnail then disappears ── */}
-        <motion.div style={{ ...imgWrapStyle, scale: img1Scale, x: img1X, y: img1Y, opacity: img1Opacity, zIndex: 3 }}>
-          <motion.div style={{ ...imgInnerStyle, borderRadius: img1Radius }}>
+        {/* ── Image 1 ── */}
+        <div ref={img1Ref} style={{ ...imgWrapStyle, zIndex: 3 }}>
+          <div style={imgInnerStyle}>
             <img src={SCROLL_ITEMS[0].image} alt={SCROLL_ITEMS[0].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
       </div>
     </section>
@@ -1729,82 +1751,194 @@ const ServicesScrollStory = () => {
 
 
 // ── 05 PROCESS + SERVICE WHEEL ────────────────────────────────────────────────
-const WHEEL = [
-  { label: 'Machine Learning', desc: 'supervised, unsupervised, and reinforcement learning tailored for financial and enterprise contexts.', angleDeg: -90 },
-  { label: 'Data Infrastructure', desc: 'scalable pipelines, real-time streaming, and warehouse architecture built for speed at scale.', angleDeg: 30 },
-  { label: 'Human-AI Synergy', desc: 'human-in-the-loop workflows that keep domain experts at the center of every AI decision.', angleDeg: 150 },
+const PHASES = [
+  {
+    num: '01', label: 'Machine\nLearning',
+    sub: 'supervised, unsupervised, and reinforcement learning tailored for financial and enterprise contexts.',
+    color: C.accent, glow: '#FFC72C',
+  },
+  {
+    num: '02', label: 'Data\nInfrastructure',
+    sub: 'scalable pipelines, real-time streaming, and warehouse architecture built for speed at scale.',
+    color: '#4A90D9', glow: '#4A90D9',
+  },
+  {
+    num: '03', label: 'Human-AI\nSynergy',
+    sub: 'human-in-the-loop workflows that keep domain experts at the center of every AI decision.',
+    color: '#A78BFA', glow: '#A78BFA',
+  },
+];
+
+// Transition windows: [enter-start, enter-end, exit-start, exit-end]
+const PHASE_WIN = [
+  [0.04, 0.14, 0.36, 0.44],
+  [0.44, 0.54, 0.66, 0.74],
+  [0.74, 0.84, 0.96, 1.00],
 ];
 
 const Process = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
-  const [active, setActive] = useState(0);
+  // per-phase refs
+  const phaseRefs   = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const labelRefs   = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const numRefs     = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const descRefs    = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const orbRefs     = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const stepRefs    = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const stepDotRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const badgeRef    = useRef<HTMLDivElement>(null);
+  const headRef     = useRef<HTMLDivElement>(null);
+  const lineRef     = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1.8,
+        },
+        defaults: { ease: 'none' },
+      });
+
+      // ── Entry: badge + heading slide up ─────────────────────────────────────
+      gsap.set([badgeRef.current, headRef.current], { y: 60, opacity: 0 });
+      tl.to(badgeRef.current, { y: 0, opacity: 1, duration: 0.06 }, 0);
+      tl.to(headRef.current,  { y: 0, opacity: 1, duration: 0.06 }, 0.02);
+
+      // ── Per-phase animations ────────────────────────────────────────────────
+      PHASES.forEach((ph, i) => {
+        const [es, ee, xs, xe] = PHASE_WIN[i];
+
+        // Initial hidden state
+        gsap.set(phaseRefs[i].current, { opacity: 0 });
+        gsap.set(labelRefs[i].current, { clipPath: 'inset(0 0 100% 0)', y: 40 });
+        gsap.set(numRefs[i].current,   { scale: 1.6, opacity: 0 });
+        gsap.set(descRefs[i].current,  { y: 28, opacity: 0 });
+        gsap.set(orbRefs[i].current,   { scale: 0.4, opacity: 0 });
+        gsap.set(stepRefs[i].current,  { opacity: 0.25 });
+        gsap.set(stepDotRefs[i].current, { scale: 0.5, backgroundColor: 'rgba(0,0,0,0.15)' });
+
+        // — ENTER —
+        const enterDur = ee - es;
+        tl.to(phaseRefs[i].current,  { opacity: 1, duration: enterDur * 0.25 }, es);
+        tl.to(numRefs[i].current,    { scale: 1, opacity: 1, duration: enterDur * 0.6 }, es);
+        tl.to(labelRefs[i].current,  { clipPath: 'inset(0 0 0% 0)', y: 0, duration: enterDur * 0.55, ease: 'power2.out' }, es + enterDur * 0.1);
+        tl.to(descRefs[i].current,   { y: 0, opacity: 1, duration: enterDur * 0.45 }, es + enterDur * 0.35);
+        tl.to(orbRefs[i].current,    { scale: 1, opacity: 1, duration: enterDur * 0.6 }, es);
+        // Step indicator brightens
+        tl.to(stepRefs[i].current,   { opacity: 1, duration: enterDur * 0.3 }, es);
+        tl.to(stepDotRefs[i].current, { scale: 1.15, backgroundColor: ph.color, duration: enterDur * 0.3 }, es);
+
+        // — EXIT (if not last phase) —
+        if (xs < 1) {
+          const exitDur = xe - xs;
+          tl.to(labelRefs[i].current, { clipPath: 'inset(100% 0 0% 0)', y: -40, duration: exitDur * 0.55, ease: 'power2.in' }, xs);
+          tl.to(numRefs[i].current,   { scale: 0.5, opacity: 0, duration: exitDur * 0.55 }, xs);
+          tl.to(descRefs[i].current,  { y: -20, opacity: 0, duration: exitDur * 0.4 }, xs);
+          tl.to(orbRefs[i].current,   { scale: 0.3, opacity: 0, duration: exitDur * 0.5 }, xs);
+          tl.to(phaseRefs[i].current, { opacity: 0, duration: exitDur * 0.2 }, xs + exitDur * 0.8);
+          // Step indicator dims back
+          tl.to(stepRefs[i].current,  { opacity: 0.25, duration: exitDur * 0.3 }, xs);
+          tl.to(stepDotRefs[i].current, { scale: 0.5, backgroundColor: 'rgba(0,0,0,0.15)', duration: exitDur * 0.3 }, xs);
+        }
+      });
+
+      // ── Vertical progress line grows ────────────────────────────────────────
+      gsap.set(lineRef.current, { scaleY: 0, transformOrigin: 'top center' });
+      tl.to(lineRef.current, { scaleY: 1, duration: 0.88 }, 0.08);
+
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
   const isMobile = useIsMobile();
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start end', 'end start'] });
-  const wheelRot = useTransform(scrollYProgress, [0, 1], [0, 360]);
-  const R = 152;
+
   return (
-    <section id="sec-process" ref={containerRef} style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', display: 'flex', alignItems: 'center' }}>
-      <SectionTag name="process" />
-      <div ref={ref} style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-        <Divider inView={inView} color="rgba(0,0,0,0.1)" />
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 72 : 100, alignItems: 'center' }}>
-          <motion.div initial={{ opacity: 0, x: -36 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.9 }}>
+    <section id="sec-process" ref={containerRef} style={{ background: C.base, height: '520vh', position: 'relative' }}>
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
+        <SectionTag name="process" />
+
+        {/* ── Left rail ─────────────────────────────────────────────────── */}
+        <div style={{ width: isMobile ? 80 : 'clamp(200px, 22vw, 280px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 0 0 24px' : '0 0 0 48px', position: 'relative', zIndex: 3 }}>
+          <div ref={badgeRef}>
             <Badge n="05" label="The Process" />
-            <div style={{ marginBottom: 44 }}>
-              <SplitHeading outline="human-in-the-loop" solid="R&D" inView={inView} color={C.charcoal} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {WHEEL.map((item, i) => (
-                <motion.button key={i} onClick={() => setActive(i)} whileHover={{ x: 6 }}
-                  style={{ textAlign: 'left', padding: '22px 28px', borderRadius: 24, cursor: 'pointer', border: `2px solid ${active === i ? C.accent : 'transparent'}`, background: active === i ? `${C.accent}10` : 'transparent', transition: 'border-color 0.25s, background 0.25s' }}
-                >
-                  <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: active === i ? C.accent : C.charcoal, marginBottom: active === i ? 8 : 0, transition: 'color 0.25s', textTransform: 'lowercase' }}>{item.label}</div>
-                  <AnimatePresence>
-                    {active === i && (
-                      <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                        style={{ color: '#666', fontFamily: 'Inter, sans-serif', fontSize: '0.88rem', lineHeight: 1.75, margin: 0, overflow: 'hidden' }}
-                      >{item.desc}</motion.p>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
+          </div>
+
+          {/* Step list */}
+          <div style={{ marginTop: 36, position: 'relative' }}>
+            {/* Growing vertical line */}
+            <div ref={lineRef} style={{ position: 'absolute', left: 9, top: 16, bottom: 16, width: 1, background: `linear-gradient(to bottom, ${C.accent}, #4A90D9, #A78BFA)`, borderRadius: 1, transformOrigin: 'top' }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {PHASES.map((ph, i) => (
+                <div key={i} ref={stepRefs[i]} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0' }}>
+                  <div ref={stepDotRefs[i]} style={{ width: 18, height: 18, borderRadius: '50%', border: `1.5px solid ${ph.color}`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: ph.color }} />
+                  </div>
+                  {!isMobile && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', fontWeight: 500, color: C.charcoal, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {ph.label.replace('\n', ' ')}
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
-          </motion.div>
-          {!isMobile && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ duration: 0.9, delay: 0.2 }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <div style={{ position: 'relative', width: 390, height: 390 }}>
-                <motion.svg viewBox="0 0 390 390" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', rotate: wheelRot }}>
-                  <circle cx="195" cy="195" r="180" fill="none" stroke={`${C.accent}18`} strokeWidth="1" />
-                  <circle cx="195" cy="195" r="180" fill="none" stroke={C.accent} strokeWidth="1.2" strokeDasharray="18 13" />
-                </motion.svg>
-                <div style={{ position: 'absolute', inset: '30%', borderRadius: '50%', background: C.charcoal, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src="/phitopolis_logo_white.svg" alt="Phitopolis" style={{ height: 28, width: 'auto' }} />
-                </div>
-                {WHEEL.map((item, i) => {
-                  const rad = (item.angleDeg * Math.PI) / 180;
-                  const cx = 195 + R * Math.cos(rad), cy = 195 + R * Math.sin(rad), innerR = 64;
-                  return (
-                    <React.Fragment key={i}>
-                      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox="0 0 390 390">
-                        <line x1={195 + innerR * Math.cos(rad)} y1={195 + innerR * Math.sin(rad)} x2={cx - 22 * Math.cos(rad)} y2={cy - 22 * Math.sin(rad)}
-                          stroke={active === i ? C.accent : `${C.accent}30`} strokeWidth={active === i ? 1.5 : 1} strokeDasharray={active === i ? undefined : '4 4'} style={{ transition: 'all 0.3s' }}
-                        />
-                      </svg>
-                      <motion.button onClick={() => setActive(i)} whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }} title={item.label}
-                        style={{ position: 'absolute', left: cx, top: cy, transform: 'translate(-50%, -50%)', width: 48, height: 48, borderRadius: '50%', background: active === i ? C.accent : `${C.accent}18`, border: `2px solid ${C.accent}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.3s' }}
-                      >
-                        <span style={{ color: active === i ? C.charcoal : C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 12 }}>{String(i + 1).padStart(2, '0')}</span>
-                      </motion.button>
-                    </React.Fragment>
-                  );
-                })}
+          </div>
+        </div>
+
+        {/* ── Main stage ───────────────────────────────────────────────── */}
+        <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+
+          {/* Section heading — fades out as phases take over */}
+          <div ref={headRef} style={{ position: 'absolute', top: '10%', left: isMobile ? 24 : 48, zIndex: 3, pointerEvents: 'none' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.charcoal}`, WebkitTextFillColor: 'transparent', display: 'block' }}>
+              human-in-the-loop
+            </span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.charcoal, display: 'block' }}>
+              R&D
+            </span>
+          </div>
+
+          {/* ── Per-phase panels ─────────────────────────────────────────── */}
+          {PHASES.map((ph, i) => (
+            <div key={i} ref={phaseRefs[i]} style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 24px 0 24px' : '0 60px 0 48px', pointerEvents: 'none' }}>
+
+              {/* Glow orb */}
+              <div ref={orbRefs[i]} style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: 'clamp(280px, 45vw, 600px)', height: 'clamp(280px, 45vw, 600px)', borderRadius: '50%', background: `radial-gradient(circle at 40% 40%, ${ph.glow}22 0%, ${ph.glow}06 50%, transparent 72%)`, filter: 'blur(40px)', pointerEvents: 'none', zIndex: 0 }} />
+
+              {/* Ghost number — background */}
+              <div ref={numRefs[i]} style={{ position: 'absolute', right: isMobile ? '-0.08em' : '-0.04em', top: '50%', transform: 'translateY(-54%)', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? '52vw' : '38vw', color: `${ph.glow}09`, lineHeight: 1, userSelect: 'none', zIndex: 0, letterSpacing: '-0.06em' }}>
+                {ph.num}
               </div>
-            </motion.div>
-          )}
+
+              {/* Phase content */}
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                {/* Phase number chip */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
+                  <div style={{ width: 32, height: 1.5, background: ph.color, borderRadius: 1 }} />
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: ph.color }}>phase {ph.num}</span>
+                </div>
+
+                {/* Label — clip-path curtain reveal */}
+                <div ref={labelRefs[i]} style={{ overflow: 'visible', marginBottom: 24 }}>
+                  <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(2.4rem, 10vw, 4rem)' : 'clamp(3.5rem, 7vw, 7.5rem)', letterSpacing: '-0.04em', lineHeight: 1.0, textTransform: 'lowercase', color: C.charcoal, margin: 0, whiteSpace: 'pre-line' }}>
+                    {ph.label}
+                  </h2>
+                </div>
+
+                {/* Description */}
+                <div ref={descRefs[i]} style={{ maxWidth: 480 }}>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.85rem' : '1rem', color: 'rgba(10,14,26,0.55)', lineHeight: 1.8, margin: 0 }}>
+                    {ph.sub}
+                  </p>
+                  {/* Accent underline */}
+                  <div style={{ marginTop: 24, width: 48, height: 2, background: ph.color, borderRadius: 1 }} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1823,38 +1957,45 @@ const CARDS = [
   { label: 'AI-Powered Compliance Monitor', tag: 'RegTech', desc: 'NLP-based regulatory compliance engine that continuously scans communications and flags violations before they become liabilities.', color: '#A78BFA' },
 ];
 const CARD_W = 480;
+const GAP = 28;
 
-const ShowCard = ({ card, index, fullWidth = false }: { card: typeof CARDS[0]; index: number; fullWidth?: boolean }) => {
+const ShowCard = ({ card, index, isActive = true, fullWidth = false }: { card: typeof CARDS[0]; index: number; isActive?: boolean; fullWidth?: boolean }) => {
   const [hovered, setHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const rx = useMotionValue(0), ry = useMotionValue(0);
-  const rxS = useSpring(rx, { stiffness: 280, damping: 22 });
-  const ryS = useSpring(ry, { stiffness: 280, damping: 22 });
+  const rxS = useSpring(rx, { stiffness: 220, damping: 28 });
+  const ryS = useSpring(ry, { stiffness: 220, damping: 28 });
   const onMove = (e: React.MouseEvent) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || !isActive) return;
     const r = cardRef.current.getBoundingClientRect();
-    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 14);
-    ry.set(((e.clientX - r.left) / r.width - 0.5) * 14);
+    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 12);
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * 12);
   };
   const onLeave = () => { rx.set(0); ry.set(0); setHovered(false); };
   return (
-    <div style={{ width: fullWidth ? '100%' : CARD_W, flexShrink: 0, perspective: 1000 }}>
-      <motion.div ref={cardRef} onMouseMove={onMove} onMouseEnter={() => setHovered(true)} onMouseLeave={onLeave}
-        style={{ rotateX: rxS, rotateY: ryS, background: C.mid, borderRadius: 56, padding: '52px 44px', height: fullWidth ? 'auto' : 470, minHeight: fullWidth ? 300 : undefined, display: 'flex', flexDirection: 'column', border: `1px solid ${hovered ? card.color : 'rgba(255,255,255,0.06)'}`, position: 'relative', overflow: 'hidden', transition: 'border-color 0.3s' }}
-      >
-        <motion.div style={{ position: 'absolute', top: -20, right: -20, width: 240, height: 240, borderRadius: '50%', background: `radial-gradient(circle, ${card.color}25 0%, transparent 70%)`, filter: 'blur(40px)' }}
-          animate={{ scale: hovered ? 1.5 : 1, opacity: hovered ? 1 : 0.3 }} transition={{ duration: 0.45 }}
-        />
-        <div style={{ position: 'absolute', top: 28, right: 36, color: `${card.color}18`, fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '6rem', lineHeight: 1, letterSpacing: '-0.04em' }}>
-          {String(index + 1).padStart(2, '0')}
-        </div>
-        <div style={{ marginTop: 'auto', position: 'relative', zIndex: 1 }}>
-          <span style={{ display: 'inline-block', padding: '5px 16px', borderRadius: 100, background: `${card.color}20`, color: card.color, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 22, fontFamily: 'Inter, sans-serif' }}>{card.tag}</span>
-          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.8rem', color: C.base, lineHeight: 1.15, marginBottom: 20, letterSpacing: '-0.015em' }}>{card.label}</h3>
-          <p style={{ color: 'rgba(255,255,255,0.48)', fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', lineHeight: 1.85 }}>{card.desc}</p>
-        </div>
-      </motion.div>
-    </div>
+    <motion.div
+      animate={{ opacity: fullWidth ? 1 : (isActive ? 1 : 0.3), scale: fullWidth ? 1 : (isActive ? 1 : 0.93) }}
+      transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+      style={{ width: fullWidth ? '100%' : CARD_W, flexShrink: 0 }}
+    >
+      <div style={{ perspective: 1000 }}>
+        <motion.div ref={cardRef} onMouseMove={onMove} onMouseEnter={() => setHovered(true)} onMouseLeave={onLeave}
+          style={{ rotateX: rxS, rotateY: ryS, background: C.mid, borderRadius: 56, padding: '52px 44px', height: fullWidth ? 'auto' : 470, minHeight: fullWidth ? 300 : undefined, display: 'flex', flexDirection: 'column', border: `1px solid ${hovered && isActive ? card.color : 'rgba(255,255,255,0.06)'}`, position: 'relative', overflow: 'hidden', transition: 'border-color 0.3s' }}
+        >
+          <motion.div style={{ position: 'absolute', top: -20, right: -20, width: 240, height: 240, borderRadius: '50%', background: `radial-gradient(circle, ${card.color}25 0%, transparent 70%)`, filter: 'blur(40px)' }}
+            animate={{ scale: hovered && isActive ? 1.5 : 1, opacity: hovered && isActive ? 1 : 0.3 }} transition={{ duration: 0.45 }}
+          />
+          <div style={{ position: 'absolute', top: 28, right: 36, color: `${card.color}18`, fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '6rem', lineHeight: 1, letterSpacing: '-0.04em' }}>
+            {String(index + 1).padStart(2, '0')}
+          </div>
+          <div style={{ marginTop: 'auto', position: 'relative', zIndex: 1 }}>
+            <span style={{ display: 'inline-block', padding: '5px 16px', borderRadius: 100, background: `${card.color}20`, color: card.color, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 22, fontFamily: 'Inter, sans-serif' }}>{card.tag}</span>
+            <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.8rem', color: C.base, lineHeight: 1.15, marginBottom: 20, letterSpacing: '-0.015em' }}>{card.label}</h3>
+            <p style={{ color: 'rgba(255,255,255,0.48)', fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', lineHeight: 1.85 }}>{card.desc}</p>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 };
 
@@ -1884,6 +2025,48 @@ const PEOPLE = [
   { id: '12', role: 'Technical Lead',         dept: 'Eng',     desc: 'Elevates entire teams through architecture ownership and mentorship',        skills: ['Architecture', 'Mentoring', 'Git'] },
 ];
 
+const PAIRS = [
+  [PEOPLE[0],  PEOPLE[1]],
+  [PEOPLE[2],  PEOPLE[3]],
+  [PEOPLE[4],  PEOPLE[5]],
+  [PEOPLE[6],  PEOPLE[7]],
+  [PEOPLE[8],  PEOPLE[9]],
+  [PEOPLE[10], PEOPLE[11]],
+] as const;
+
+const PAIR_WIN = [
+  [0.04, 0.09, 0.16, 0.21],
+  [0.21, 0.26, 0.33, 0.38],
+  [0.38, 0.43, 0.50, 0.55],
+  [0.55, 0.60, 0.67, 0.72],
+  [0.72, 0.77, 0.84, 0.89],
+  [0.89, 0.94, 0.98, 1.00],
+];
+
+const RolePairCard = ({ person, isMobile }: { person: typeof PEOPLE[0]; isMobile: boolean }) => {
+  const c = DEPT_COLORS[person.dept];
+  return (
+    <div style={{ background: 'rgba(10,42,102,0.26)', backdropFilter: 'blur(14px)', border: '1px solid rgba(255,255,255,0.07)', borderLeft: `3px solid ${c}`, borderRadius: 20, padding: isMobile ? '18px 20px' : '26px 36px', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: isMobile ? 8 : 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 10, color: c, letterSpacing: '0.3em' }}>{person.id}</span>
+          <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: isMobile ? '1.05rem' : 'clamp(1.3rem, 2.2vw, 1.85rem)', color: '#fff', letterSpacing: '-0.02em', margin: 0, lineHeight: 1.1 }}>{person.role}</h3>
+        </div>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 9, fontWeight: 600, color: c, background: `${c}1A`, padding: '4px 10px', borderRadius: 100, letterSpacing: '0.12em', textTransform: 'uppercase', flexShrink: 0, alignSelf: 'center' }}>{person.dept}</span>
+      </div>
+      {!isMobile && (
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', color: 'rgba(255,255,255,0.48)', lineHeight: 1.8, margin: '0 0 14px 0' }}>{person.desc}</p>
+      )}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {person.skills.map(s => (
+          <span key={s} style={{ fontFamily: 'Inter, sans-serif', fontSize: 10, color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 100, padding: '3px 10px' }}>{s}</span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// kept for legacy mobile usage - not rendered in new layout
 const RoleRow = React.memo(({ person, index, inView }: { person: typeof PEOPLE[0]; index: number; inView: boolean }) => {
   const [hovered, setHovered] = useState(false);
   const isMobile = useIsMobile();
@@ -1900,9 +2083,10 @@ const RoleRow = React.memo(({ person, index, inView }: { person: typeof PEOPLE[0
         alignItems: 'center',
         gap: isMobile ? '0 16px' : '0 32px',
         padding: isMobile ? '14px 16px' : '15px 28px',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '1px solid rgba(255,255,255,0.09)',
         position: 'relative',
-        background: hovered ? 'rgba(255,199,44,0.05)' : 'transparent',
+        background: hovered ? 'rgba(255,199,44,0.08)' : 'rgba(10,42,102,0.18)',
+        backdropFilter: 'blur(6px)',
         transition: 'background 0.28s ease',
         cursor: 'default',
       }}
@@ -1920,7 +2104,7 @@ const RoleRow = React.memo(({ person, index, inView }: { person: typeof PEOPLE[0
       <span style={{
         fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 10,
         letterSpacing: '0.25em',
-        color: hovered ? DEPT_COLORS[person.dept] : 'rgba(255,255,255,0.18)',
+        color: DEPT_COLORS[person.dept],
         transition: 'color 0.28s',
       }}>
         {person.id}
@@ -1931,7 +2115,7 @@ const RoleRow = React.memo(({ person, index, inView }: { person: typeof PEOPLE[0
         <span style={{
           fontFamily: 'Outfit, sans-serif', fontWeight: 700,
           fontSize: isMobile ? '0.9rem' : '1rem',
-          color: hovered ? '#fff' : 'rgba(255,255,255,0.78)',
+          color: '#fff',
           letterSpacing: '-0.01em', transition: 'color 0.28s', whiteSpace: 'nowrap',
         }}>
           {person.role}
@@ -1952,7 +2136,7 @@ const RoleRow = React.memo(({ person, index, inView }: { person: typeof PEOPLE[0
       {!isMobile && (
         <span style={{
           fontFamily: 'Inter, sans-serif', fontSize: '0.78rem',
-          color: hovered ? 'rgba(255,255,255,0.48)' : 'rgba(255,255,255,0.26)',
+          color: 'rgba(255,255,255,0.55)',
           lineHeight: 1.55, transition: 'color 0.28s',
         }}>
           {person.desc}
@@ -1965,8 +2149,8 @@ const RoleRow = React.memo(({ person, index, inView }: { person: typeof PEOPLE[0
           {person.skills.map(s => (
             <span key={s} style={{
               fontFamily: 'Inter, sans-serif', fontSize: 10,
-              color: hovered ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)',
-              border: `1px solid ${hovered ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.07)'}`,
+              color: 'rgba(255,255,255,0.6)',
+              border: '1px solid rgba(255,255,255,0.18)',
               borderRadius: 100, padding: '3px 10px', whiteSpace: 'nowrap',
               transition: 'all 0.28s',
             }}>
@@ -1980,95 +2164,152 @@ const RoleRow = React.memo(({ person, index, inView }: { person: typeof PEOPLE[0
 });
 
 const OurPeople = () => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
+  const sRef    = useRef<HTMLElement>(null);
+  const bgRef   = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const headRef  = useRef<HTMLDivElement>(null);
+  const lineRef  = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  return (
-    <section id="sec-people" ref={ref} style={{
-      background: C.charcoal, minHeight: '100vh',
-      padding: 'clamp(80px, 10vw, 120px) 40px',
-      position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-    }}>
-      <SectionTag name="our people" />
-      <div style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
-        <Divider inView={inView} />
 
-        {/* Header row */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 40, flexWrap: 'wrap', gap: 24 }}>
-          <div>
+  const pairRefs  = useRef<(HTMLDivElement | null)[]>([]);
+  const role1Refs = useRef<(HTMLDivElement | null)[]>([]);
+  const role2Refs = useRef<(HTMLDivElement | null)[]>([]);
+  const ghostRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dotRefs   = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // ── Background parallax ──────────────────────────────────────────────
+      gsap.fromTo(bgRef.current, { y: '-8%' }, {
+        y: '8%', ease: 'none',
+        scrollTrigger: { trigger: sRef.current, start: 'top bottom', end: 'bottom top', scrub: 1.2 },
+      });
+
+      // ── Main scroll timeline ─────────────────────────────────────────────
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: sRef.current, start: 'top top', end: 'bottom bottom', scrub: 1.8 },
+        defaults: { ease: 'none' },
+      });
+
+      // Entry
+      gsap.set([badgeRef.current, headRef.current], { y: 52, opacity: 0 });
+      tl.to(badgeRef.current, { y: 0, opacity: 1, duration: 0.04 }, 0);
+      tl.to(headRef.current,  { y: 0, opacity: 1, duration: 0.04 }, 0.015);
+
+      // Progress line grows top → bottom over entire scroll
+      gsap.set(lineRef.current, { scaleY: 0, transformOrigin: 'top center' });
+      tl.to(lineRef.current, { scaleY: 1, duration: 0.92 }, 0.04);
+
+      // ── Per-pair animations ──────────────────────────────────────────────
+      PAIRS.forEach((pair, i) => {
+        const [es, ee, xs, xe] = PAIR_WIN[i];
+        const eD = ee - es;
+        const xD = xe - xs;
+        const pairColor = DEPT_COLORS[pair[0].dept];
+
+        gsap.set(pairRefs.current[i],  { opacity: 0 });
+        gsap.set(role1Refs.current[i], { x: -60, opacity: 0 });
+        gsap.set(role2Refs.current[i], { x:  60, opacity: 0 });
+        gsap.set(ghostRefs.current[i], { scale: 1.22, opacity: 0 });
+        gsap.set(dotRefs.current[i * 2],     { backgroundColor: 'rgba(255,255,255,0.1)', scale: 0.65 });
+        gsap.set(dotRefs.current[i * 2 + 1], { backgroundColor: 'rgba(255,255,255,0.1)', scale: 0.65 });
+
+        // Enter
+        tl.to(pairRefs.current[i],  { opacity: 1, duration: eD * 0.2 }, es);
+        tl.to(ghostRefs.current[i], { scale: 1, opacity: 1, duration: eD * 0.75, ease: 'power2.out' }, es);
+        tl.to(role1Refs.current[i], { x: 0, opacity: 1, duration: eD * 0.65, ease: 'power3.out' }, es + eD * 0.12);
+        tl.to(role2Refs.current[i], { x: 0, opacity: 1, duration: eD * 0.65, ease: 'power3.out' }, es + eD * 0.30);
+        tl.to(dotRefs.current[i * 2],     { backgroundColor: pairColor, scale: 1.25, duration: eD * 0.3 }, es + eD * 0.12);
+        tl.to(dotRefs.current[i * 2 + 1], { backgroundColor: pairColor, scale: 1.25, duration: eD * 0.3 }, es + eD * 0.30);
+
+        // Exit (skip for last pair)
+        if (xs < 0.97) {
+          tl.to(role1Refs.current[i], { x: -48, opacity: 0, duration: xD * 0.5, ease: 'power2.in' }, xs);
+          tl.to(role2Refs.current[i], { x:  48, opacity: 0, duration: xD * 0.5, ease: 'power2.in' }, xs + xD * 0.12);
+          tl.to(ghostRefs.current[i], { scale: 0.82, opacity: 0, duration: xD * 0.55 }, xs);
+          tl.to(pairRefs.current[i],  { opacity: 0, duration: xD * 0.12 }, xs + xD * 0.88);
+          tl.to(dotRefs.current[i * 2],     { backgroundColor: 'rgba(255,255,255,0.1)', scale: 0.65, duration: xD * 0.3 }, xs);
+          tl.to(dotRefs.current[i * 2 + 1], { backgroundColor: 'rgba(255,255,255,0.1)', scale: 0.65, duration: xD * 0.3 }, xs + xD * 0.1);
+        }
+      });
+    }, sRef);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="sec-people" ref={sRef} style={{ background: C.charcoal, height: '750vh', position: 'relative' }}>
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
+        <SectionTag name="our people" />
+
+        {/* Background */}
+        <div ref={bgRef} style={{ position: 'absolute', inset: '-12%', zIndex: 0, pointerEvents: 'none', willChange: 'transform' }}>
+          <img src="/bg_tech_towers.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+        </div>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(100deg, ${C.charcoal} 0%, ${C.charcoal}F0 30%, ${C.charcoal}BB 55%, ${C.charcoal}77 75%, ${C.charcoal}44 100%)` }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(to bottom, ${C.charcoal} 0%, transparent 8%, transparent 92%, ${C.charcoal} 100%)` }} />
+
+        {/* ── Left rail ────────────────────────────────────────────────────── */}
+        <div style={{ width: isMobile ? 72 : 'clamp(190px, 21vw, 270px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 0 0 20px' : '0 0 0 48px', position: 'relative', zIndex: 3 }}>
+          <div ref={badgeRef}>
             <Badge n="07" label="Our People" />
-            <div style={{ overflow: 'hidden' }}>
-              <motion.div
-                initial={{ y: '110%' }} animate={inView ? { y: 0 } : {}}
-                transition={{ duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
-                style={{ display: 'flex', alignItems: 'baseline', gap: '0.2em', flexWrap: 'wrap' }}
-              >
-                <span style={{
-                  fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-                  fontSize: 'clamp(2.8rem, 5vw, 5rem)',
-                  letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
-                  WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent',
-                  display: 'inline-block',
-                }}>the</span>
-                <span style={{
-                  fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-                  fontSize: 'clamp(2.8rem, 5vw, 5rem)',
-                  letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
-                  color: C.base, display: 'inline-block',
-                }}>people</span>
-              </motion.div>
-            </div>
           </div>
 
-          {/* Stat + legend */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16, paddingBottom: 4 }}
-          >
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,4vw,3.5rem)', color: C.accent, lineHeight: 1, letterSpacing: '-0.04em' }}>
-                {PEOPLE.length}
-              </div>
-              <div style={{ fontFamily: 'Inter, sans-serif', fontSize: 10, color: C.muted, letterSpacing: '0.2em', textTransform: 'uppercase', marginTop: 4 }}>
-                disciplines
-              </div>
+          <div style={{ marginTop: 32, position: 'relative' }}>
+            {/* Growing progress line */}
+            <div ref={lineRef} style={{ position: 'absolute', left: 8, top: 10, bottom: 10, width: 1, background: 'rgba(255,255,255,0.12)', borderRadius: 1 }} />
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {PEOPLE.map((person, i) => (
+                <div key={person.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: i % 2 === 0 ? '9px 0 4px 0' : '4px 0 9px 0' }}>
+                  <div
+                    ref={el => { dotRefs.current[i] = el; }}
+                    style={{ width: 16, height: 16, borderRadius: '50%', border: `1.5px solid ${DEPT_COLORS[person.dept]}55`, flexShrink: 0, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                  />
+                  {!isMobile && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {person.role}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
-            {/* Dept legend */}
-            {!isMobile && (
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                {Object.entries(DEPT_COLORS).map(([dept, color]) => (
-                  <div key={dept} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: color }} />
-                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 10, color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{dept}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
+          </div>
         </div>
 
-        {/* Column headers */}
-        {!isMobile && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.15, duration: 0.5 }}
-            style={{ display: 'grid', gridTemplateColumns: '44px 1fr 2fr auto', gap: '0 32px', padding: '0 28px 10px 28px' }}
-          >
-            {['#', 'Role', 'What they do', 'Key tools'].map(h => (
-              <span key={h} style={{ fontFamily: 'Inter, sans-serif', fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.22em', textTransform: 'uppercase' }}>
-                {h}
-              </span>
-            ))}
-          </motion.div>
-        )}
+        {/* ── Main stage ───────────────────────────────────────────────────── */}
+        <div style={{ flex: 1, position: 'relative', overflow: 'hidden', zIndex: 2 }}>
+          {/* Section heading — entry state, fades out once pairs begin */}
+          <div ref={headRef} style={{ position: 'absolute', top: '10%', left: isMobile ? 20 : 48, zIndex: 3, pointerEvents: 'none' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent', display: 'block' }}>the</span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base, display: 'block' }}>people</span>
+          </div>
 
-        {/* Roles list */}
-        <div>
-          {PEOPLE.map((person, i) => (
-            <RoleRow key={person.id} person={person} index={i} inView={inView} />
-          ))}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} />
+          {/* ── Pair panels ──────────────────────────────────────────────── */}
+          {PAIRS.map((pair, i) => {
+            const pairColor = DEPT_COLORS[pair[0].dept];
+            return (
+              <div key={i} ref={el => { pairRefs.current[i] = el; }}
+                style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 20px' : '0 48px', gap: 16, pointerEvents: 'none' }}
+              >
+                {/* Ghost dept text */}
+                <div ref={el => { ghostRefs.current[i] = el; }}
+                  style={{ position: 'absolute', right: '-0.04em', top: '50%', transform: 'translateY(-52%)', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? '52vw' : '34vw', color: `${pairColor}07`, lineHeight: 1, userSelect: 'none', letterSpacing: '-0.06em', zIndex: 0, pointerEvents: 'none' }}
+                >
+                  {pair[0].dept.toUpperCase()}
+                </div>
+
+                {/* Role cards — left / right split */}
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 14 : 24, alignItems: 'flex-start' }}>
+                  <div ref={el => { role1Refs.current[i] = el; }} style={{ flex: 1, minWidth: 0 }}>
+                    <RolePairCard person={pair[0]} isMobile={isMobile} />
+                  </div>
+                  <div ref={el => { role2Refs.current[i] = el; }} style={{ flex: 1, minWidth: 0 }}>
+                    <RolePairCard person={pair[1]} isMobile={isMobile} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -2077,28 +2318,78 @@ const OurPeople = () => {
 
 const Showcase = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef(null);
-  const inView = useInView(headerRef, { once: true, margin: '-60px' });
+  const leftRef = useRef(null);
+  const inView = useInView(leftRef, { once: true, margin: '-60px' });
   const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
   const x = useMotionValue(0);
+  const xSpring = useSpring(x, { stiffness: 180, damping: 28, mass: 0.8 });
+  const [activeIdx, setActiveIdx] = useState(0);
+  const activeIdxRef = useRef(0);
+  const isAdvancingRef = useRef(false);
 
+  // Sync track position whenever activeIdx changes
+  useEffect(() => {
+    x.set(-(activeIdx * (CARD_W + GAP)));
+  }, [activeIdx]);
+
+  // Reset to card 0 if the section is re-entered from the top
   useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    if (!trackRef.current) return;
-    const scrollable = Math.max(0, trackRef.current.scrollWidth - (window.innerWidth - 80));
-    x.set(-scrollable * v);
+    if (v <= 0.015 && activeIdxRef.current !== 0) {
+      activeIdxRef.current = 0;
+      setActiveIdx(0);
+      isAdvancingRef.current = false;
+    }
   });
 
-  // Progress indicator for horizontal scroll
-  const [pctDisplay, setPctDisplay] = useState('0');
-  useMotionValueEvent(scrollYProgress, 'change', (v) => { setPctDisplay(String(Math.round(v * 100))); });
+  // Per-card wheel navigation — capture phase runs before SectionTransition's bubble listener
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      const sec = sectionRef.current;
+      if (!sec) return;
+      const rect = sec.getBoundingClientRect();
+      // Only intercept while section is in its sticky state
+      if (rect.top > 2 || rect.bottom < window.innerHeight - 2) return;
+
+      const dir = Math.sign(e.deltaY);
+      if (dir === 0) return;
+      const cur = activeIdxRef.current;
+
+      if (dir > 0 && cur < CARDS.length - 1) {
+        e.preventDefault();
+        if (isAdvancingRef.current) return;
+        isAdvancingRef.current = true;
+        const next = cur + 1;
+        activeIdxRef.current = next;
+        setActiveIdx(next);
+        const scrollable = sec.offsetHeight - window.innerHeight;
+        window.scrollTo({ top: sec.offsetTop + (next / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+        setTimeout(() => { isAdvancingRef.current = false; }, 700);
+      } else if (dir < 0 && cur > 0) {
+        e.preventDefault();
+        if (isAdvancingRef.current) return;
+        isAdvancingRef.current = true;
+        const prev = cur - 1;
+        activeIdxRef.current = prev;
+        setActiveIdx(prev);
+        const scrollable = sec.offsetHeight - window.innerHeight;
+        window.scrollTo({ top: sec.offsetTop + (prev / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+        setTimeout(() => { isAdvancingRef.current = false; }, 700);
+      }
+      // At first/last card: don't preventDefault → SectionTransition handles section navigation
+    };
+
+    window.addEventListener('wheel', onWheel, { passive: false, capture: true });
+    return () => window.removeEventListener('wheel', onWheel, { capture: true });
+  }, []);
+
+  const activeCard = CARDS[activeIdx];
 
   if (isMobile) {
     return (
       <section id="sec-showcase" style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 24px', position: 'relative' }}>
         <SectionTag name="showcase" />
-        <div ref={headerRef}>
+        <div ref={leftRef}>
           <div style={{ marginBottom: 52 }}>
             <Badge n="06" label="Innovation Hub" />
             <SplitHeading outline="ai projects" solid="at work" inView={inView} color={C.charcoal} fontSize="clamp(2.8rem, 8vw, 4.5rem)" />
@@ -2117,29 +2408,66 @@ const Showcase = () => {
 
   return (
     <section id="sec-showcase" ref={sectionRef} style={{ background: C.base, height: `${(CARDS.length + 1.5) * 100}vh`, position: 'relative' }}>
-      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 40px' }}
-        data-cursor="drag"
-      >
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
         <SectionTag name="showcase" />
-        <motion.div ref={headerRef} initial={{ opacity: 0, y: 28 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7 }} style={{ marginBottom: 44 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <Badge n="06" label="Innovation Hub" />
-              <SplitHeading outline="ai projects" solid="at work" inView={inView} color={C.charcoal} fontSize="clamp(2.8rem, 5vw, 4.5rem)" />
+
+        {/* ── Left panel: heading + card meta + progress ── */}
+        <motion.div ref={leftRef}
+          initial={{ opacity: 0, x: -24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.7 }}
+          style={{ width: 'clamp(280px, 34vw, 440px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 48px', borderRight: '1px solid rgba(0,0,0,0.06)', position: 'relative', zIndex: 2 }}
+        >
+          <Badge n="06" label="Innovation Hub" />
+          <SplitHeading outline="ai projects" solid="at work" inView={inView} color={C.charcoal} fontSize="clamp(1.9rem, 2.8vw, 3rem)" />
+
+          {/* Current card details */}
+          <AnimatePresence mode="wait">
+            <motion.div key={activeIdx}
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }}
+              transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+              style={{ marginTop: 32 }}
+            >
+              <span style={{ display: 'inline-block', padding: '5px 14px', borderRadius: 100, background: `${activeCard.color}18`, color: activeCard.color, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
+                {activeCard.tag}
+              </span>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1rem, 1.5vw, 1.45rem)', color: C.charcoal, lineHeight: 1.2, marginBottom: 12, letterSpacing: '-0.015em' }}>
+                {activeCard.label}
+              </h3>
+              <p style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', lineHeight: 1.75 }}>
+                {activeCard.desc}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Counter + dots + scroll bar */}
+          <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2rem', color: C.charcoal, letterSpacing: '-0.04em', lineHeight: 1 }}>
+                {String(activeIdx + 1).padStart(2, '0')}
+              </span>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 400, fontSize: '1rem', color: C.muted }}>
+                / {String(CARDS.length).padStart(2, '0')}
+              </span>
             </div>
-            {/* Horizontal progress indicator */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 8 }}>
-              <span style={{ color: C.muted, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 11, letterSpacing: '0.15em', textTransform: 'uppercase' }}>scroll</span>
-              <div style={{ width: 120, height: 2, background: 'rgba(0,0,0,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+              {CARDS.map((_, i) => (
+                <div key={i} style={{ height: 4, borderRadius: 2, background: i === activeIdx ? activeCard.color : 'rgba(0,0,0,0.12)', transition: 'width 0.35s ease, background 0.35s ease', width: i === activeIdx ? 28 : 6 }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>scroll to explore</span>
+              <div style={{ flex: 1, height: 1.5, background: 'rgba(0,0,0,0.1)', borderRadius: 1, overflow: 'hidden' }}>
                 <motion.div style={{ height: '100%', background: C.accent, scaleX: scrollYProgress, transformOrigin: 'left' }} />
               </div>
-              <span style={{ color: C.charcoal, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: 11 }}>{pctDisplay}%</span>
             </div>
           </div>
         </motion.div>
-        <motion.div ref={trackRef} style={{ x, display: 'flex', gap: 28, willChange: 'transform' }}>
-          {CARDS.map((card, i) => <ShowCard key={i} card={card} index={i} />)}
-        </motion.div>
+
+        {/* ── Right panel: card track ── */}
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', padding: '0 40px 0 52px' }}>
+          <motion.div style={{ x: xSpring, display: 'flex', gap: GAP, willChange: 'transform' }}>
+            {CARDS.map((card, i) => <ShowCard key={i} card={card} index={i} isActive={i === activeIdx} />)}
+          </motion.div>
+        </div>
       </div>
     </section>
   );
