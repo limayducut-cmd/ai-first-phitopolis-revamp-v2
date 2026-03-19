@@ -465,6 +465,177 @@ const SectionTransition = () => {
   );
 };
 
+// ── FLOATING STRING ───────────────────────────────────────────────────────────
+const FloatingString = ({ years, scrollProgressRef }: { years: string[]; scrollProgressRef: React.MutableRefObject<number> }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let raf: number;
+    let t = 0;
+    let rawCursorY = window.innerHeight / 2;
+    let smoothCursorY = window.innerHeight / 2;
+
+    // Ring buffer
+    const HISTORY = 180;
+    const TRAVEL_FRAMES = 36;
+    const cursorHistory = new Float32Array(HISTORY).fill(0);
+    let histHead = 0;
+
+    // Per-year smooth dot progresses (1 = right end, 0 = left end)
+    const N = years.length;
+    const chapterSpan = 1 / Math.max(1, N - 1);
+    const smoothProgresses = new Float32Array(N).fill(1);
+    const entryTimes = new Array<number>(N).fill(-1); // -1 = not entered yet
+
+    const onMouseMove = (e: MouseEvent) => { rawCursorY = e.clientY; };
+    window.addEventListener('mousemove', onMouseMove);
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = canvas.offsetWidth  * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    // Helper: sample string Y at a given progress value
+    const sampleY = (tp: number, centerY: number) => {
+      const delay  = (1 - tp) * TRAVEL_FRAMES;
+      const dFloor = Math.floor(delay);
+      const dFrac  = delay - dFloor;
+      const iA     = (histHead - 1 - dFloor     + HISTORY * 4) % HISTORY;
+      const iB     = (histHead - 1 - dFloor - 1 + HISTORY * 4) % HISTORY;
+      const disp   = cursorHistory[iA] * (1 - dFrac) + cursorHistory[iB] * dFrac;
+      const env    = Math.sqrt(Math.max(0, tp)) * Math.sin(tp * Math.PI * 0.95 + 0.08);
+      const w1     = Math.sin(tp * Math.PI * 2.2 + t * 0.9) * 12;
+      const w2     = Math.sin(tp * Math.PI * 4.7 + t * 1.6) * 5;
+      const dr     = Math.sin(t * 0.25 - tp * 1.2) * 4;
+      const taper  = 0.2 + 0.8 * tp;
+      return centerY + disp * taper + (w1 + w2 + dr) * env;
+    };
+
+    const draw = () => {
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      ctx.clearRect(0, 0, w, h);
+      t += 0.007;
+
+      smoothCursorY += (rawCursorY - smoothCursorY) * 0.08;
+      const displace = (smoothCursorY - window.innerHeight / 2) / (window.innerHeight / 2) * h * 0.42;
+      cursorHistory[histHead] = displace;
+      histHead = (histHead + 1) % HISTORY;
+
+      const centerY = h / 2;
+      const segments = 120;
+      const dotR = 3;
+      const stringW = w * 0.75 - dotR;
+
+      // Draw string
+      const leftDisplace = cursorHistory[(histHead - 1 - TRAVEL_FRAMES + HISTORY * 4) % HISTORY] * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY + leftDisplace);
+      let lastY = centerY + leftDisplace;
+      for (let i = 1; i <= segments; i++) {
+        const progress = i / segments;
+        const x = progress * stringW;
+        const delay  = (1 - progress) * TRAVEL_FRAMES;
+        const dFloor = Math.floor(delay);
+        const dFrac  = delay - dFloor;
+        const idxA   = (histHead - 1 - dFloor     + HISTORY * 4) % HISTORY;
+        const idxB   = (histHead - 1 - dFloor - 1 + HISTORY * 4) % HISTORY;
+        const cDisp  = cursorHistory[idxA] * (1 - dFrac) + cursorHistory[idxB] * dFrac;
+        const wave1  = Math.sin(progress * Math.PI * 2.2 + t * 0.9) * 12;
+        const wave2  = Math.sin(progress * Math.PI * 4.7 + t * 1.6) * 5;
+        const drift  = Math.sin(t * 0.25 - progress * 1.2) * 4;
+        const env    = Math.sqrt(progress) * Math.sin(progress * Math.PI * 0.95 + 0.08);
+        const taper  = 0.2 + 0.8 * progress;
+        lastY = centerY + cDisp * taper + (wave1 + wave2 + drift) * env;
+        ctx.lineTo(x, lastY);
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Permanent dot at right end
+      ctx.beginPath();
+      ctx.arc(stringW, lastY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fill();
+
+      // Per-year traveling dots
+      const scrollProg = scrollProgressRef.current;
+      ctx.font = '11px "Outfit", sans-serif';
+      ctx.textBaseline = 'bottom';
+
+      for (let i = 0; i < N; i++) {
+        const chapterStart = i * chapterSpan;
+        const localProg    = Math.max(0, Math.min(1, (scrollProg - chapterStart) / chapterSpan));
+        const target       = 1 - localProg;
+
+        // Chapter not yet reached — reset so it slides in fresh next time
+        if (scrollProg < chapterStart - 0.001) {
+          smoothProgresses[i] = 1;
+          entryTimes[i] = -1;
+          continue;
+        }
+
+        // Record when this chapter was first entered
+        if (entryTimes[i] < 0) entryTimes[i] = performance.now();
+        const entryAlpha = Math.min(1, (performance.now() - entryTimes[i]) / 300);
+
+        // Faster lerp when scrolling back (target > current) so it snaps back quickly
+        const lerpRate = target > smoothProgresses[i] ? 0.10 : 0.04;
+        smoothProgresses[i] += (target - smoothProgresses[i]) * lerpRate;
+        const tp      = smoothProgresses[i];
+        const travelX = tp * stringW;
+        const travelY = sampleY(tp, centerY);
+
+        // Fade in on entry, fade out near left edge
+        const alpha = Math.min(tp / 0.12, 1) * entryAlpha;
+        if (alpha < 0.01) continue;
+
+        // Hollow dot: fill interior with background to mask the string, then stroke
+        ctx.beginPath();
+        ctx.arc(travelX, travelY, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(10,42,102,${alpha.toFixed(3)})`; // C.charcoal bg
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(255,199,44,${(0.9 * alpha).toFixed(3)})`;
+        const lw = ctx.measureText(years[i]).width;
+        ctx.fillText(years[i], travelX - lw / 2, travelY - dotR - 4);
+      }
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+    window.addEventListener('resize', resize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); window.removeEventListener('mousemove', onMouseMove); };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 3,
+      }}
+    />
+  );
+};
+
 // ── FLOATING SECTION NAV ──────────────────────────────────────────────────────
 const FLOAT_SECTIONS = [
   { id: 'sec-hero',      label: 'Intro' },
@@ -2343,7 +2514,9 @@ const ChapterGroup = () => {
   const imgRefs       = useRef<(HTMLDivElement | null)[]>([]);
   const progressRef   = useRef<HTMLDivElement>(null);
   const dotRefs       = useRef<(HTMLDivElement | null)[]>([]);
-  const yearLabelRef  = useRef<HTMLDivElement>(null);
+  const yearLabelRef      = useRef<HTMLDivElement>(null);
+  const scrollProgressRef = useRef(0);
+  const dotProgressRef    = useRef(1); // 1 = right end, 0 = left end
   const isMobile      = useIsMobile();
   const N = CHAPTERS.length;
 
@@ -2365,6 +2538,14 @@ const ChapterGroup = () => {
           end: 'bottom bottom',
           scrub: 1.5,
           invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            scrollProgressRef.current = self.progress;
+            const p = self.progress;
+            const chapterSpan = 1 / (N - 1);                                       // 0.2 per chapter
+            const chapterIdx  = Math.min(N - 2, Math.floor(p / chapterSpan));      // 0-4
+            const localProg   = (p - chapterIdx * chapterSpan) / chapterSpan;      // 0-1 within chapter
+            dotProgressRef.current = 1 - Math.max(0, Math.min(1, localProg));      // 1=right, 0=left
+          },
         },
         defaults: { ease: 'none' },
       });
@@ -2428,6 +2609,9 @@ const ChapterGroup = () => {
       <SectionTag name="our journey" />
 
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
+        {/* Floating string */}
+        <FloatingString years={CHAPTERS.map(c => c.num)} scrollProgressRef={scrollProgressRef} />
+
         {/* Top/bottom edge fades */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none', background: `linear-gradient(to bottom, ${C.charcoal} 0%, transparent 5%, transparent 92%, ${C.charcoal} 100%)` }} />
 
@@ -2736,7 +2920,7 @@ const Showcase = () => {
         {/* ── Right panel: card track ── */}
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', padding: '0 40px 0 52px' }}>
           <motion.div style={{ x: xSpring, display: 'flex', gap: GAP, willChange: 'transform' }}>
-            {CARDS.map((card, i) => <ShowCard key={i} card={card} index={i} isActive={i === activeIdx} />)}
+            {CARDS.map((card, i) => <ShowCard key={String(i)} card={card} index={i} isActive={i === activeIdx} />)}
           </motion.div>
         </div>
       </div>
