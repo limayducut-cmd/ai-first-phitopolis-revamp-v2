@@ -2500,7 +2500,7 @@ const CARDS = [
 const CARD_W = 480;
 const GAP = 28;
 
-const ShowCard = ({ card, index, isActive = true, fullWidth = false }: { card: typeof CARDS[0]; index: number; isActive?: boolean; fullWidth?: boolean }) => {
+const ShowCard = ({ card, index, isActive = true, fullWidth = false }: { key?: React.Key; card: typeof CARDS[0]; index: number; isActive?: boolean; fullWidth?: boolean }) => {
   const [hovered, setHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const rx = useMotionValue(0), ry = useMotionValue(0);
