@@ -2089,7 +2089,7 @@ const Vision = () => {
           {/* Parallax image */}
           <motion.div style={{ y: imgY }}>
             <motion.div initial={{ opacity: 0, x: 40 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.9, delay: 0.2, ease: [0.21, 1.02, 0.47, 0.98] }}>
-              <OrgMorphReveal src="https://phitopolis.com/img/core-competencies/innovation.jpg" alt="Phitopolis AI Innovation" />
+              <OrgMorphReveal src="/vision.jpg" alt="Phitopolis AI Vision" />
             </motion.div>
           </motion.div>
         </div>
@@ -2823,17 +2823,17 @@ const OurPeople = () => {
 
 // ── CHAPTERS ──────────────────────────────────────────────────────────────────
 const CHAPTERS = [
-  { num: '2021', id: 'sec-ch1', tag: 'The Beginning', title: '2021', sub: 'Where it all started',                color: '#FFC72C',
+  { num: '2021', id: 'sec-ch1', tag: 'The Beginning', title: '2021', sub: 'Where it all started',                color: '#FFC72C', image: '/img/journey/2021.jpg',
     body: 'Placeholder — content covering Phitopolis\'s founding year will live here. The vision, the first team members, and the early decisions that set the direction for everything that followed.' },
-  { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA',
+  { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA', image: '/img/journey/2022.jpg',
     body: 'Placeholder — content covering 2022\'s milestones will live here. Early client engagements, team growth, and the first solutions that proved the model worked.' },
-  { num: '2023', id: 'sec-ch3', tag: 'Momentum',      title: '2023', sub: 'Accelerating the mission',            color: '#34D399',
+  { num: '2023', id: 'sec-ch3', tag: 'Momentum',      title: '2023', sub: 'Accelerating the mission',            color: '#34D399', image: '/img/journey/2023.jpg',
     body: 'Placeholder — content covering 2023\'s growth will live here. Expanded capabilities, deeper partnerships, and the projects that put Phitopolis on the map.' },
-  { num: '2024', id: 'sec-ch4', tag: 'Scaling Up',    title: '2024', sub: 'Reaching new heights',                color: '#A78BFA',
+  { num: '2024', id: 'sec-ch4', tag: 'Scaling Up',    title: '2024', sub: 'Reaching new heights',                color: '#A78BFA', image: '/img/journey/2024.jpg',
     body: 'Placeholder — content covering 2024\'s expansion will live here. Larger engagements, new service lines, and a growing team aligned around AI-first delivery.' },
-  { num: '2025', id: 'sec-ch5', tag: 'Full Stride',   title: '2025', sub: 'Operating at full capacity',          color: '#F59E0B',
+  { num: '2025', id: 'sec-ch5', tag: 'Full Stride',   title: '2025', sub: 'Operating at full capacity',          color: '#F59E0B', image: '/img/journey/2025.jpg',
     body: 'Placeholder — content covering 2025\'s achievements will live here. Flagship deployments, measurable client impact, and the refinement of what makes Phitopolis different.' },
-  { num: '2026', id: 'sec-ch6', tag: 'AI Day',        title: '2026', sub: 'Five years in, the work continues',   color: '#F472B6',
+  { num: '2026', id: 'sec-ch6', tag: 'AI Day',        title: '2026', sub: 'Five years in, the work continues',   color: '#F472B6', image: '/img/journey/2026.jpg',
     body: 'Placeholder — content covering where Phitopolis stands today will live here. Five years of learning, shipping, and building — and a clear view of what comes next.' },
 ];
 
@@ -3013,42 +3013,30 @@ const ChapterGroup = () => {
                   </p>
                 </div>
 
-                {/* Image placeholder */}
+                {/* Image */}
                 <div ref={el => { imgRefs.current[i] = el; }}
                   style={{
                     flex: 1, minHeight: isMobile ? 220 : 'clamp(300px, 40vh, 480px)',
-                    borderRadius: 24, border: `1px dashed ${ch.color}28`,
-                    background: `linear-gradient(135deg, ${ch.color}06 0%, transparent 55%)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: 24, border: `1px solid ${ch.color}20`,
                     position: 'relative', overflow: 'hidden', willChange: 'transform',
                   }}
                 >
-                  {(['tl', 'tr', 'bl', 'br'] as const).map(corner => (
-                    <div key={corner} style={{
-                      position: 'absolute', width: 22, height: 22,
-                      ...(corner.includes('t') ? { top: 18 } : { bottom: 18 }),
-                      ...(corner.includes('l') ? { left: 18 } : { right: 18 }),
-                      borderTop:    corner.includes('t') ? `1.5px solid ${ch.color}50` : 'none',
-                      borderBottom: corner.includes('b') ? `1.5px solid ${ch.color}50` : 'none',
-                      borderLeft:   corner.includes('l') ? `1.5px solid ${ch.color}50` : 'none',
-                      borderRight:  corner.includes('r') ? `1.5px solid ${ch.color}50` : 'none',
-                    }} />
-                  ))}
-                  <div style={{ textAlign: 'center', pointerEvents: 'none' }}>
-                    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" style={{ opacity: 0.2 }}>
-                      <circle cx="26" cy="26" r="11" stroke={ch.color} strokeWidth="1" strokeDasharray="3 4" />
-                      <line x1="26" y1="2"  x2="26" y2="15" stroke={ch.color} strokeWidth="1" />
-                      <line x1="26" y1="37" x2="26" y2="50" stroke={ch.color} strokeWidth="1" />
-                      <line x1="2"  y1="26" x2="15" y2="26" stroke={ch.color} strokeWidth="1" />
-                      <line x1="37" y1="26" x2="50" y2="26" stroke={ch.color} strokeWidth="1" />
-                    </svg>
-                    <p style={{
-                      fontFamily: 'Inter, sans-serif', fontSize: 9, letterSpacing: '0.28em',
-                      textTransform: 'uppercase', color: ch.color, opacity: 0.28, marginTop: 12,
-                    }}>
-                      asset pending
-                    </p>
-                  </div>
+                  {/* Real photo — drop in /public/img/journey/{year}.jpg to replace */}
+                  <img
+                    src={ch.image}
+                    alt={ch.title}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      e.currentTarget.style.display = 'none';
+                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block';
+                    }}
+                  />
+                  {/* SVG fallback — shown until real photo is added */}
+                  <img
+                    src={ch.image.replace('.jpg', '.svg')}
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'none' }}
+                  />
                 </div>
               </div>
             </div>
