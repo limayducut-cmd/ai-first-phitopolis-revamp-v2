@@ -1143,7 +1143,7 @@ const TechStack = () => {
               transition={{ delay: 0.45, duration: 0.65 }}
               style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', lineHeight: 1.75, maxWidth: 320, paddingBottom: 6 }}
             >
-              the full arsenal — from model training and orchestration to deployment, data pipelines, and cloud infrastructure.
+              the full arsenal — from model training and orchestration to deployment, data pipelines, and cloud infrastructure. Every tool chosen deliberately, every stack decision backed by real production experience.
             </motion.p>
           </div>
           {/* Legend */}
@@ -1795,7 +1795,7 @@ const Hero = ({ ready }: { ready: boolean }) => {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }}
         style={{ position: 'absolute', top: 44, left: 44, color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase', zIndex: 10 }}
       >
-        ai day — 2026
+        about us
       </motion.div>
 
       {/* Top-right label */}
@@ -1933,7 +1933,9 @@ const Statement = () => {
   const { scrollYProgress } = useScroll({ target: sRef, offset: ['start end', 'end start'] });
   const blobY = useTransform(scrollYProgress, [0, 1], [60, -60]);
   const textY = useTransform(scrollYProgress, [0, 1], [30, -30]);
+  const bgY   = useTransform(scrollYProgress, [0, 1], ['-8%', '8%']);
 
+  const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
@@ -1963,11 +1965,25 @@ const Statement = () => {
   return (
     <section id="sec-statement" ref={sRef} style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center' }}>
       <SectionTag name="story" />
-      {/* Parallax background blobs */}
-      <motion.div style={{ position: 'absolute', left: '-8%', top: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}16 0%, transparent 70%)`, filter: 'blur(70px)', y: blobY, pointerEvents: 'none' }} />
-      <motion.div style={{ position: 'absolute', right: '-4%', bottom: '8%', width: 280, height: 280, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}10 0%, transparent 70%)`, filter: 'blur(60px)', y: blobY, pointerEvents: 'none' }} />
 
-      <motion.div ref={ref} style={{ maxWidth: 900, margin: '0 auto', width: '100%', position: 'relative', y: textY, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      {/* Background image — parallax, same pattern as Demographics section */}
+      <motion.div style={{ position: 'absolute', inset: '-10%', zIndex: 0, pointerEvents: 'none', y: bgY }}>
+        <img
+          src="/img/story/bg.jpg"
+          alt=""
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = '/img/story/bg.svg'; }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }}
+        />
+      </motion.div>
+      {/* Gradient overlays — fade background image into section colour */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(100deg, ${C.base} 0%, ${C.base}E0 25%, ${C.base}99 55%, ${C.base}44 100%)` }} />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(to bottom, ${C.base} 0%, transparent 10%, transparent 90%, ${C.base} 100%)` }} />
+
+      {/* Parallax background blobs */}
+      <motion.div style={{ position: 'absolute', left: '-8%', top: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}16 0%, transparent 70%)`, filter: 'blur(70px)', y: blobY, pointerEvents: 'none', zIndex: 2 }} />
+      <motion.div style={{ position: 'absolute', right: '-4%', bottom: '8%', width: 280, height: 280, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}10 0%, transparent 70%)`, filter: 'blur(60px)', y: blobY, pointerEvents: 'none', zIndex: 2 }} />
+
+      <motion.div ref={ref} style={{ maxWidth: 900, margin: '0 auto', width: '100%', position: 'relative', y: textY, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', zIndex: 3 }}>
         {/* Section label */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.7 }}
           style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}
@@ -1982,6 +1998,28 @@ const Statement = () => {
         >
           Phitopolis was built in response to the demand of our partners in the Financial Investment Industry. They needed exacting and powerful technological solutions and harnessed the top talent in the Philippines via Phitopolis.
         </motion.p>
+
+        {/* Story image row */}
+        {!isMobile && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.4 }}
+            style={{ display: 'flex', gap: 16, width: '100%', maxWidth: 900, marginBottom: 56 }}
+          >
+            {[
+              { src: '/img/story/team.jpg',     alt: 'Our team' },
+              { src: '/img/story/office.jpg',   alt: 'Our office' },
+              { src: '/img/story/founders.jpg', alt: 'Our founders' },
+            ].map(({ src, alt }) => (
+              <div key={src} style={{ flex: '1 1 0', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(10,42,102,0.1)', aspectRatio: '4 / 3', position: 'relative' }}>
+                <img
+                  src={src}
+                  alt={alt}
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = src.replace('.jpg', '.svg'); }}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Large heading — scroll-driven per-letter fill↔outline */}
         <ScrollLetterHeading triggerRef={sRef} />
@@ -2061,14 +2099,34 @@ const Vision = () => {
   const inView = useInView(ref, { once: true, margin: '-80px' });
   const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: sRef, offset: ['start end', 'end start'] });
-  const imgY = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const imgY = useTransform(scrollYProgress, [0, 1], [80, -80]);
 
   return (
-    <section id="sec-vision" ref={sRef} style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+    <section id="sec-vision" ref={sRef} style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
       <SectionTag name="vision" />
-      <div ref={ref} style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+
+      {/* ── Full-bleed organic image ── */}
+      <motion.div style={{ position: 'absolute', inset: '-15%', y: imgY, pointerEvents: 'none' }}>
+        <motion.div
+          initial={{ clipPath: 'ellipse(0% 0% at 72% 50%)' }}
+          animate={{ clipPath: inView ? (isMobile ? 'ellipse(130% 52% at 50% 90%)' : 'ellipse(60% 90% at 70% 50%)') : 'ellipse(0% 0% at 72% 50%)' }}
+          transition={{ duration: 1.8, ease: [0.76, 0, 0.24, 1] }}
+          style={{ width: '100%', height: '100%', backgroundImage: 'url(/vision.png)', backgroundSize: 'cover', backgroundPosition: isMobile ? 'center bottom' : 'center right' }}
+        />
+      </motion.div>
+
+      {/* ── Gradient overlay for text readability ── */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: isMobile
+          ? `linear-gradient(to bottom, transparent, ${C.base} 18%, ${C.base} 58%, transparent 78%)`
+          : `linear-gradient(to right, transparent, ${C.base} 12%, ${C.base} 52%, transparent 72%)`
+      }} />
+
+      {/* ── Text ── */}
+      <div ref={ref} style={{ maxWidth: 1200, margin: '0 auto', width: '100%', position: 'relative', zIndex: 1 }}>
         <Divider inView={inView} color={`rgba(0,0,0,0.1)`} />
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 64 : 100, alignItems: 'center' }}>
+        <div style={{ maxWidth: isMobile ? '100%' : '50%' }}>
           <motion.div initial={{ opacity: 0, x: -40 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.9, ease: [0.21, 1.02, 0.47, 0.98] }}>
             <Badge n="01" label="The Vision" />
             <div style={{ marginBottom: 36 }}>
@@ -2084,13 +2142,6 @@ const Vision = () => {
             >
               in a world where AI agents collaborate with humans in real-time, Phitopolis stands at the frontier — turning cutting-edge research into production-grade solutions.
             </motion.p>
-          </motion.div>
-
-          {/* Parallax image */}
-          <motion.div style={{ y: imgY }}>
-            <motion.div initial={{ opacity: 0, x: 40 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.9, delay: 0.2, ease: [0.21, 1.02, 0.47, 0.98] }}>
-              <OrgMorphReveal src="/vision.jpg" alt="Phitopolis AI Vision" />
-            </motion.div>
           </motion.div>
         </div>
       </div>
@@ -2120,13 +2171,16 @@ const SCROLL_ITEMS = [
   },
 ];
 
-// Image base: 44vw × 88vh at left: 25vw, top: 6vh (centered layout with right caption area)
-// Base image: top: 6vh, left: 25vw, width: 44vw, height: 88vh → right: 69vw, bottom: 94vh
-// Thumbnail scale 0.22 → rendered size: 9.68vw × 19.36vh
-// Left slot (prev): top-aligned with main, snug to left edge
-//   → x = (25vw - 9.68vw - 1vw) - 25vw = -10.68vw ≈ -11vw, y = 0vh
-// Right slot (next): bottom-aligned with main, snug to right edge
-//   → x = (69vw + 1vw) - 25vw = 45vw → 46vw with gap, y = (94vh - 19.36vh) - 6vh ≈ 69vh
+// Desktop layout: image at left:25vw, width:44vw, height:88vh — caption right panel 22%
+// Mobile layout:  image full-width (left:0, width:100vw, height:72vh) — caption below image
+//
+// GSAP seed/thumbnail positions derived from container origin + desired screen position:
+//   Desktop seed:      screen(48vw, 83vh) → relative(23vw, 77vh) [container origin: 25vw, 6vh]
+//   Mobile seed:       screen(50vw, 84vh) → relative(50vw, 84vh) [container origin: 0,  0 ]
+//   Desktop nextSlot:  screen(71vw, 75vh) → relative(46vw, 69vh)
+//   Mobile nextSlot:   screen(100vw,72vh) → relative(100vw,72vh) [off-screen right]
+//   Desktop leftThumb: screen(14vw,  6vh) → relative(-11vw, 0)
+//   Mobile leftThumb:  screen(-24vw, 0)   → relative(-24vw, 0)   [off-screen left]
 const ServicesScrollStory = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const headingRef   = useRef<HTMLDivElement>(null);
@@ -2136,14 +2190,23 @@ const ServicesScrollStory = () => {
   const cap1Ref      = useRef<HTMLDivElement>(null);
   const cap2Ref      = useRef<HTMLDivElement>(null);
   const cap3Ref      = useRef<HTMLDivElement>(null);
+  const isMobile     = useIsMobile();
 
   useEffect(() => {
+    // Layout-dependent GSAP values — recalculate when isMobile changes
+    const seed      = isMobile
+      ? { x: '50vw',  y: '84vh' }
+      : { x: '23vw',  y: '77vh' };
+    const nextSlot  = isMobile
+      ? { x: '100vw', y: '72vh' }
+      : { x: '46vw',  y: '69vh' };
+    const leftThumb = isMobile ? '-24vw' : '-11vw';
+
     const ctx = gsap.context(() => {
-      // Set initial states before ScrollTrigger takes over
       gsap.set(headingRef.current,  { transformOrigin: '50% 0%' });
-      gsap.set(img1Ref.current,     { scale: 0.08, x: '23vw', y: '77vh', transformOrigin: '0% 0%', willChange: 'transform', borderRadius: 20 / 0.08 });
-      gsap.set(img2Ref.current,     { opacity: 0, scale: 0.22, x: '46vw', y: '69vh', transformOrigin: '0% 0%', willChange: 'transform', borderRadius: 20 / 0.22 });
-      gsap.set(img3Ref.current,     { opacity: 0, scale: 0.22, x: '46vw', y: '69vh', transformOrigin: '0% 0%', willChange: 'transform', borderRadius: 20 / 0.22 });
+      gsap.set(img1Ref.current,     { scale: 0.08, ...seed, transformOrigin: '0% 0%', willChange: 'transform', borderRadius: 20 / 0.08 });
+      gsap.set(img2Ref.current,     { opacity: 0, scale: 0.22, ...nextSlot, transformOrigin: '0% 0%', willChange: 'transform', borderRadius: 20 / 0.22 });
+      gsap.set(img3Ref.current,     { opacity: 0, scale: 0.22, ...nextSlot, transformOrigin: '0% 0%', willChange: 'transform', borderRadius: 20 / 0.22 });
       gsap.set(cap1Ref.current,     { opacity: 0 });
       gsap.set(cap2Ref.current,     { opacity: 0 });
       gsap.set(cap3Ref.current,     { opacity: 0 });
@@ -2163,7 +2226,7 @@ const ServicesScrollStory = () => {
 
       // ── Image 1: tiny → full → thumbnail → fade ───────────────────────────────
       tl.to(img1Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.22 }, 0);
-      tl.to(img1Ref.current,   { scale: 0.22, x: '-11vw', borderRadius: 20 / 0.22, duration: 0.20 }, 0.38);
+      tl.to(img1Ref.current,   { scale: 0.22, x: leftThumb, borderRadius: 20 / 0.22, duration: 0.20 }, 0.38);
       tl.to(img1Ref.current,   { opacity: 0, duration: 0.15 }, 0.75);
 
       // ── Caption 1 ─────────────────────────────────────────────────────────────
@@ -2173,7 +2236,7 @@ const ServicesScrollStory = () => {
       // ── Image 2: appears → full → thumbnail ───────────────────────────────────
       tl.to(img2Ref.current,   { opacity: 1, duration: 0.08 }, 0.33);
       tl.to(img2Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.20 }, 0.38);
-      tl.to(img2Ref.current,   { scale: 0.22, x: '-11vw', borderRadius: 20 / 0.22, duration: 0.15 }, 0.75);
+      tl.to(img2Ref.current,   { scale: 0.22, x: leftThumb, borderRadius: 20 / 0.22, duration: 0.15 }, 0.75);
 
       // ── Caption 2 ─────────────────────────────────────────────────────────────
       tl.to(cap2Ref.current,   { opacity: 1, duration: 0.08 }, 0.62);
@@ -2188,24 +2251,27 @@ const ServicesScrollStory = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [isMobile]);
 
-  const captionStyle: React.CSSProperties = {
+  // Caption: right panel on desktop, bottom strip on mobile
+  const captionStyle: React.CSSProperties = isMobile ? {
+    position: 'absolute',
+    bottom: '6vh', left: '6vw', right: '6vw',
+    zIndex: 6, pointerEvents: 'none',
+  } : {
     position: 'absolute', right: '5%', top: '50%', transform: 'translateY(-50%)',
     zIndex: 6, maxWidth: '22%', pointerEvents: 'none',
   };
 
+  // Image container: narrower/offset on desktop, full-width on mobile
   const imgWrapStyle: React.CSSProperties = {
     position: 'absolute',
-    top: '6vh', left: '25vw',
-    width: '44vw', height: '88vh',
+    top:    isMobile ? '0'    : '6vh',
+    left:   isMobile ? '0'    : '25vw',
+    width:  isMobile ? '100vw': '44vw',
+    height: isMobile ? '72vh' : '88vh',
     willChange: 'transform',
     overflow: 'hidden', borderRadius: 20,
-  };
-
-  const imgInnerStyle: React.CSSProperties = {
-    width: '100%', height: '100%',
-    position: 'relative',
   };
 
   return (
@@ -2216,12 +2282,14 @@ const ServicesScrollStory = () => {
         {/* ── Heading ── */}
         <div ref={headingRef} style={{
           position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)',
-          zIndex: 10, textAlign: 'center', whiteSpace: 'nowrap', pointerEvents: 'none',
+          zIndex: 10, textAlign: 'center', pointerEvents: 'none',
+          whiteSpace: isMobile ? 'normal' : 'nowrap',
+          width: isMobile ? '80vw' : 'auto',
         }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>
             what we{' '}
           </span>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>
             do best.
           </span>
         </div>
@@ -2229,43 +2297,37 @@ const ServicesScrollStory = () => {
         {/* ── Caption 1 ── */}
         <div ref={cap1Ref} style={captionStyle}>
           <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[0].label}</p>
-          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[0].title}</h3>
-          <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[0].desc}</p>
+          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: isMobile ? 6 : 12 }}>{SCROLL_ITEMS[0].title}</h3>
+          {!isMobile && <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[0].desc}</p>}
         </div>
 
         {/* ── Caption 2 ── */}
         <div ref={cap2Ref} style={captionStyle}>
           <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[1].label}</p>
-          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[1].title}</h3>
-          <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[1].desc}</p>
+          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: isMobile ? 6 : 12 }}>{SCROLL_ITEMS[1].title}</h3>
+          {!isMobile && <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[1].desc}</p>}
         </div>
 
         {/* ── Caption 3 ── */}
         <div ref={cap3Ref} style={captionStyle}>
           <p style={{ color: C.accent, fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 10 }}>{SCROLL_ITEMS[2].label}</p>
-          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: 12 }}>{SCROLL_ITEMS[2].title}</h3>
-          <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[2].desc}</p>
+          <h3 style={{ color: C.base, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.1rem, 1.8vw, 1.9rem)', letterSpacing: '-0.02em', marginBottom: isMobile ? 6 : 12 }}>{SCROLL_ITEMS[2].title}</h3>
+          {!isMobile && <p style={{ color: 'rgba(240,242,250,0.55)', fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', lineHeight: 1.75 }}>{SCROLL_ITEMS[2].desc}</p>}
         </div>
 
         {/* ── Image 3 (lowest z) ── */}
         <div ref={img3Ref} style={{ ...imgWrapStyle, zIndex: 1 }}>
-          <div style={imgInnerStyle}>
-            <img src={SCROLL_ITEMS[2].image} alt={SCROLL_ITEMS[2].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          </div>
+          <img src={SCROLL_ITEMS[2].image} alt={SCROLL_ITEMS[2].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
 
         {/* ── Image 2 ── */}
         <div ref={img2Ref} style={{ ...imgWrapStyle, zIndex: 2 }}>
-          <div style={imgInnerStyle}>
-            <img src={SCROLL_ITEMS[1].image} alt={SCROLL_ITEMS[1].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          </div>
+          <img src={SCROLL_ITEMS[1].image} alt={SCROLL_ITEMS[1].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
 
         {/* ── Image 1 ── */}
         <div ref={img1Ref} style={{ ...imgWrapStyle, zIndex: 3 }}>
-          <div style={imgInnerStyle}>
-            <img src={SCROLL_ITEMS[0].image} alt={SCROLL_ITEMS[0].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          </div>
+          <img src={SCROLL_ITEMS[0].image} alt={SCROLL_ITEMS[0].title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
 
       </div>
@@ -2281,24 +2343,28 @@ const PHASES = [
     definition: 'We operate with unwavering honesty and transparency in every interaction, ensuring our word is our bond.',
     valueToClient: 'Builds a foundation of trust and predictability — clients can rely on truthful reporting and ethical decision-making, reducing risk and ensuring long-term partnership stability.',
     color: C.accent, glow: '#FFC72C',
+    image: '/img/values/integrity.jpg',
   },
   {
     num: '02', label: 'Accountability',
     definition: 'We take full ownership of our commitments and results, standing behind the quality of our output without excuses.',
     valueToClient: 'Ensures reliability and peace of mind — by owning both successes and challenges, we provide a dependable partner who proactively manages outcomes to meet project milestones.',
     color: '#4A90D9', glow: '#4A90D9',
+    image: '/img/values/accountability.jpg',
   },
   {
     num: '03', label: 'Forward Thinking',
     definition: 'We don\'t just solve today\'s problems; we anticipate tomorrow\'s challenges through innovation and strategic planning.',
     valueToClient: 'Clients gain a competitive edge by leveraging our proactive approach to technology and market trends, ensuring their business remains resilient and scalable.',
     color: '#A78BFA', glow: '#A78BFA',
+    image: '/img/values/forward-thinking.jpg',
   },
   {
     num: '04', label: 'Excellence',
     definition: 'In everything we do — we set the highest standards for performance, continuously refining our processes to deliver superior quality.',
     valueToClient: 'Our commitment to excellence translates to reduced errors, higher efficiency, and a final product that exceeds expectations, maximizing the client\'s return on investment.',
     color: '#2ECC71', glow: '#2ECC71',
+    image: '/img/values/excellence.jpg',
   },
 ];
 
@@ -2337,9 +2403,8 @@ const Process = () => {
       });
 
       // ── Entry: badge + heading slide up ─────────────────────────────────────
-      gsap.set([badgeRef.current, headRef.current], { y: 60, opacity: 0 });
+      gsap.set(badgeRef.current, { y: 60, opacity: 0 });
       tl.to(badgeRef.current, { y: 0, opacity: 1, duration: 0.06 }, 0);
-      tl.to(headRef.current,  { y: 0, opacity: 1, duration: 0.06 }, 0.02);
 
       // ── Per-phase animations ────────────────────────────────────────────────
       PHASES.forEach((ph, i) => {
@@ -2394,6 +2459,23 @@ const Process = () => {
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
         <SectionTag name="values" />
 
+        {/* ── Background decorations ──────────────────────────────────── */}
+        {/* Dot grid */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle, rgba(10,42,102,0.07) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }} />
+        {/* Top accent bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 0, pointerEvents: 'none', background: `linear-gradient(90deg, transparent, ${C.accent}40, transparent)` }} />
+        {/* Bottom accent bar */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, zIndex: 0, pointerEvents: 'none', background: `linear-gradient(90deg, transparent, ${C.accent}30, transparent)` }} />
+        {/* Corner marks */}
+        <svg style={{ position: 'absolute', top: 28, left: 28, zIndex: 0, pointerEvents: 'none', opacity: 0.08 }} width="72" height="72">
+          <path d="M0 72 L0 0 L72 0" stroke="#0A2A66" strokeWidth="1.5" fill="none"/>
+        </svg>
+        <svg style={{ position: 'absolute', bottom: 28, right: 28, zIndex: 0, pointerEvents: 'none', opacity: 0.08 }} width="72" height="72">
+          <path d="M72 0 L72 72 L0 72" stroke="#0A2A66" strokeWidth="1.5" fill="none"/>
+        </svg>
+        {/* Ghost watermark */}
+        <div style={{ position: 'absolute', bottom: '-0.05em', right: '-0.03em', zIndex: 0, pointerEvents: 'none', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '28vw', WebkitTextStroke: '1px rgba(10,42,102,0.04)', WebkitTextFillColor: 'transparent', lineHeight: 1, letterSpacing: '-0.05em', userSelect: 'none' }}>values</div>
+
         {/* ── Left rail ─────────────────────────────────────────────────── */}
         <div style={{ width: isMobile ? 80 : 'clamp(200px, 22vw, 280px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 0 0 24px' : '0 0 0 48px', position: 'relative', zIndex: 3 }}>
           <div ref={badgeRef} />
@@ -2433,12 +2515,12 @@ const Process = () => {
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
 
           {/* Section heading — fades out as phases take over */}
-          <div ref={headRef} style={{ position: 'absolute', top: '10%', left: isMobile ? 24 : 48, zIndex: 3, pointerEvents: 'none' }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.charcoal}`, WebkitTextFillColor: 'transparent', display: 'block' }}>
-              phitopolis is
+          <div ref={headRef} style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)', zIndex: 3, textAlign: 'center', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.charcoal}`, WebkitTextFillColor: 'transparent' }}>
+              phitopolis is{' '}
             </span>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.charcoal, display: 'block' }}>
-              rooted in values
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.charcoal }}>
+              rooted in values.
             </span>
           </div>
 
@@ -2455,28 +2537,44 @@ const Process = () => {
               </div>
 
               {/* Phase content */}
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                {/* Label — clip-path curtain reveal */}
-                <div ref={labelRefs[i]} style={{ overflow: 'visible', marginBottom: 24 }}>
-                  <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(2.4rem, 10vw, 4rem)' : 'clamp(3.5rem, 7vw, 7.5rem)', letterSpacing: '-0.04em', lineHeight: 1.15, textTransform: 'lowercase', color: C.charcoal, margin: 0, whiteSpace: 'pre-line' }}>
-                    {ph.label}
-                  </h2>
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 'clamp(32px, 5vw, 64px)', width: '100%' }}>
+
+                {/* Text */}
+                <div style={{ flex: '0 0 auto', width: isMobile ? '100%' : '50%' }}>
+                  {/* Label — clip-path curtain reveal */}
+                  <div ref={labelRefs[i]} style={{ overflow: 'visible', marginBottom: 24 }}>
+                    <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(2.4rem, 10vw, 4rem)' : 'clamp(3.5rem, 7vw, 7.5rem)', letterSpacing: '-0.04em', lineHeight: 1.15, textTransform: 'lowercase', color: C.charcoal, margin: 0, whiteSpace: 'pre-line' }}>
+                      {ph.label}
+                    </h2>
+                  </div>
+
+                  {/* Description */}
+                  <div ref={descRefs[i]}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.85rem' : '1rem', color: 'rgba(10,14,26,0.72)', lineHeight: 1.8, margin: 0 }}>
+                      {ph.definition}
+                    </p>
+                    <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(10,14,26,0.08)' }}>
+                      <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: ph.color }}>Value to Client</span>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.78rem' : '0.88rem', color: 'rgba(10,14,26,0.5)', lineHeight: 1.85, margin: '8px 0 0' }}>
+                        {ph.valueToClient}
+                      </p>
+                    </div>
+                    {/* Accent underline */}
+                    <div style={{ marginTop: 20, width: 48, height: 2, background: ph.color, borderRadius: 1 }} />
+                  </div>
                 </div>
 
-                {/* Description */}
-                <div ref={descRefs[i]} style={{ maxWidth: 480 }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.85rem' : '1rem', color: 'rgba(10,14,26,0.72)', lineHeight: 1.8, margin: 0 }}>
-                    {ph.definition}
-                  </p>
-                  <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(10,14,26,0.08)' }}>
-                    <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: ph.color }}>Value to Client</span>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.78rem' : '0.88rem', color: 'rgba(10,14,26,0.5)', lineHeight: 1.85, margin: '8px 0 0' }}>
-                      {ph.valueToClient}
-                    </p>
+                {/* Value image */}
+                {!isMobile && (
+                  <div style={{ flex: 1, borderRadius: 20, overflow: 'hidden', minHeight: 'clamp(240px, 35vh, 420px)', border: `1px solid ${ph.color}20` }}>
+                    <img
+                      src={ph.image}
+                      alt={ph.label}
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = ph.image.replace('.jpg', '.svg'); }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
                   </div>
-                  {/* Accent underline */}
-                  <div style={{ marginTop: 20, width: 48, height: 2, background: ph.color, borderRadius: 1 }} />
-                </div>
+                )}
               </div>
             </div>
           ))}
@@ -2555,12 +2653,12 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Schools & Education',
     sub: 'Recruiting from the top universities in the Philippines and Asia',
     items: [
-      { name: 'University of the Philippines',  abbr: 'UP',    note: 'Engineering · CS · Math',      logo: '/logos/schools/up.svg' },
-      { name: 'Ateneo de Manila University',    abbr: 'ADMU',  note: 'CS · Management Science',      logo: '/logos/schools/admu.svg' },
-      { name: 'De La Salle University',         abbr: 'DLSU',  note: 'Engineering · IT · Finance',   logo: '/logos/schools/dlsu.svg' },
-      { name: 'Mapúa University',               abbr: 'Mapúa', note: 'Computer Engineering',         logo: '/logos/schools/mapua.svg' },
-      { name: 'University of Santo Tomas',      abbr: 'UST',   note: 'Accountancy · IT',             logo: '/logos/schools/ust.svg' },
-      { name: 'FEU Tech / PUP',                 abbr: 'FEU',   note: 'Engineering · Technology',     logo: '/logos/schools/feu.svg' },
+      { name: 'University of the Philippines',  abbr: 'UP',    note: 'Engineering · CS · Math',      logo: '/logos/schools/up.png' },
+      { name: 'Ateneo de Manila University',    abbr: 'ADMU',  note: 'CS · Management Science',      logo: '/logos/schools/admu.png' },
+      { name: 'De La Salle University',         abbr: 'DLSU',  note: 'Engineering · IT · Finance',   logo: '/logos/schools/dlsu.png' },
+      { name: 'Mapúa University',               abbr: 'Mapúa', note: 'Computer Engineering',         logo: '/logos/schools/mapua.webp' },
+      { name: 'University of Santo Tomas',      abbr: 'UST',   note: 'Accountancy · IT',             logo: '/logos/schools/ust.webp' },
+      { name: 'FEU Tech / PUP',                 abbr: 'FEU',   note: 'Engineering · Technology',     logo: '/logos/schools/feu.png' },
     ],
   },
   {
@@ -2578,15 +2676,15 @@ const HR_SLIDES: HRSlide[] = [
   {
     id: '03', type: 'certs', color: '#34D399',
     heading: 'Certifications',
-    sub: 'And many more — continuously levelling up',
+    sub: 'Certified across the stack. Upskilling never stops.',
     items: [
-      { name: 'AWS Certified',    sub: 'Solutions Architect · ML Specialty', logo: '/logos/certs/aws.svg' },
-      { name: 'Red Hat (RHCSA)', sub: 'Linux System Administrator',          logo: '/logos/certs/redhat.svg' },
-      { name: 'ITIL',            sub: 'Foundation & Practitioner',           logo: '/logos/certs/itil.svg' },
-      { name: 'PMP',             sub: 'Project Management Professional',     logo: '/logos/certs/pmp.svg' },
-      { name: 'Six Sigma',       sub: 'Green Belt & Black Belt',             logo: '/logos/certs/sixsigma.svg' },
-      { name: 'ISO 27001',       sub: 'Lead Implementer & Internal Auditor', logo: '/logos/certs/iso27001.svg' },
-      { name: 'CFA / CPA',       sub: 'Finance & Accounting Professionals',  logo: '/logos/certs/cfa.svg' },
+      { name: 'AWS Certified',       sub: 'Solutions Architect · ML Specialty', logo: '/logos/certs/aws.webp' },
+      { name: 'Red Hat (RHCSA)',    sub: 'Linux System Administrator',          logo: '/logos/certs/redhat.webp' },
+      { name: 'ITIL',               sub: 'Foundation & Practitioner',           logo: '/logos/certs/itil.webp' },
+      { name: 'PMP',                sub: 'Project Management Professional',     logo: '/logos/certs/pmp.webp' },
+      { name: 'AWS AI Practitioner', sub: 'Certified AI Practitioner',          logo: '/logos/certs/aipractitioner.webp' },
+      { name: 'ISO 27001',          sub: 'Lead Implementer & Internal Auditor', logo: '/logos/certs/iso27001.webp' },
+      { name: 'CFA / CPA',          sub: 'Finance & Accounting Professionals',  logo: '/logos/certs/cpa.webp' },
     ],
   },
 ];
@@ -2721,24 +2819,34 @@ const OurPeople = () => {
 
                 {/* ── Schools grid ─────────────────────────────────────────── */}
                 {slide.type === 'schools' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 16 }}>
                     {(slide.items as SchoolItem[]).map((s, idx) => (
-                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '20px 20px 16px', overflow: 'hidden' }}>
-                        {/* Subtle accent glow top-left */}
-                        <div style={{ position: 'absolute', top: -20, left: -20, width: 80, height: 80, borderRadius: '50%', background: `${slide.color}18`, filter: 'blur(20px)', pointerEvents: 'none' }} />
+                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '28px 20px 22px', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        {/* Accent glow */}
+                        <div style={{ position: 'absolute', top: -32, left: -32, width: 120, height: 120, borderRadius: '50%', background: `${slide.color}1A`, filter: 'blur(28px)', pointerEvents: 'none' }} />
                         {/* Rank badge */}
-                        <div style={{ position: 'absolute', top: 14, right: 14, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
+                        <div style={{ position: 'absolute', top: 14, right: 16, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>
                           {String(idx + 1).padStart(2, '0')}
                         </div>
-                        {/* Logo / Abbr pill */}
-                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${slide.color}22`, border: `1px solid ${slide.color}44`, borderRadius: 8, padding: '5px 12px', marginBottom: 12 }}>
-                          <img src={s.logo} alt={s.abbr} width={32} height={32} style={{ objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { const el = e.currentTarget; el.style.display = 'none'; el.nextElementSibling && ((el.nextElementSibling as HTMLElement).style.display = 'inline'); }} />
-                          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1rem', color: slide.color, letterSpacing: '-0.01em', display: 'none' }}>{s.abbr}</span>
+                        {/* Logo */}
+                        <div style={{ width: 80, height: 80, borderRadius: 16, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, padding: 10, flexShrink: 0 }}>
+                          <img
+                            src={s.logo} alt={s.abbr}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                              const el = e.currentTarget;
+                              el.style.display = 'none';
+                              (el.nextElementSibling as HTMLElement).style.display = 'flex';
+                            }}
+                          />
+                          <span style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.1rem', color: slide.color }}>{s.abbr}</span>
                         </div>
-                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.78rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4, marginBottom: 8 }}>{s.name}</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {/* Name */}
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: isMobile ? '0.72rem' : '0.82rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, marginBottom: 12 }}>{s.name}</div>
+                        {/* Discipline tags */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'center' }}>
                           {s.note.split(' · ').map(tag => (
-                            <span key={tag} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.38)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 100, padding: '2px 8px', letterSpacing: '0.04em' }}>{tag}</span>
+                            <span key={tag} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, padding: '3px 10px', letterSpacing: '0.04em' }}>{tag}</span>
                           ))}
                         </div>
                       </div>
@@ -2791,25 +2899,37 @@ const OurPeople = () => {
 
                 {/* ── Certifications grid ───────────────────────────────────── */}
                 {slide.type === 'certs' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
                     {(slide.items as CertItem[]).map(cert => (
-                      <div key={cert.name} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
-                        {/* Top accent line */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${slide.color}, transparent)`, borderRadius: '16px 16px 0 0' }} />
-                        {/* Icon area */}
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                      <div key={cert.name} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderLeft: `3px solid ${slide.color}70`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, overflow: 'hidden' }}>
+                        {/* Glow behind logo */}
+                        <div style={{ position: 'absolute', top: '50%', left: 16, width: 90, height: 90, borderRadius: '50%', background: `${slide.color}14`, filter: 'blur(22px)', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                        {/* Logo */}
+                        <div style={{ width: 68, height: 68, borderRadius: 14, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 10 }}>
                           {cert.logo ? (
-                            <img src={cert.logo} alt={cert.name} width={30} height={30} style={{ objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }} />
+                            <img src={cert.logo} alt={cert.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }} />
                           ) : (
-                            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 14, color: slide.color }}>{cert.name.slice(0, 2)}</span>
+                            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 18, color: slide.color }}>{cert.name.slice(0, 2)}</span>
                           )}
                         </div>
-                        <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#fff', lineHeight: 1.25, marginBottom: 4 }}>{cert.name}</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>{cert.sub}</div>
+                        {/* Text */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: '#fff', lineHeight: 1.3, marginBottom: 6 }}>{cert.name}</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5 }}>{cert.sub}</div>
                         </div>
                       </div>
                     ))}
+                    {/* ── "& many more" last block ─────────────────────────── */}
+                    <div style={{ position: 'relative', background: `${slide.color}0D`, border: `1px dashed ${slide.color}40`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: '50%', left: 16, width: 90, height: 90, borderRadius: '50%', background: `${slide.color}18`, filter: 'blur(22px)', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <div style={{ width: 68, height: 68, borderRadius: 14, background: `${slide.color}20`, border: `1px solid ${slide.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 22, color: slide.color }}>+</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: slide.color, lineHeight: 1.3, marginBottom: 6 }}>& Many More</div>
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5 }}>Certifications provided across the team</div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2823,19 +2943,107 @@ const OurPeople = () => {
 
 // ── CHAPTERS ──────────────────────────────────────────────────────────────────
 const CHAPTERS = [
-  { num: '2021', id: 'sec-ch1', tag: 'The Beginning', title: '2021', sub: 'Where it all started',                color: '#FFC72C', image: '/img/journey/2021.jpg',
+  { num: '2021', id: 'sec-ch1', tag: 'The Beginning', title: '2021', sub: 'Where it all started',                color: '#FFC72C',
+    images: ['/img/journey/2021/1.jpg', '/img/journey/2021/2.jpg', '/img/journey/2021/3.jpg', '/img/journey/2021/4.jpg'],
     body: 'Placeholder — content covering Phitopolis\'s founding year will live here. The vision, the first team members, and the early decisions that set the direction for everything that followed.' },
-  { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA', image: '/img/journey/2022.jpg',
+  { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA',
+    images: ['/img/journey/2022/1.jpg', '/img/journey/2022/2.jpg', '/img/journey/2022/3.jpg', '/img/journey/2022/4.jpg'],
     body: 'Placeholder — content covering 2022\'s milestones will live here. Early client engagements, team growth, and the first solutions that proved the model worked.' },
-  { num: '2023', id: 'sec-ch3', tag: 'Momentum',      title: '2023', sub: 'Accelerating the mission',            color: '#34D399', image: '/img/journey/2023.jpg',
+  { num: '2023', id: 'sec-ch3', tag: 'Momentum',      title: '2023', sub: 'Accelerating the mission',            color: '#34D399',
+    images: ['/img/journey/2023/1.jpg', '/img/journey/2023/2.jpg', '/img/journey/2023/3.jpg', '/img/journey/2023/4.jpg'],
     body: 'Placeholder — content covering 2023\'s growth will live here. Expanded capabilities, deeper partnerships, and the projects that put Phitopolis on the map.' },
-  { num: '2024', id: 'sec-ch4', tag: 'Scaling Up',    title: '2024', sub: 'Reaching new heights',                color: '#A78BFA', image: '/img/journey/2024.jpg',
+  { num: '2024', id: 'sec-ch4', tag: 'Scaling Up',    title: '2024', sub: 'Reaching new heights',                color: '#A78BFA',
+    images: ['/img/journey/2024/1.jpg', '/img/journey/2024/2.jpg', '/img/journey/2024/3.jpg', '/img/journey/2024/4.jpg'],
     body: 'Placeholder — content covering 2024\'s expansion will live here. Larger engagements, new service lines, and a growing team aligned around AI-first delivery.' },
-  { num: '2025', id: 'sec-ch5', tag: 'Full Stride',   title: '2025', sub: 'Operating at full capacity',          color: '#F59E0B', image: '/img/journey/2025.jpg',
+  { num: '2025', id: 'sec-ch5', tag: 'Full Stride',   title: '2025', sub: 'Operating at full capacity',          color: '#F59E0B',
+    images: ['/img/journey/2025/1.jpg', '/img/journey/2025/2.jpg', '/img/journey/2025/3.jpg', '/img/journey/2025/4.jpg'],
     body: 'Placeholder — content covering 2025\'s achievements will live here. Flagship deployments, measurable client impact, and the refinement of what makes Phitopolis different.' },
-  { num: '2026', id: 'sec-ch6', tag: 'AI Day',        title: '2026', sub: 'Five years in, the work continues',   color: '#F472B6', image: '/img/journey/2026.jpg',
+  { num: '2026', id: 'sec-ch6', tag: 'AI Day',        title: '2026', sub: 'Five years in, the work continues',   color: '#F472B6',
+    images: ['/img/journey/2026/1.jpg', '/img/journey/2026/2.jpg', '/img/journey/2026/3.jpg', '/img/journey/2026/4.jpg'],
     body: 'Placeholder — content covering where Phitopolis stands today will live here. Five years of learning, shipping, and building — and a clear view of what comes next.' },
 ];
+
+// Unique scatter layouts per year — desktop polaroid placement
+// Each array maps to images[0], [1], [2], [3] of that chapter
+const CHAPTER_SCATTER: Record<string, { top?: string; bottom?: string; left?: string; right?: string; width: string; rotate: string; zIndex: number }[]> = {
+  // 2021 — spread across right half (the layout the user liked)
+  '2021': [
+    { top: '14%',    left: '42%',   width: '30%', rotate: '-4deg',  zIndex: 2 },
+    { top: '-4%',    right: '4%',   width: '24%', rotate:  '9deg',  zIndex: 3 },
+    { bottom: '8%',  left: '50%',   width: '27%', rotate: '-8deg',  zIndex: 1 },
+    { bottom: '-3%', right: '9%',   width: '22%', rotate:  '6deg',  zIndex: 3 },
+  ],
+  // 2022 — diagonal cascade top-left to bottom-right
+  '2022': [
+    { top: '4%',     left: '38%',   width: '25%', rotate: '-12deg', zIndex: 1 },
+    { top: '22%',    left: '52%',   width: '29%', rotate: '-1deg',  zIndex: 2 },
+    { bottom: '14%', left: '60%',   width: '26%', rotate:  '9deg',  zIndex: 3 },
+    { bottom: '1%',  right: '-1%',  width: '23%', rotate: '16deg',  zIndex: 2 },
+  ],
+  // 2023 — fan spread from a single point (like dealing cards)
+  '2023': [
+    { top: '8%',     left: '36%',   width: '33%', rotate: '-18deg', zIndex: 1 },
+    { top: '14%',    left: '47%',   width: '31%', rotate:  '-6deg', zIndex: 2 },
+    { top: '20%',    left: '55%',   width: '28%', rotate:   '5deg', zIndex: 3 },
+    { top: '26%',    right: '2%',   width: '24%', rotate:  '17deg', zIndex: 4 },
+  ],
+  // 2024 — chaotic pile, all overlapping in a cluster
+  '2024': [
+    { top: '20%',    left: '44%',   width: '36%', rotate: '-2deg',  zIndex: 1 },
+    { top: '10%',    left: '53%',   width: '28%', rotate: '13deg',  zIndex: 2 },
+    { top: '32%',    left: '40%',   width: '26%', rotate: '-15deg', zIndex: 3 },
+    { top: '15%',    right: '3%',   width: '22%', rotate:  '6deg',  zIndex: 4 },
+  ],
+  // 2025 — wide scatter, images pushed to the four corners of the right side
+  '2025': [
+    { top: '-6%',    left: '40%',   width: '27%', rotate: '-7deg',  zIndex: 2 },
+    { top: '28%',    right: '-4%',  width: '32%', rotate: '10deg',  zIndex: 1 },
+    { bottom: '10%', left: '43%',   width: '25%', rotate: '-11deg', zIndex: 3 },
+    { bottom: '-5%', right: '14%',  width: '26%', rotate:  '3deg',  zIndex: 2 },
+  ],
+  // 2026 — curated trio with a small peeker in the corner
+  '2026': [
+    { top: '6%',     left: '44%',   width: '34%', rotate: '-5deg',  zIndex: 2 },
+    { top: '38%',    right: '3%',   width: '29%', rotate:  '8deg',  zIndex: 3 },
+    { bottom: '4%',  left: '50%',   width: '31%', rotate: '-3deg',  zIndex: 1 },
+    { top: '-3%',    right: '5%',   width: '18%', rotate: '15deg',  zIndex: 4 },
+  ],
+};
+
+type ScatterPos = { top?: string; bottom?: string; left?: string; right?: string; width: string; rotate: string; zIndex: number };
+
+const ScatterPhoto = ({ src, alt, pos }: { src: string; alt: string; pos: ScatterPos }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'absolute',
+        top: pos.top, bottom: pos.bottom, left: pos.left, right: pos.right,
+        width: pos.width,
+        aspectRatio: '4 / 3',
+        borderRadius: 8,
+        border: `3px solid rgba(255,255,255,${hovered ? 1 : 0.82})`,
+        boxShadow: hovered ? '0 20px 56px rgba(0,0,0,0.7)' : '0 8px 32px rgba(0,0,0,0.45)',
+        overflow: 'hidden',
+        transform: hovered ? `rotate(${pos.rotate}) scale(1.07)` : `rotate(${pos.rotate})`,
+        zIndex: hovered ? 10 : pos.zIndex,
+        transition: 'transform 0.22s cubic-bezier(0.23,1,0.32,1), box-shadow 0.22s ease, border-color 0.15s ease',
+        cursor: 'pointer',
+        pointerEvents: 'auto',
+        willChange: 'transform',
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = src.replace('.jpg', '.svg'); }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
+    </div>
+  );
+};
 
 const ChapterGroup = () => {
   const containerRef  = useRef<HTMLElement>(null);
@@ -2969,12 +3177,28 @@ const ChapterGroup = () => {
                 right: '-8vw', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none',
               }} />
 
+              {/* ── Scattered polaroid images — desktop; sits behind content row ── */}
+              {!isMobile && (
+                <div ref={el => { imgRefs.current[i] = el; }}
+                  style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
+                >
+                  {(CHAPTER_SCATTER[ch.num] ?? []).map((pos, j) => j < ch.images.length && (
+                    <ScatterPhoto
+                      key={j}
+                      src={ch.images[j]}
+                      alt={`${ch.title} — ${j + 1}`}
+                      pos={pos}
+                    />
+                  ))}
+                </div>
+              )}
+
               {/* ── Content row ───────────────────────────────────────────── */}
               <div style={{
                 width: '100%', maxWidth: 1400, margin: '0 auto',
                 display: 'flex', flexDirection: isMobile ? 'column' : 'row',
                 alignItems: 'center', gap: isMobile ? 44 : 'clamp(48px, 7vw, 88px)',
-                position: 'relative', zIndex: 1,
+                position: 'relative', zIndex: 2,
               }}>
                 {/* Text block */}
                 <div ref={el => { textRefs.current[i] = el; }}
@@ -3013,31 +3237,23 @@ const ChapterGroup = () => {
                   </p>
                 </div>
 
-                {/* Image */}
-                <div ref={el => { imgRefs.current[i] = el; }}
-                  style={{
-                    flex: 1, minHeight: isMobile ? 220 : 'clamp(300px, 40vh, 480px)',
-                    borderRadius: 24, border: `1px solid ${ch.color}20`,
-                    position: 'relative', overflow: 'hidden', willChange: 'transform',
-                  }}
-                >
-                  {/* Real photo — drop in /public/img/journey/{year}.jpg to replace */}
-                  <img
-                    src={ch.image}
-                    alt={ch.title}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                      e.currentTarget.style.display = 'none';
-                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block';
-                    }}
-                  />
-                  {/* SVG fallback — shown until real photo is added */}
-                  <img
-                    src={ch.image.replace('.jpg', '.svg')}
-                    alt=""
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'none' }}
-                  />
-                </div>
+                {/* Mobile: simple 2-image row fallback */}
+                {isMobile && (
+                  <div ref={el => { imgRefs.current[i] = el; }}
+                    style={{ display: 'flex', gap: 8, width: '100%' }}
+                  >
+                    {ch.images.slice(0, 2).map((src, j) => (
+                      <div key={j} style={{ flex: 1, aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.7)', boxShadow: '0 4px 16px rgba(0,0,0,0.35)' }}>
+                        <img
+                          src={src}
+                          alt={`${ch.title} — ${j + 1}`}
+                          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = src.replace('.jpg', '.svg'); }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -3362,7 +3578,7 @@ export default function AIDayPage() {
         <MarqueeSection />
         <ServicesScrollStory />
         <TechStack />
-        <Stats />
+        <div style={{ display: 'none' }}><Stats /></div>
         <OurPeople />
         <Vision />
         <ChapterGroup />
