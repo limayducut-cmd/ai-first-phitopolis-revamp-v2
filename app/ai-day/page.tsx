@@ -1143,7 +1143,7 @@ const TechStack = () => {
               transition={{ delay: 0.45, duration: 0.65 }}
               style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontSize: '0.9rem', lineHeight: 1.75, maxWidth: 320, paddingBottom: 6 }}
             >
-              the full arsenal — from model training and orchestration to deployment, data pipelines, and cloud infrastructure.
+              the full arsenal — from model training and orchestration to deployment, data pipelines, and cloud infrastructure. Every tool chosen deliberately, every stack decision backed by real production experience.
             </motion.p>
           </div>
           {/* Legend */}
@@ -1795,7 +1795,7 @@ const Hero = ({ ready }: { ready: boolean }) => {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }}
         style={{ position: 'absolute', top: 44, left: 44, color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase', zIndex: 10 }}
       >
-        ai day — 2026
+        about us
       </motion.div>
 
       {/* Top-right label */}
@@ -2099,14 +2099,34 @@ const Vision = () => {
   const inView = useInView(ref, { once: true, margin: '-80px' });
   const isMobile = useIsMobile();
   const { scrollYProgress } = useScroll({ target: sRef, offset: ['start end', 'end start'] });
-  const imgY = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const imgY = useTransform(scrollYProgress, [0, 1], [80, -80]);
 
   return (
-    <section id="sec-vision" ref={sRef} style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', display: 'flex', alignItems: 'center' }}>
+    <section id="sec-vision" ref={sRef} style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
       <SectionTag name="vision" />
-      <div ref={ref} style={{ maxWidth: 1200, margin: '0 auto', width: '100%' }}>
+
+      {/* ── Full-bleed organic image ── */}
+      <motion.div style={{ position: 'absolute', inset: '-15%', y: imgY, pointerEvents: 'none' }}>
+        <motion.div
+          initial={{ clipPath: 'ellipse(0% 0% at 72% 50%)' }}
+          animate={{ clipPath: inView ? (isMobile ? 'ellipse(130% 52% at 50% 90%)' : 'ellipse(60% 90% at 70% 50%)') : 'ellipse(0% 0% at 72% 50%)' }}
+          transition={{ duration: 1.8, ease: [0.76, 0, 0.24, 1] }}
+          style={{ width: '100%', height: '100%', backgroundImage: 'url(/vision.png)', backgroundSize: 'cover', backgroundPosition: isMobile ? 'center bottom' : 'center right' }}
+        />
+      </motion.div>
+
+      {/* ── Gradient overlay for text readability ── */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: isMobile
+          ? `linear-gradient(to bottom, transparent, ${C.base} 18%, ${C.base} 58%, transparent 78%)`
+          : `linear-gradient(to right, transparent, ${C.base} 12%, ${C.base} 52%, transparent 72%)`
+      }} />
+
+      {/* ── Text ── */}
+      <div ref={ref} style={{ maxWidth: 1200, margin: '0 auto', width: '100%', position: 'relative', zIndex: 1 }}>
         <Divider inView={inView} color={`rgba(0,0,0,0.1)`} />
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 64 : 100, alignItems: 'center' }}>
+        <div style={{ maxWidth: isMobile ? '100%' : '50%' }}>
           <motion.div initial={{ opacity: 0, x: -40 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.9, ease: [0.21, 1.02, 0.47, 0.98] }}>
             <Badge n="01" label="The Vision" />
             <div style={{ marginBottom: 36 }}>
@@ -2122,13 +2142,6 @@ const Vision = () => {
             >
               in a world where AI agents collaborate with humans in real-time, Phitopolis stands at the frontier — turning cutting-edge research into production-grade solutions.
             </motion.p>
-          </motion.div>
-
-          {/* Parallax image */}
-          <motion.div style={{ y: imgY }}>
-            <motion.div initial={{ opacity: 0, x: 40 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.9, delay: 0.2, ease: [0.21, 1.02, 0.47, 0.98] }}>
-              <OrgMorphReveal src="/vision.jpg" alt="Phitopolis AI Vision" />
-            </motion.div>
           </motion.div>
         </div>
       </div>
@@ -2640,12 +2653,12 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Schools & Education',
     sub: 'Recruiting from the top universities in the Philippines and Asia',
     items: [
-      { name: 'University of the Philippines',  abbr: 'UP',    note: 'Engineering · CS · Math',      logo: '/logos/schools/up.svg' },
-      { name: 'Ateneo de Manila University',    abbr: 'ADMU',  note: 'CS · Management Science',      logo: '/logos/schools/admu.svg' },
-      { name: 'De La Salle University',         abbr: 'DLSU',  note: 'Engineering · IT · Finance',   logo: '/logos/schools/dlsu.svg' },
-      { name: 'Mapúa University',               abbr: 'Mapúa', note: 'Computer Engineering',         logo: '/logos/schools/mapua.svg' },
-      { name: 'University of Santo Tomas',      abbr: 'UST',   note: 'Accountancy · IT',             logo: '/logos/schools/ust.svg' },
-      { name: 'FEU Tech / PUP',                 abbr: 'FEU',   note: 'Engineering · Technology',     logo: '/logos/schools/feu.svg' },
+      { name: 'University of the Philippines',  abbr: 'UP',    note: 'Engineering · CS · Math',      logo: '/logos/schools/up.png' },
+      { name: 'Ateneo de Manila University',    abbr: 'ADMU',  note: 'CS · Management Science',      logo: '/logos/schools/admu.png' },
+      { name: 'De La Salle University',         abbr: 'DLSU',  note: 'Engineering · IT · Finance',   logo: '/logos/schools/dlsu.png' },
+      { name: 'Mapúa University',               abbr: 'Mapúa', note: 'Computer Engineering',         logo: '/logos/schools/mapua.webp' },
+      { name: 'University of Santo Tomas',      abbr: 'UST',   note: 'Accountancy · IT',             logo: '/logos/schools/ust.webp' },
+      { name: 'FEU Tech / PUP',                 abbr: 'FEU',   note: 'Engineering · Technology',     logo: '/logos/schools/feu.png' },
     ],
   },
   {
@@ -2663,15 +2676,15 @@ const HR_SLIDES: HRSlide[] = [
   {
     id: '03', type: 'certs', color: '#34D399',
     heading: 'Certifications',
-    sub: 'And many more — continuously levelling up',
+    sub: 'Certified across the stack. Upskilling never stops.',
     items: [
-      { name: 'AWS Certified',    sub: 'Solutions Architect · ML Specialty', logo: '/logos/certs/aws.svg' },
-      { name: 'Red Hat (RHCSA)', sub: 'Linux System Administrator',          logo: '/logos/certs/redhat.svg' },
-      { name: 'ITIL',            sub: 'Foundation & Practitioner',           logo: '/logos/certs/itil.svg' },
-      { name: 'PMP',             sub: 'Project Management Professional',     logo: '/logos/certs/pmp.svg' },
-      { name: 'Six Sigma',       sub: 'Green Belt & Black Belt',             logo: '/logos/certs/sixsigma.svg' },
-      { name: 'ISO 27001',       sub: 'Lead Implementer & Internal Auditor', logo: '/logos/certs/iso27001.svg' },
-      { name: 'CFA / CPA',       sub: 'Finance & Accounting Professionals',  logo: '/logos/certs/cfa.svg' },
+      { name: 'AWS Certified',       sub: 'Solutions Architect · ML Specialty', logo: '/logos/certs/aws.webp' },
+      { name: 'Red Hat (RHCSA)',    sub: 'Linux System Administrator',          logo: '/logos/certs/redhat.webp' },
+      { name: 'ITIL',               sub: 'Foundation & Practitioner',           logo: '/logos/certs/itil.webp' },
+      { name: 'PMP',                sub: 'Project Management Professional',     logo: '/logos/certs/pmp.webp' },
+      { name: 'AWS AI Practitioner', sub: 'Certified AI Practitioner',          logo: '/logos/certs/aipractitioner.webp' },
+      { name: 'ISO 27001',          sub: 'Lead Implementer & Internal Auditor', logo: '/logos/certs/iso27001.webp' },
+      { name: 'CFA / CPA',          sub: 'Finance & Accounting Professionals',  logo: '/logos/certs/cpa.webp' },
     ],
   },
 ];
@@ -2806,24 +2819,34 @@ const OurPeople = () => {
 
                 {/* ── Schools grid ─────────────────────────────────────────── */}
                 {slide.type === 'schools' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 16 }}>
                     {(slide.items as SchoolItem[]).map((s, idx) => (
-                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '20px 20px 16px', overflow: 'hidden' }}>
-                        {/* Subtle accent glow top-left */}
-                        <div style={{ position: 'absolute', top: -20, left: -20, width: 80, height: 80, borderRadius: '50%', background: `${slide.color}18`, filter: 'blur(20px)', pointerEvents: 'none' }} />
+                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '28px 20px 22px', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        {/* Accent glow */}
+                        <div style={{ position: 'absolute', top: -32, left: -32, width: 120, height: 120, borderRadius: '50%', background: `${slide.color}1A`, filter: 'blur(28px)', pointerEvents: 'none' }} />
                         {/* Rank badge */}
-                        <div style={{ position: 'absolute', top: 14, right: 14, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
+                        <div style={{ position: 'absolute', top: 14, right: 16, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>
                           {String(idx + 1).padStart(2, '0')}
                         </div>
-                        {/* Logo / Abbr pill */}
-                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: `${slide.color}22`, border: `1px solid ${slide.color}44`, borderRadius: 8, padding: '5px 12px', marginBottom: 12 }}>
-                          <img src={s.logo} alt={s.abbr} width={32} height={32} style={{ objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { const el = e.currentTarget; el.style.display = 'none'; el.nextElementSibling && ((el.nextElementSibling as HTMLElement).style.display = 'inline'); }} />
-                          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1rem', color: slide.color, letterSpacing: '-0.01em', display: 'none' }}>{s.abbr}</span>
+                        {/* Logo */}
+                        <div style={{ width: 80, height: 80, borderRadius: 16, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, padding: 10, flexShrink: 0 }}>
+                          <img
+                            src={s.logo} alt={s.abbr}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                              const el = e.currentTarget;
+                              el.style.display = 'none';
+                              (el.nextElementSibling as HTMLElement).style.display = 'flex';
+                            }}
+                          />
+                          <span style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.1rem', color: slide.color }}>{s.abbr}</span>
                         </div>
-                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '0.78rem', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4, marginBottom: 8 }}>{s.name}</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {/* Name */}
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: isMobile ? '0.72rem' : '0.82rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, marginBottom: 12 }}>{s.name}</div>
+                        {/* Discipline tags */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'center' }}>
                           {s.note.split(' · ').map(tag => (
-                            <span key={tag} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.38)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 100, padding: '2px 8px', letterSpacing: '0.04em' }}>{tag}</span>
+                            <span key={tag} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, padding: '3px 10px', letterSpacing: '0.04em' }}>{tag}</span>
                           ))}
                         </div>
                       </div>
@@ -2876,25 +2899,37 @@ const OurPeople = () => {
 
                 {/* ── Certifications grid ───────────────────────────────────── */}
                 {slide.type === 'certs' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
                     {(slide.items as CertItem[]).map(cert => (
-                      <div key={cert.name} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
-                        {/* Top accent line */}
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${slide.color}, transparent)`, borderRadius: '16px 16px 0 0' }} />
-                        {/* Icon area */}
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                      <div key={cert.name} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderLeft: `3px solid ${slide.color}70`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, overflow: 'hidden' }}>
+                        {/* Glow behind logo */}
+                        <div style={{ position: 'absolute', top: '50%', left: 16, width: 90, height: 90, borderRadius: '50%', background: `${slide.color}14`, filter: 'blur(22px)', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                        {/* Logo */}
+                        <div style={{ width: 68, height: 68, borderRadius: 14, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 10 }}>
                           {cert.logo ? (
-                            <img src={cert.logo} alt={cert.name} width={30} height={30} style={{ objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }} />
+                            <img src={cert.logo} alt={cert.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }} />
                           ) : (
-                            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 14, color: slide.color }}>{cert.name.slice(0, 2)}</span>
+                            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 18, color: slide.color }}>{cert.name.slice(0, 2)}</span>
                           )}
                         </div>
-                        <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#fff', lineHeight: 1.25, marginBottom: 4 }}>{cert.name}</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>{cert.sub}</div>
+                        {/* Text */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: '#fff', lineHeight: 1.3, marginBottom: 6 }}>{cert.name}</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5 }}>{cert.sub}</div>
                         </div>
                       </div>
                     ))}
+                    {/* ── "& many more" last block ─────────────────────────── */}
+                    <div style={{ position: 'relative', background: `${slide.color}0D`, border: `1px dashed ${slide.color}40`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: '50%', left: 16, width: 90, height: 90, borderRadius: '50%', background: `${slide.color}18`, filter: 'blur(22px)', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <div style={{ width: 68, height: 68, borderRadius: 14, background: `${slide.color}20`, border: `1px solid ${slide.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 22, color: slide.color }}>+</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: slide.color, lineHeight: 1.3, marginBottom: 6 }}>& Many More</div>
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5 }}>Certifications provided across the team</div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2973,6 +3008,41 @@ const CHAPTER_SCATTER: Record<string, { top?: string; bottom?: string; left?: st
     { bottom: '4%',  left: '50%',   width: '31%', rotate: '-3deg',  zIndex: 1 },
     { top: '-3%',    right: '5%',   width: '18%', rotate: '15deg',  zIndex: 4 },
   ],
+};
+
+type ScatterPos = { top?: string; bottom?: string; left?: string; right?: string; width: string; rotate: string; zIndex: number };
+
+const ScatterPhoto = ({ src, alt, pos }: { src: string; alt: string; pos: ScatterPos }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'absolute',
+        top: pos.top, bottom: pos.bottom, left: pos.left, right: pos.right,
+        width: pos.width,
+        aspectRatio: '4 / 3',
+        borderRadius: 8,
+        border: `3px solid rgba(255,255,255,${hovered ? 1 : 0.82})`,
+        boxShadow: hovered ? '0 20px 56px rgba(0,0,0,0.7)' : '0 8px 32px rgba(0,0,0,0.45)',
+        overflow: 'hidden',
+        transform: hovered ? `rotate(${pos.rotate}) scale(1.07)` : `rotate(${pos.rotate})`,
+        zIndex: hovered ? 10 : pos.zIndex,
+        transition: 'transform 0.22s cubic-bezier(0.23,1,0.32,1), box-shadow 0.22s ease, border-color 0.15s ease',
+        cursor: 'pointer',
+        pointerEvents: 'auto',
+        willChange: 'transform',
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = src.replace('.jpg', '.svg'); }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
+    </div>
+  );
 };
 
 const ChapterGroup = () => {
@@ -3113,29 +3183,12 @@ const ChapterGroup = () => {
                   style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
                 >
                   {(CHAPTER_SCATTER[ch.num] ?? []).map((pos, j) => j < ch.images.length && (
-                    <div key={j} style={{
-                      position: 'absolute',
-                      top:    pos.top,
-                      bottom: pos.bottom,
-                      left:   pos.left,
-                      right:  pos.right,
-                      width: pos.width,
-                      aspectRatio: '4 / 3',
-                      borderRadius: 8,
-                      border: '3px solid rgba(255,255,255,0.82)',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
-                      overflow: 'hidden',
-                      transform: `rotate(${pos.rotate})`,
-                      zIndex: pos.zIndex,
-                      willChange: 'transform',
-                    }}>
-                      <img
-                        src={ch.images[j]}
-                        alt={`${ch.title} — ${j + 1}`}
-                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = ch.images[j].replace('.jpg', '.svg'); }}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                      />
-                    </div>
+                    <ScatterPhoto
+                      key={j}
+                      src={ch.images[j]}
+                      alt={`${ch.title} — ${j + 1}`}
+                      pos={pos}
+                    />
                   ))}
                 </div>
               )}
@@ -3525,7 +3578,7 @@ export default function AIDayPage() {
         <MarqueeSection />
         <ServicesScrollStory />
         <TechStack />
-        <Stats />
+        <div style={{ display: 'none' }}><Stats /></div>
         <OurPeople />
         <Vision />
         <ChapterGroup />
