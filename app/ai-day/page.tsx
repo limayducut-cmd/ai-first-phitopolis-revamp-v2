@@ -1933,7 +1933,9 @@ const Statement = () => {
   const { scrollYProgress } = useScroll({ target: sRef, offset: ['start end', 'end start'] });
   const blobY = useTransform(scrollYProgress, [0, 1], [60, -60]);
   const textY = useTransform(scrollYProgress, [0, 1], [30, -30]);
+  const bgY   = useTransform(scrollYProgress, [0, 1], ['-8%', '8%']);
 
+  const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
@@ -1963,11 +1965,25 @@ const Statement = () => {
   return (
     <section id="sec-statement" ref={sRef} style={{ background: C.base, minHeight: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center' }}>
       <SectionTag name="story" />
-      {/* Parallax background blobs */}
-      <motion.div style={{ position: 'absolute', left: '-8%', top: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}16 0%, transparent 70%)`, filter: 'blur(70px)', y: blobY, pointerEvents: 'none' }} />
-      <motion.div style={{ position: 'absolute', right: '-4%', bottom: '8%', width: 280, height: 280, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}10 0%, transparent 70%)`, filter: 'blur(60px)', y: blobY, pointerEvents: 'none' }} />
 
-      <motion.div ref={ref} style={{ maxWidth: 900, margin: '0 auto', width: '100%', position: 'relative', y: textY, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      {/* Background image — parallax, same pattern as Demographics section */}
+      <motion.div style={{ position: 'absolute', inset: '-10%', zIndex: 0, pointerEvents: 'none', y: bgY }}>
+        <img
+          src="/img/story/bg.jpg"
+          alt=""
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = '/img/story/bg.svg'; }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }}
+        />
+      </motion.div>
+      {/* Gradient overlays — fade background image into section colour */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(100deg, ${C.base} 0%, ${C.base}E0 25%, ${C.base}99 55%, ${C.base}44 100%)` }} />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(to bottom, ${C.base} 0%, transparent 10%, transparent 90%, ${C.base} 100%)` }} />
+
+      {/* Parallax background blobs */}
+      <motion.div style={{ position: 'absolute', left: '-8%', top: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}16 0%, transparent 70%)`, filter: 'blur(70px)', y: blobY, pointerEvents: 'none', zIndex: 2 }} />
+      <motion.div style={{ position: 'absolute', right: '-4%', bottom: '8%', width: 280, height: 280, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}10 0%, transparent 70%)`, filter: 'blur(60px)', y: blobY, pointerEvents: 'none', zIndex: 2 }} />
+
+      <motion.div ref={ref} style={{ maxWidth: 900, margin: '0 auto', width: '100%', position: 'relative', y: textY, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', zIndex: 3 }}>
         {/* Section label */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.7 }}
           style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}
@@ -1982,6 +1998,28 @@ const Statement = () => {
         >
           Phitopolis was built in response to the demand of our partners in the Financial Investment Industry. They needed exacting and powerful technological solutions and harnessed the top talent in the Philippines via Phitopolis.
         </motion.p>
+
+        {/* Story image row */}
+        {!isMobile && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.4 }}
+            style={{ display: 'flex', gap: 16, width: '100%', maxWidth: 900, marginBottom: 56 }}
+          >
+            {[
+              { src: '/img/story/team.jpg',     alt: 'Our team' },
+              { src: '/img/story/office.jpg',   alt: 'Our office' },
+              { src: '/img/story/founders.jpg', alt: 'Our founders' },
+            ].map(({ src, alt }) => (
+              <div key={src} style={{ flex: '1 1 0', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(10,42,102,0.1)', aspectRatio: '4 / 3', position: 'relative' }}>
+                <img
+                  src={src}
+                  alt={alt}
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = src.replace('.jpg', '.svg'); }}
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Large heading — scroll-driven per-letter fill↔outline */}
         <ScrollLetterHeading triggerRef={sRef} />
@@ -2292,24 +2330,28 @@ const PHASES = [
     definition: 'We operate with unwavering honesty and transparency in every interaction, ensuring our word is our bond.',
     valueToClient: 'Builds a foundation of trust and predictability — clients can rely on truthful reporting and ethical decision-making, reducing risk and ensuring long-term partnership stability.',
     color: C.accent, glow: '#FFC72C',
+    image: '/img/values/integrity.jpg',
   },
   {
     num: '02', label: 'Accountability',
     definition: 'We take full ownership of our commitments and results, standing behind the quality of our output without excuses.',
     valueToClient: 'Ensures reliability and peace of mind — by owning both successes and challenges, we provide a dependable partner who proactively manages outcomes to meet project milestones.',
     color: '#4A90D9', glow: '#4A90D9',
+    image: '/img/values/accountability.jpg',
   },
   {
     num: '03', label: 'Forward Thinking',
     definition: 'We don\'t just solve today\'s problems; we anticipate tomorrow\'s challenges through innovation and strategic planning.',
     valueToClient: 'Clients gain a competitive edge by leveraging our proactive approach to technology and market trends, ensuring their business remains resilient and scalable.',
     color: '#A78BFA', glow: '#A78BFA',
+    image: '/img/values/forward-thinking.jpg',
   },
   {
     num: '04', label: 'Excellence',
     definition: 'In everything we do — we set the highest standards for performance, continuously refining our processes to deliver superior quality.',
     valueToClient: 'Our commitment to excellence translates to reduced errors, higher efficiency, and a final product that exceeds expectations, maximizing the client\'s return on investment.',
     color: '#2ECC71', glow: '#2ECC71',
+    image: '/img/values/excellence.jpg',
   },
 ];
 
@@ -2405,6 +2447,23 @@ const Process = () => {
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
         <SectionTag name="values" />
 
+        {/* ── Background decorations ──────────────────────────────────── */}
+        {/* Dot grid */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(circle, rgba(10,42,102,0.07) 1.5px, transparent 1.5px)', backgroundSize: '28px 28px' }} />
+        {/* Top accent bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 0, pointerEvents: 'none', background: `linear-gradient(90deg, transparent, ${C.accent}40, transparent)` }} />
+        {/* Bottom accent bar */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, zIndex: 0, pointerEvents: 'none', background: `linear-gradient(90deg, transparent, ${C.accent}30, transparent)` }} />
+        {/* Corner marks */}
+        <svg style={{ position: 'absolute', top: 28, left: 28, zIndex: 0, pointerEvents: 'none', opacity: 0.08 }} width="72" height="72">
+          <path d="M0 72 L0 0 L72 0" stroke="#0A2A66" strokeWidth="1.5" fill="none"/>
+        </svg>
+        <svg style={{ position: 'absolute', bottom: 28, right: 28, zIndex: 0, pointerEvents: 'none', opacity: 0.08 }} width="72" height="72">
+          <path d="M72 0 L72 72 L0 72" stroke="#0A2A66" strokeWidth="1.5" fill="none"/>
+        </svg>
+        {/* Ghost watermark */}
+        <div style={{ position: 'absolute', bottom: '-0.05em', right: '-0.03em', zIndex: 0, pointerEvents: 'none', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '28vw', WebkitTextStroke: '1px rgba(10,42,102,0.04)', WebkitTextFillColor: 'transparent', lineHeight: 1, letterSpacing: '-0.05em', userSelect: 'none' }}>values</div>
+
         {/* ── Left rail ─────────────────────────────────────────────────── */}
         <div style={{ width: isMobile ? 80 : 'clamp(200px, 22vw, 280px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 0 0 24px' : '0 0 0 48px', position: 'relative', zIndex: 3 }}>
           <div ref={badgeRef} />
@@ -2466,28 +2525,44 @@ const Process = () => {
               </div>
 
               {/* Phase content */}
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                {/* Label — clip-path curtain reveal */}
-                <div ref={labelRefs[i]} style={{ overflow: 'visible', marginBottom: 24 }}>
-                  <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(2.4rem, 10vw, 4rem)' : 'clamp(3.5rem, 7vw, 7.5rem)', letterSpacing: '-0.04em', lineHeight: 1.15, textTransform: 'lowercase', color: C.charcoal, margin: 0, whiteSpace: 'pre-line' }}>
-                    {ph.label}
-                  </h2>
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 'clamp(32px, 5vw, 64px)', width: '100%' }}>
+
+                {/* Text */}
+                <div style={{ flex: '0 0 auto', width: isMobile ? '100%' : '50%' }}>
+                  {/* Label — clip-path curtain reveal */}
+                  <div ref={labelRefs[i]} style={{ overflow: 'visible', marginBottom: 24 }}>
+                    <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(2.4rem, 10vw, 4rem)' : 'clamp(3.5rem, 7vw, 7.5rem)', letterSpacing: '-0.04em', lineHeight: 1.15, textTransform: 'lowercase', color: C.charcoal, margin: 0, whiteSpace: 'pre-line' }}>
+                      {ph.label}
+                    </h2>
+                  </div>
+
+                  {/* Description */}
+                  <div ref={descRefs[i]}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.85rem' : '1rem', color: 'rgba(10,14,26,0.72)', lineHeight: 1.8, margin: 0 }}>
+                      {ph.definition}
+                    </p>
+                    <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(10,14,26,0.08)' }}>
+                      <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: ph.color }}>Value to Client</span>
+                      <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.78rem' : '0.88rem', color: 'rgba(10,14,26,0.5)', lineHeight: 1.85, margin: '8px 0 0' }}>
+                        {ph.valueToClient}
+                      </p>
+                    </div>
+                    {/* Accent underline */}
+                    <div style={{ marginTop: 20, width: 48, height: 2, background: ph.color, borderRadius: 1 }} />
+                  </div>
                 </div>
 
-                {/* Description */}
-                <div ref={descRefs[i]} style={{ maxWidth: 480 }}>
-                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.85rem' : '1rem', color: 'rgba(10,14,26,0.72)', lineHeight: 1.8, margin: 0 }}>
-                    {ph.definition}
-                  </p>
-                  <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid rgba(10,14,26,0.08)' }}>
-                    <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: ph.color }}>Value to Client</span>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: isMobile ? '0.78rem' : '0.88rem', color: 'rgba(10,14,26,0.5)', lineHeight: 1.85, margin: '8px 0 0' }}>
-                      {ph.valueToClient}
-                    </p>
+                {/* Value image */}
+                {!isMobile && (
+                  <div style={{ flex: 1, borderRadius: 20, overflow: 'hidden', minHeight: 'clamp(240px, 35vh, 420px)', border: `1px solid ${ph.color}20` }}>
+                    <img
+                      src={ph.image}
+                      alt={ph.label}
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = ph.image.replace('.jpg', '.svg'); }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
                   </div>
-                  {/* Accent underline */}
-                  <div style={{ marginTop: 20, width: 48, height: 2, background: ph.color, borderRadius: 1 }} />
-                </div>
+                )}
               </div>
             </div>
           ))}
@@ -2834,19 +2909,72 @@ const OurPeople = () => {
 
 // ── CHAPTERS ──────────────────────────────────────────────────────────────────
 const CHAPTERS = [
-  { num: '2021', id: 'sec-ch1', tag: 'The Beginning', title: '2021', sub: 'Where it all started',                color: '#FFC72C', image: '/img/journey/2021.jpg',
+  { num: '2021', id: 'sec-ch1', tag: 'The Beginning', title: '2021', sub: 'Where it all started',                color: '#FFC72C',
+    images: ['/img/journey/2021/1.jpg', '/img/journey/2021/2.jpg', '/img/journey/2021/3.jpg', '/img/journey/2021/4.jpg'],
     body: 'Placeholder — content covering Phitopolis\'s founding year will live here. The vision, the first team members, and the early decisions that set the direction for everything that followed.' },
-  { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA', image: '/img/journey/2022.jpg',
+  { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA',
+    images: ['/img/journey/2022/1.jpg', '/img/journey/2022/2.jpg', '/img/journey/2022/3.jpg', '/img/journey/2022/4.jpg'],
     body: 'Placeholder — content covering 2022\'s milestones will live here. Early client engagements, team growth, and the first solutions that proved the model worked.' },
-  { num: '2023', id: 'sec-ch3', tag: 'Momentum',      title: '2023', sub: 'Accelerating the mission',            color: '#34D399', image: '/img/journey/2023.jpg',
+  { num: '2023', id: 'sec-ch3', tag: 'Momentum',      title: '2023', sub: 'Accelerating the mission',            color: '#34D399',
+    images: ['/img/journey/2023/1.jpg', '/img/journey/2023/2.jpg', '/img/journey/2023/3.jpg', '/img/journey/2023/4.jpg'],
     body: 'Placeholder — content covering 2023\'s growth will live here. Expanded capabilities, deeper partnerships, and the projects that put Phitopolis on the map.' },
-  { num: '2024', id: 'sec-ch4', tag: 'Scaling Up',    title: '2024', sub: 'Reaching new heights',                color: '#A78BFA', image: '/img/journey/2024.jpg',
+  { num: '2024', id: 'sec-ch4', tag: 'Scaling Up',    title: '2024', sub: 'Reaching new heights',                color: '#A78BFA',
+    images: ['/img/journey/2024/1.jpg', '/img/journey/2024/2.jpg', '/img/journey/2024/3.jpg', '/img/journey/2024/4.jpg'],
     body: 'Placeholder — content covering 2024\'s expansion will live here. Larger engagements, new service lines, and a growing team aligned around AI-first delivery.' },
-  { num: '2025', id: 'sec-ch5', tag: 'Full Stride',   title: '2025', sub: 'Operating at full capacity',          color: '#F59E0B', image: '/img/journey/2025.jpg',
+  { num: '2025', id: 'sec-ch5', tag: 'Full Stride',   title: '2025', sub: 'Operating at full capacity',          color: '#F59E0B',
+    images: ['/img/journey/2025/1.jpg', '/img/journey/2025/2.jpg', '/img/journey/2025/3.jpg', '/img/journey/2025/4.jpg'],
     body: 'Placeholder — content covering 2025\'s achievements will live here. Flagship deployments, measurable client impact, and the refinement of what makes Phitopolis different.' },
-  { num: '2026', id: 'sec-ch6', tag: 'AI Day',        title: '2026', sub: 'Five years in, the work continues',   color: '#F472B6', image: '/img/journey/2026.jpg',
+  { num: '2026', id: 'sec-ch6', tag: 'AI Day',        title: '2026', sub: 'Five years in, the work continues',   color: '#F472B6',
+    images: ['/img/journey/2026/1.jpg', '/img/journey/2026/2.jpg', '/img/journey/2026/3.jpg', '/img/journey/2026/4.jpg'],
     body: 'Placeholder — content covering where Phitopolis stands today will live here. Five years of learning, shipping, and building — and a clear view of what comes next.' },
 ];
+
+// Unique scatter layouts per year — desktop polaroid placement
+// Each array maps to images[0], [1], [2], [3] of that chapter
+const CHAPTER_SCATTER: Record<string, { top?: string; bottom?: string; left?: string; right?: string; width: string; rotate: string; zIndex: number }[]> = {
+  // 2021 — spread across right half (the layout the user liked)
+  '2021': [
+    { top: '14%',    left: '42%',   width: '30%', rotate: '-4deg',  zIndex: 2 },
+    { top: '-4%',    right: '4%',   width: '24%', rotate:  '9deg',  zIndex: 3 },
+    { bottom: '8%',  left: '50%',   width: '27%', rotate: '-8deg',  zIndex: 1 },
+    { bottom: '-3%', right: '9%',   width: '22%', rotate:  '6deg',  zIndex: 3 },
+  ],
+  // 2022 — diagonal cascade top-left to bottom-right
+  '2022': [
+    { top: '4%',     left: '38%',   width: '25%', rotate: '-12deg', zIndex: 1 },
+    { top: '22%',    left: '52%',   width: '29%', rotate: '-1deg',  zIndex: 2 },
+    { bottom: '14%', left: '60%',   width: '26%', rotate:  '9deg',  zIndex: 3 },
+    { bottom: '1%',  right: '-1%',  width: '23%', rotate: '16deg',  zIndex: 2 },
+  ],
+  // 2023 — fan spread from a single point (like dealing cards)
+  '2023': [
+    { top: '8%',     left: '36%',   width: '33%', rotate: '-18deg', zIndex: 1 },
+    { top: '14%',    left: '47%',   width: '31%', rotate:  '-6deg', zIndex: 2 },
+    { top: '20%',    left: '55%',   width: '28%', rotate:   '5deg', zIndex: 3 },
+    { top: '26%',    right: '2%',   width: '24%', rotate:  '17deg', zIndex: 4 },
+  ],
+  // 2024 — chaotic pile, all overlapping in a cluster
+  '2024': [
+    { top: '20%',    left: '44%',   width: '36%', rotate: '-2deg',  zIndex: 1 },
+    { top: '10%',    left: '53%',   width: '28%', rotate: '13deg',  zIndex: 2 },
+    { top: '32%',    left: '40%',   width: '26%', rotate: '-15deg', zIndex: 3 },
+    { top: '15%',    right: '3%',   width: '22%', rotate:  '6deg',  zIndex: 4 },
+  ],
+  // 2025 — wide scatter, images pushed to the four corners of the right side
+  '2025': [
+    { top: '-6%',    left: '40%',   width: '27%', rotate: '-7deg',  zIndex: 2 },
+    { top: '28%',    right: '-4%',  width: '32%', rotate: '10deg',  zIndex: 1 },
+    { bottom: '10%', left: '43%',   width: '25%', rotate: '-11deg', zIndex: 3 },
+    { bottom: '-5%', right: '14%',  width: '26%', rotate:  '3deg',  zIndex: 2 },
+  ],
+  // 2026 — curated trio with a small peeker in the corner
+  '2026': [
+    { top: '6%',     left: '44%',   width: '34%', rotate: '-5deg',  zIndex: 2 },
+    { top: '38%',    right: '3%',   width: '29%', rotate:  '8deg',  zIndex: 3 },
+    { bottom: '4%',  left: '50%',   width: '31%', rotate: '-3deg',  zIndex: 1 },
+    { top: '-3%',    right: '5%',   width: '18%', rotate: '15deg',  zIndex: 4 },
+  ],
+};
 
 const ChapterGroup = () => {
   const containerRef  = useRef<HTMLElement>(null);
@@ -2980,12 +3108,45 @@ const ChapterGroup = () => {
                 right: '-8vw', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none',
               }} />
 
+              {/* ── Scattered polaroid images — desktop; sits behind content row ── */}
+              {!isMobile && (
+                <div ref={el => { imgRefs.current[i] = el; }}
+                  style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
+                >
+                  {(CHAPTER_SCATTER[ch.num] ?? []).map((pos, j) => j < ch.images.length && (
+                    <div key={j} style={{
+                      position: 'absolute',
+                      top:    pos.top,
+                      bottom: pos.bottom,
+                      left:   pos.left,
+                      right:  pos.right,
+                      width: pos.width,
+                      aspectRatio: '4 / 3',
+                      borderRadius: 8,
+                      border: '3px solid rgba(255,255,255,0.82)',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+                      overflow: 'hidden',
+                      transform: `rotate(${pos.rotate})`,
+                      zIndex: pos.zIndex,
+                      willChange: 'transform',
+                    }}>
+                      <img
+                        src={ch.images[j]}
+                        alt={`${ch.title} — ${j + 1}`}
+                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = ch.images[j].replace('.jpg', '.svg'); }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* ── Content row ───────────────────────────────────────────── */}
               <div style={{
                 width: '100%', maxWidth: 1400, margin: '0 auto',
                 display: 'flex', flexDirection: isMobile ? 'column' : 'row',
                 alignItems: 'center', gap: isMobile ? 44 : 'clamp(48px, 7vw, 88px)',
-                position: 'relative', zIndex: 1,
+                position: 'relative', zIndex: 2,
               }}>
                 {/* Text block */}
                 <div ref={el => { textRefs.current[i] = el; }}
@@ -3024,31 +3185,23 @@ const ChapterGroup = () => {
                   </p>
                 </div>
 
-                {/* Image */}
-                <div ref={el => { imgRefs.current[i] = el; }}
-                  style={{
-                    flex: 1, minHeight: isMobile ? 220 : 'clamp(300px, 40vh, 480px)',
-                    borderRadius: 24, border: `1px solid ${ch.color}20`,
-                    position: 'relative', overflow: 'hidden', willChange: 'transform',
-                  }}
-                >
-                  {/* Real photo — drop in /public/img/journey/{year}.jpg to replace */}
-                  <img
-                    src={ch.image}
-                    alt={ch.title}
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                      e.currentTarget.style.display = 'none';
-                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block';
-                    }}
-                  />
-                  {/* SVG fallback — shown until real photo is added */}
-                  <img
-                    src={ch.image.replace('.jpg', '.svg')}
-                    alt=""
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'none' }}
-                  />
-                </div>
+                {/* Mobile: simple 2-image row fallback */}
+                {isMobile && (
+                  <div ref={el => { imgRefs.current[i] = el; }}
+                    style={{ display: 'flex', gap: 8, width: '100%' }}
+                  >
+                    {ch.images.slice(0, 2).map((src, j) => (
+                      <div key={j} style={{ flex: 1, aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(255,255,255,0.7)', boxShadow: '0 4px 16px rgba(0,0,0,0.35)' }}>
+                        <img
+                          src={src}
+                          alt={`${ch.title} — ${j + 1}`}
+                          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = src.replace('.jpg', '.svg'); }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
