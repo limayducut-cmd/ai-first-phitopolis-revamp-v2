@@ -1031,6 +1031,36 @@ const SI: Record<string, string> = {
   'Snowflake':         'snowflake',
   'Apache Spark':      'apachespark',
   'Airflow':           'apacheairflow',
+  // Languages & Frameworks
+  'Go':            'go',
+  'Rust':          'rust',
+  'Java':          'openjdk',
+  'Vue.js':        'vuedotjs',
+  'Angular':       'angular',
+  'Svelte':        'svelte',
+  'Django':        'django',
+  'Spring Boot':   'springboot',
+  'Flutter':       'flutter',
+  'Laravel':       'laravel',
+  '.NET':          'dotnet',
+  // Additional Cloud & Infra
+  'AWS':           'amazonaws',
+  'Azure':         'microsoftazure',
+  'GitHub Actions':'githubactions',
+  'Ansible':       'ansible',
+  // Additional Data & Storage
+  'Elasticsearch': 'elasticsearch',
+  'Cassandra':     'apachecassandra',
+  'ClickHouse':    'clickhouse',
+  'dbt':           'dbt',
+  'RabbitMQ':      'rabbitmq',
+  'Supabase':      'supabase',
+  'Firebase':      'firebase',
+  'DynamoDB':      'amazondynamodb',
+  // Additional AI / ML
+  'OpenAI':        'openai',
+  'Jupyter':       'jupyter',
+  'ONNX':          'onnx',
 };
 
 const TECH_ROW1 = [
@@ -1038,7 +1068,8 @@ const TECH_ROW1 = [
   { name: 'Hugging Face', cat: 'ai' }, { name: 'PyTorch', cat: 'ai' },
   { name: 'TensorFlow', cat: 'ai' }, { name: 'Ollama', cat: 'ai' },
   { name: 'CrewAI', cat: 'ai' }, { name: 'MLflow', cat: 'ai' },
-  { name: 'Weights & Biases', cat: 'ai' },
+  { name: 'Weights & Biases', cat: 'ai' }, { name: 'OpenAI', cat: 'ai' },
+  { name: 'Jupyter', cat: 'ai' }, { name: 'ONNX', cat: 'ai' },
 ];
 
 const TECH_ROW2 = [
@@ -1046,9 +1077,17 @@ const TECH_ROW2 = [
   { name: 'Node.js', cat: 'dev' }, { name: 'React', cat: 'dev' },
   { name: 'TypeScript', cat: 'dev' }, { name: 'Next.js', cat: 'dev' },
   { name: 'GraphQL', cat: 'dev' }, { name: 'Celery', cat: 'dev' },
+  { name: 'Go', cat: 'dev' }, { name: 'Rust', cat: 'dev' },
+  { name: 'Java', cat: 'dev' }, { name: 'Vue.js', cat: 'dev' },
+  { name: 'Angular', cat: 'dev' }, { name: 'Svelte', cat: 'dev' },
+  { name: 'Django', cat: 'dev' }, { name: 'Spring Boot', cat: 'dev' },
+  { name: 'Flutter', cat: 'dev' }, { name: 'Laravel', cat: 'dev' },
+  { name: '.NET', cat: 'dev' },
   { name: 'Docker', cat: 'infra' }, { name: 'Kubernetes', cat: 'infra' },
   { name: 'Terraform', cat: 'infra' }, { name: 'GCP', cat: 'infra' },
   { name: 'Nginx', cat: 'infra' }, { name: 'Prometheus', cat: 'infra' },
+  { name: 'AWS', cat: 'infra' }, { name: 'Azure', cat: 'infra' },
+  { name: 'GitHub Actions', cat: 'infra' }, { name: 'Ansible', cat: 'infra' },
 ];
 
 const TECH_ROW3 = [
@@ -1057,6 +1096,10 @@ const TECH_ROW3 = [
   { name: 'Redis', cat: 'data' }, { name: 'MongoDB', cat: 'data' },
   { name: 'Kafka', cat: 'data' }, { name: 'Snowflake', cat: 'data' },
   { name: 'Apache Spark', cat: 'data' }, { name: 'Airflow', cat: 'data' },
+  { name: 'Elasticsearch', cat: 'data' }, { name: 'Cassandra', cat: 'data' },
+  { name: 'ClickHouse', cat: 'data' }, { name: 'dbt', cat: 'data' },
+  { name: 'RabbitMQ', cat: 'data' }, { name: 'Supabase', cat: 'data' },
+  { name: 'Firebase', cat: 'data' }, { name: 'DynamoDB', cat: 'data' },
 ];
 
 // Individual item — flat logo + text, no pill container
@@ -1852,7 +1895,7 @@ const Hero = ({ ready }: { ready: boolean }) => {
 // ── SCROLL-DRIVEN LETTER HEADING ─────────────────────────────────────────────
 const HEADING_FONT: React.CSSProperties = {
   fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-  fontSize: 'clamp(2.4rem, 5.5vw, 5rem)', letterSpacing: '-0.03em', lineHeight: 1.15,
+  fontSize: 'clamp(3rem, 7vw, 7rem)', letterSpacing: '-0.03em', lineHeight: 1.15,
 };
 
 const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLElement | null> }) => {
@@ -1869,7 +1912,7 @@ const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLE
     const st1 = { trigger: triggerRef.current, start: 'top 70%', end: 'top top', scrub: 0.4 };
     const tl1 = gsap.timeline({ scrollTrigger: st1 });
     chars1.forEach((ch, i) => {
-      const pos = i / chars1.length;
+      const pos = i / Math.max(chars1.length - 1, 1);
       tl1.set(ch, { webkitTextFillColor: 'transparent' }, pos);
     });
 
@@ -1878,7 +1921,7 @@ const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLE
     const st2 = { trigger: triggerRef.current, start: 'top 70%', end: 'top top', scrub: 0.4 };
     const tl2 = gsap.timeline({ scrollTrigger: st2 });
     chars2.forEach((ch, i) => {
-      const pos = i / chars2.length;
+      const pos = i / Math.max(chars2.length - 1, 1);
       tl2.set(ch, { webkitTextFillColor: C.charcoal }, pos);
     });
 
@@ -1894,10 +1937,10 @@ const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLE
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.1em' }}>
-      <div ref={line1Ref} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div ref={line1Ref} style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'center' }}>
         {renderChars('what do you look for in')}
       </div>
-      <div ref={line2Ref} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div ref={line2Ref} style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'center' }}>
         {renderChars('an ')}
         {renderChars('IT', true)}
         {renderChars(' partner?')}
@@ -1971,7 +2014,7 @@ const Statement = () => {
         <img
           src="/img/story/bg.jpg"
           alt=""
-          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = '/img/story/bg.svg'; }}
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { const img = e.currentTarget; if (!img.src.endsWith('.svg')) { img.src = '/img/story/bg.svg'; } else { img.style.display = 'none'; } }}
           style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }}
         />
       </motion.div>
@@ -1999,27 +2042,7 @@ const Statement = () => {
           Phitopolis was built in response to the demand of our partners in the Financial Investment Industry. They needed exacting and powerful technological solutions and harnessed the top talent in the Philippines via Phitopolis.
         </motion.p>
 
-        {/* Story image row */}
-        {!isMobile && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: 0.4 }}
-            style={{ display: 'flex', gap: 16, width: '100%', maxWidth: 900, marginBottom: 56 }}
-          >
-            {[
-              { src: '/img/story/team.jpg',     alt: 'Our team' },
-              { src: '/img/story/office.jpg',   alt: 'Our office' },
-              { src: '/img/story/founders.jpg', alt: 'Our founders' },
-            ].map(({ src, alt }) => (
-              <div key={src} style={{ flex: '1 1 0', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(10,42,102,0.1)', aspectRatio: '4 / 3', position: 'relative' }}>
-                <img
-                  src={src}
-                  alt={alt}
-                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = src.replace('.jpg', '.svg'); }}
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-            ))}
-          </motion.div>
-        )}
+        {/* Story image row — hidden for now */}
 
         {/* Large heading — scroll-driven per-letter fill↔outline */}
         <ScrollLetterHeading triggerRef={sRef} />
@@ -2230,8 +2253,8 @@ const ServicesScrollStory = () => {
       tl.to(img1Ref.current,   { opacity: 0, duration: 0.15 }, 0.75);
 
       // ── Caption 1 ─────────────────────────────────────────────────────────────
-      tl.to(cap1Ref.current,   { opacity: 1, duration: 0.08 }, 0.35);
-      tl.to(cap1Ref.current,   { opacity: 0, duration: 0.08 }, 0.50);
+      tl.to(cap1Ref.current,   { opacity: 1, duration: 0.08 }, 0.20);
+      tl.to(cap1Ref.current,   { opacity: 0, duration: 0.08 }, 0.38);
 
       // ── Image 2: appears → full → thumbnail ───────────────────────────────────
       tl.to(img2Ref.current,   { opacity: 1, duration: 0.08 }, 0.33);
@@ -2239,15 +2262,15 @@ const ServicesScrollStory = () => {
       tl.to(img2Ref.current,   { scale: 0.22, x: leftThumb, borderRadius: 20 / 0.22, duration: 0.15 }, 0.75);
 
       // ── Caption 2 ─────────────────────────────────────────────────────────────
-      tl.to(cap2Ref.current,   { opacity: 1, duration: 0.08 }, 0.62);
-      tl.to(cap2Ref.current,   { opacity: 0, duration: 0.08 }, 0.77);
+      tl.to(cap2Ref.current,   { opacity: 1, duration: 0.08 }, 0.50);
+      tl.to(cap2Ref.current,   { opacity: 0, duration: 0.08 }, 0.72);
 
       // ── Image 3: appears small → grows to full ────────────────────────────────
       tl.to(img3Ref.current,   { opacity: 1, duration: 0.08 }, 0.48);
       tl.to(img3Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.21 }, 0.75);
 
-      // ── Caption 3 ─────────────────────────────────────────────────────────────
-      tl.to(cap3Ref.current,   { opacity: 1, duration: 0.08 }, 0.88);
+      // ── Caption 3 — appears as image 3 approaches full size ──────────────────
+      tl.to(cap3Ref.current,   { opacity: 1, duration: 0.08 }, 0.85);
     }, containerRef);
 
     return () => ctx.revert();
@@ -2639,7 +2662,60 @@ const ShowCard = ({ card, index, isActive = true, fullWidth = false }: { key?: R
 };
 
 // ── OUR PEOPLE — HR Demographics ──────────────────────────────────────────────
-type SchoolItem = { name: string; abbr: string; note: string; logo: string };
+
+// Certification badge images — fetched from vendor CDNs, no local assets required for cloud certs
+const CERT_CLOUD = [
+  // AWS — official hexagonal badges from d1.awsstatic.com
+  { name: 'AWS AI Practitioner',            path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/aif-badge-resized.b4fb88afcfb3d7e57012aa2abe67cbcae6021315.png' },
+  { name: 'AWS Cloud Practitioner',         path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/clf-badge-resized.2fdbed6fe7b39cf6cef5063f283ddd689cc78caa.png' },
+  { name: 'AWS Solutions Architect Assoc',  path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/saa-badge-resized.c20e7aebf85d36eb5203d39969a4bca1164c47d6.png' },
+  { name: 'AWS Developer Associate',        path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/dva-badge-resized.d7d49d6e5cda74099c39ca24ef2573994f4b7955.png' },
+  { name: 'AWS Solutions Architect Pro',    path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/sap-badge-resized.5b4e271e6559dfa5a4b326685b2f00efd53420ed.png' },
+  { name: 'AWS Machine Learning Specialty', path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/mls-badge-resized.e6adaa2cb420c3214ffc9aadf87b65a46eb58c70.png' },
+  { name: 'AWS Security Specialty',         path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/scs-badge-resized.f5b59e681f95bdca2713c46d537ff6bddd6b413a.png' },
+  { name: 'AWS Data Engineer Associate',    path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/dea-badge-resized.46424d5f94ca6c466febd476c86c5d8fe437db1d.png' },
+  { name: 'AWS DevOps Engineer Pro',        path: 'https://d1.awsstatic.com/onedam/marketing-channels/website/aws/en_US/certification/approved/images/certification-badges/dop-badge-resized.8fb9086efd423b597d659ad63b5aa399f7c2a4ed.png' },
+  // Microsoft Azure — official SVG badges from learn.microsoft.com
+  { name: 'Azure Fundamentals',             path: 'https://learn.microsoft.com/en-us/media/learn/certification/badges/microsoft-certified-fundamentals-badge.svg' },
+  { name: 'Azure Associate',                path: 'https://learn.microsoft.com/en-us/media/learn/certification/badges/microsoft-certified-associate-badge.svg' },
+  { name: 'Azure Expert',                   path: 'https://learn.microsoft.com/en-us/media/learn/certification/badges/microsoft-certified-expert-badge.svg' },
+  // Local badges already in public folder
+  { name: 'PMP',                            path: '/logos/certs/pmp.webp' },
+  { name: 'Red Hat (RHCSA)',                path: '/logos/certs/redhat.webp' },
+  { name: 'ITIL',                           path: '/logos/certs/itil.webp' },
+  { name: 'ISO 27001',                      path: '/logos/certs/iso27001.webp' },
+  { name: 'CFA',                            path: '/logos/certs/cpa.webp' },
+];
+
+// Pre-computed scatter positions with rotation — badges cycle through all positions
+const CERT_SCATTER_POSITIONS: { top: string; left: string; size: number; opacity: number; rotate: string }[] = [
+  { top:  '3%', left: '46%', size: 110, opacity: 0.90, rotate: '-4deg' },
+  { top:  '4%', left: '68%', size:  90, opacity: 0.82, rotate:  '6deg' },
+  { top:  '2%', left: '82%', size: 100, opacity: 0.86, rotate: '-2deg' },
+  { top: '18%', left: '56%', size:  95, opacity: 0.84, rotate:  '8deg' },
+  { top: '15%', left: '74%', size: 115, opacity: 0.88, rotate: '-6deg' },
+  { top: '20%', left: '88%', size:  85, opacity: 0.78, rotate:  '3deg' },
+  { top: '32%', left:  '8%', size: 120, opacity: 0.92, rotate: '-3deg' },
+  { top: '28%', left: '32%', size: 100, opacity: 0.86, rotate:  '7deg' },
+  { top: '30%', left: '58%', size: 110, opacity: 0.88, rotate: '-5deg' },
+  { top: '35%', left: '76%', size:  90, opacity: 0.80, rotate:  '4deg' },
+  { top: '40%', left: '89%', size:  95, opacity: 0.82, rotate: '-8deg' },
+  { top: '48%', left: '18%', size: 105, opacity: 0.90, rotate:  '5deg' },
+  { top: '44%', left: '44%', size: 115, opacity: 0.85, rotate: '-4deg' },
+  { top: '50%', left: '64%', size: 100, opacity: 0.88, rotate:  '9deg' },
+  { top: '52%', left: '82%', size:  90, opacity: 0.80, rotate: '-6deg' },
+  { top: '62%', left:  '6%', size: 110, opacity: 0.87, rotate:  '3deg' },
+  { top: '65%', left: '28%', size:  95, opacity: 0.83, rotate: '-7deg' },
+  { top: '60%', left: '52%', size: 120, opacity: 0.90, rotate:  '5deg' },
+  { top: '68%', left: '72%', size: 100, opacity: 0.82, rotate: '-3deg' },
+  { top: '76%', left: '16%', size: 105, opacity: 0.88, rotate:  '8deg' },
+  { top: '78%', left: '42%', size:  90, opacity: 0.80, rotate: '-5deg' },
+  { top: '74%', left: '64%', size: 115, opacity: 0.85, rotate:  '4deg' },
+  { top: '82%', left: '85%', size:  95, opacity: 0.78, rotate: '-2deg' },
+  { top: '85%', left: '30%', size: 100, opacity: 0.83, rotate:  '6deg' },
+];
+
+type SchoolItem = { name: string; abbr: string; note: string; logo: string | null; stackedLogos?: string[] };
 type CourseItem = { name: string; pct: number; color: string };
 type CertItem   = { name: string; sub: string; logo: string | null };
 type HRSlide =
@@ -2653,12 +2729,15 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Schools & Education',
     sub: 'Recruiting from the top universities in the Philippines and Asia',
     items: [
-      { name: 'University of the Philippines',  abbr: 'UP',    note: 'Engineering · CS · Math',      logo: '/logos/schools/up.png' },
-      { name: 'Ateneo de Manila University',    abbr: 'ADMU',  note: 'CS · Management Science',      logo: '/logos/schools/admu.png' },
-      { name: 'De La Salle University',         abbr: 'DLSU',  note: 'Engineering · IT · Finance',   logo: '/logos/schools/dlsu.png' },
-      { name: 'Mapúa University',               abbr: 'Mapúa', note: 'Computer Engineering',         logo: '/logos/schools/mapua.webp' },
-      { name: 'University of Santo Tomas',      abbr: 'UST',   note: 'Accountancy · IT',             logo: '/logos/schools/ust.webp' },
-      { name: 'FEU Tech / PUP',                 abbr: 'FEU',   note: 'Engineering · Technology',     logo: '/logos/schools/feu.png' },
+      { name: 'University of the Philippines',         abbr: 'UP',      note: 'CS · Engineering · Sciences',   logo: '/logos/schools/up.png' },
+      { name: 'Ateneo de Manila University',           abbr: 'ADMU',    note: 'CS · Math · Engineering',       logo: '/logos/schools/admu.png' },
+      { name: 'De La Salle University',                abbr: 'DLSU',    note: 'CS · Engineering · Sciences',   logo: '/logos/schools/dlsu.png' },
+      { name: 'Mapúa University',                      abbr: 'Mapúa',   note: 'CS · Engineering',              logo: '/logos/schools/mapua.webp' },
+      { name: 'University of Santo Tomas',             abbr: 'UST',     note: 'Engineering · Finance',         logo: '/logos/schools/ust.webp' },
+      { name: 'Polytechnic University of the Philippines', abbr: 'PUP', note: 'CS · Finance · Sciences',       logo: '/logos/schools/pup.webp' },
+      { name: 'Adamson University',                    abbr: 'Adamson', note: 'CS · Accountancy',              logo: '/logos/schools/adamson.webp' },
+      { name: 'University of Mindanao',                abbr: 'UMind',   note: 'Business · Engineering',        logo: '/logos/schools/mindanao.webp' },
+      { name: 'Masters / Advanced / International',    abbr: 'Intl',    note: 'CS · Math · Business',          logo: null, stackedLogos: ['/logos/schools/aim.webp', '/logos/schools/brunel.webp', '/logos/schools/sophia.webp'] },
     ],
   },
   {
@@ -2666,11 +2745,14 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Courses & Disciplines',
     sub: 'A multi-disciplined team covering every layer of the stack',
     items: [
-      { name: 'Computer Science',         pct: 32, color: '#A78BFA' },
-      { name: 'Engineering',              pct: 27, color: '#60A5FA' },
-      { name: 'Mathematics & Statistics', pct: 18, color: '#34D399' },
-      { name: 'Information Technology',   pct: 14, color: '#FFC72C' },
-      { name: 'Business & Finance',       pct:  9, color: '#F472B6' },
+      { name: 'Computer Science',                    pct: 27, color: '#A78BFA' },
+      { name: 'Engineering',                         pct: 23, color: '#60A5FA' },
+      { name: 'Mathematics & Statistics',            pct: 16, color: '#34D399' },
+      { name: 'Sciences',                            pct: 12, color: '#FFC72C' },
+      { name: 'Business and Management',             pct:  9, color: '#F472B6' },
+      { name: 'Finance and Economics',               pct:  6, color: '#FB923C' },
+      { name: 'Accountancy',                         pct:  5, color: '#E879F9' },
+      { name: 'International / Advanced Education',  pct:  2, color: '#38BDF8' },
     ],
   },
   {
@@ -2698,6 +2780,15 @@ const HR_WIN = [
 const OurPeople = () => {
   const sRef     = useRef<HTMLElement>(null);
   const bgRef    = useRef<HTMLDivElement>(null);
+
+  const scrollToCoursesSlide = useCallback(() => {
+    const section = document.getElementById('sec-people');
+    if (!section) return;
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.offsetHeight;
+    // Courses slide (HR_WIN[1]) enters at 40% — target ~52% for stable visibility
+    window.scrollTo({ top: sectionTop + sectionHeight * 0.52, behavior: 'smooth' });
+  }, []);
   const badgeRef = useRef<HTMLDivElement>(null);
   const headRef  = useRef<HTMLDivElement>(null);
   const lineRef  = useRef<HTMLDivElement>(null);
@@ -2797,7 +2888,7 @@ const OurPeople = () => {
 
           {HR_SLIDES.map((slide, i) => (
             <div key={slide.id} ref={el => { slideRefs.current[i] = el; }}
-              style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 20px' : '0 48px', pointerEvents: 'none' }}
+              style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: isMobile ? 'clamp(110px,22vh,180px) 20px 0' : 'clamp(120px,20vh,190px) 48px 0', pointerEvents: 'none' }}
             >
               {/* Ghost slide number */}
               <div ref={el => { ghostRefs.current[i] = el; }}
@@ -2809,44 +2900,100 @@ const OurPeople = () => {
               {/* Slide content */}
               <div ref={el => { contentRefs.current[i] = el; }} style={{ position: 'relative', zIndex: 1, maxWidth: isMobile ? '100%' : '70vw' }}>
                 {/* Heading */}
-                <div style={{ marginBottom: 8 }}>
-                  <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: slide.color }}>{slide.id}</span>
-                </div>
-                <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(1.8rem, 7vw, 2.8rem)' : 'clamp(2.2rem, 4vw, 4rem)', letterSpacing: '-0.03em', color: '#fff', margin: '0 0 8px', lineHeight: 1.1, textTransform: 'lowercase' as const }}>
-                  {slide.heading}
-                </h2>
-                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', margin: '0 0 32px', lineHeight: 1.6 }}>{slide.sub}</p>
+                <>
+                  <div style={{ marginBottom: 8 }}>
+                    <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: slide.color }}>{slide.id}</span>
+                  </div>
+                  <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(1.5rem, 6vw, 2.2rem)' : 'clamp(1.7rem, 3vw, 2.8rem)', letterSpacing: '-0.03em', color: '#fff', margin: '0 0 6px', lineHeight: 1.1, textTransform: 'lowercase' as const }}>
+                    {slide.heading}
+                  </h2>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', margin: '0 0 16px', lineHeight: 1.5 }}>{slide.sub}</p>
+                </>
 
                 {/* ── Schools grid ─────────────────────────────────────────── */}
                 {slide.type === 'schools' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: isMobile ? 8 : 10 }}>
                     {(slide.items as SchoolItem[]).map((s, idx) => (
-                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '28px 20px 22px', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '14px 14px 12px', overflow: s.stackedLogos ? 'visible' : 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                         {/* Accent glow */}
-                        <div style={{ position: 'absolute', top: -32, left: -32, width: 120, height: 120, borderRadius: '50%', background: `${slide.color}1A`, filter: 'blur(28px)', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', top: -24, left: -24, width: 80, height: 80, borderRadius: '50%', background: `${slide.color}1A`, filter: 'blur(20px)', pointerEvents: 'none' }} />
                         {/* Rank badge */}
-                        <div style={{ position: 'absolute', top: 14, right: 16, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>
+                        <div style={{ position: 'absolute', top: 10, right: 12, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 9, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>
                           {String(idx + 1).padStart(2, '0')}
                         </div>
                         {/* Logo */}
-                        <div style={{ width: 80, height: 80, borderRadius: 16, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, padding: 10, flexShrink: 0 }}>
-                          <img
-                            src={s.logo} alt={s.abbr}
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                              const el = e.currentTarget;
-                              el.style.display = 'none';
-                              (el.nextElementSibling as HTMLElement).style.display = 'flex';
-                            }}
-                          />
-                          <span style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.1rem', color: slide.color }}>{s.abbr}</span>
-                        </div>
+                        {s.stackedLogos ? (
+                          /* ── Stacked logos (AIM / Brunel / Sophia) ── */
+                          <div style={{ position: 'relative', width: 60, height: 34, marginBottom: 10, flexShrink: 0, pointerEvents: 'auto' }}>
+                            {s.stackedLogos.map((src, si) => (
+                              <div key={si}
+                                style={{
+                                  position: 'absolute',
+                                  left: si * 16,
+                                  top: 0,
+                                  width: 34, height: 34,
+                                  zIndex: s.stackedLogos!.length - si,
+                                  borderRadius: 9,
+                                  background: 'rgba(255,255,255,0.95)',
+                                  border: `2px solid rgba(10,42,102,0.25)`,
+                                  boxShadow: `${si > 0 ? '-3px' : '0px'} 0 8px rgba(0,0,0,0.28)`,
+                                  overflow: 'hidden',
+                                  padding: 4,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  transition: 'transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease',
+                                  transformOrigin: 'center center',
+                                  cursor: 'default',
+                                }}
+                                onMouseEnter={e => {
+                                  const el = e.currentTarget as HTMLElement;
+                                  el.style.transform = 'scale(2.1)';
+                                  el.style.zIndex = '99';
+                                  el.style.boxShadow = '0 10px 24px rgba(0,0,0,0.45)';
+                                }}
+                                onMouseLeave={e => {
+                                  const el = e.currentTarget as HTMLElement;
+                                  el.style.transform = 'scale(1)';
+                                  el.style.zIndex = String(s.stackedLogos!.length - si);
+                                  el.style.boxShadow = `${si > 0 ? '-3px' : '0px'} 0 8px rgba(0,0,0,0.28)`;
+                                }}
+                              >
+                                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div
+                            style={{ width: 54, height: 54, borderRadius: 12, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, padding: 7, flexShrink: 0, transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', pointerEvents: 'auto' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.15)'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
+                          >
+                            {s.logo ? (
+                              <>
+                                <img
+                                  src={s.logo} alt={s.abbr}
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                    const el = e.currentTarget;
+                                    el.style.display = 'none';
+                                    (el.nextElementSibling as HTMLElement).style.display = 'flex';
+                                  }}
+                                />
+                                <span style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '0.9rem', color: slide.color }}>{s.abbr}</span>
+                              </>
+                            ) : (
+                              <span style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '0.85rem', color: slide.color, textAlign: 'center', lineHeight: 1.2 }}>{s.abbr}</span>
+                            )}
+                          </div>
+                        )}
                         {/* Name */}
-                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: isMobile ? '0.72rem' : '0.82rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, marginBottom: 12 }}>{s.name}</div>
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: isMobile ? '0.66rem' : '0.73rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, marginBottom: 6 }}>{s.name}</div>
                         {/* Discipline tags */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'center' }}>
                           {s.note.split(' · ').map(tag => (
-                            <span key={tag} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, padding: '3px 10px', letterSpacing: '0.04em' }}>{tag}</span>
+                            <span key={tag} onClick={scrollToCoursesSlide} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 100, padding: '2px 8px', letterSpacing: '0.04em', cursor: 'pointer', pointerEvents: 'auto', transition: 'background 0.15s, color 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,199,44,0.15)'; (e.currentTarget as HTMLElement).style.color = '#FFC72C'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)'; }}
+                            >{tag}</span>
                           ))}
                         </div>
                       </div>
@@ -2878,19 +3025,13 @@ const OurPeople = () => {
                     {!isMobile && (
                       <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>5+</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>disciplines represented</div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>9</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>QS Global Top 1000 school educated</div>
                         </div>
                         <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
                         <div>
                           <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: '#60A5FA', letterSpacing: '-0.04em', lineHeight: 1 }}>100%</div>
                           <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>equal opportunity employer</div>
-                        </div>
-                        <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                        <div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, fontStyle: 'italic' }}>
-                            "What matters to us is values and skills."
-                          </div>
                         </div>
                       </div>
                     )}
@@ -2899,37 +3040,25 @@ const OurPeople = () => {
 
                 {/* ── Certifications grid ───────────────────────────────────── */}
                 {slide.type === 'certs' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12 }}>
                     {(slide.items as CertItem[]).map(cert => (
-                      <div key={cert.name} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderLeft: `3px solid ${slide.color}70`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, overflow: 'hidden' }}>
-                        {/* Glow behind logo */}
-                        <div style={{ position: 'absolute', top: '50%', left: 16, width: 90, height: 90, borderRadius: '50%', background: `${slide.color}14`, filter: 'blur(22px)', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                        {/* Logo */}
-                        <div style={{ width: 68, height: 68, borderRadius: 14, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 10 }}>
+                      <div key={cert.name} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                        {/* Top accent line */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${slide.color}, transparent)`, borderRadius: '16px 16px 0 0' }} />
+                        {/* Icon area */}
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                           {cert.logo ? (
-                            <img src={cert.logo} alt={cert.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }} />
+                            <img src={cert.logo} alt={cert.name} width={30} height={30} style={{ objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }} />
                           ) : (
-                            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 18, color: slide.color }}>{cert.name.slice(0, 2)}</span>
+                            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 14, color: slide.color }}>{cert.name.slice(0, 2)}</span>
                           )}
                         </div>
-                        {/* Text */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: '#fff', lineHeight: 1.3, marginBottom: 6 }}>{cert.name}</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5 }}>{cert.sub}</div>
+                        <div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#fff', lineHeight: 1.25, marginBottom: 4 }}>{cert.name}</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>{cert.sub}</div>
                         </div>
                       </div>
                     ))}
-                    {/* ── "& many more" last block ─────────────────────────── */}
-                    <div style={{ position: 'relative', background: `${slide.color}0D`, border: `1px dashed ${slide.color}40`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', top: '50%', left: 16, width: 90, height: 90, borderRadius: '50%', background: `${slide.color}18`, filter: 'blur(22px)', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                      <div style={{ width: 68, height: 68, borderRadius: 14, background: `${slide.color}20`, border: `1px solid ${slide.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 22, color: slide.color }}>+</span>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.9rem', color: slide.color, lineHeight: 1.3, marginBottom: 6 }}>& Many More</div>
-                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.42)', lineHeight: 1.5 }}>Certifications provided across the team</div>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
@@ -2943,9 +3072,15 @@ const OurPeople = () => {
 
 // ── CHAPTERS ──────────────────────────────────────────────────────────────────
 const CHAPTERS = [
-  { num: '2021', id: 'sec-ch1', tag: 'The Beginning', title: '2021', sub: 'Where it all started',                color: '#FFC72C',
-    images: ['/img/journey/2021/1.jpg', '/img/journey/2021/2.jpg', '/img/journey/2021/3.jpg', '/img/journey/2021/4.jpg'],
+  { num: '2019', id: 'sec-ch0a', tag: 'The Beginning', title: '2019', sub: 'Where it all started',                 color: '#E879F9',
+    images: ['/img/journey/2019/1.jpg', '/img/journey/2019/2.jpg', '/img/journey/2019/3.svg', '/img/journey/2019/4.svg'],
     body: 'Placeholder — content covering Phitopolis\'s founding year will live here. The vision, the first team members, and the early decisions that set the direction for everything that followed.' },
+  { num: '2020', id: 'sec-ch0b', tag: 'Laying Ground', title: '2020', sub: 'Setting the stage',                   color: '#38BDF8',
+    images: ['/img/journey/2020/1.svg', '/img/journey/2020/2.svg', '/img/journey/2020/3.svg', '/img/journey/2020/4.svg'],
+    body: 'Placeholder — content covering 2020\'s groundwork will live here. Building the blueprint amid a global shift, assembling the founding pieces, and preparing to launch.' },
+  { num: '2021', id: 'sec-ch1', tag: 'Taking Off', title: '2021', sub: 'Gaining momentum',                       color: '#FFC72C',
+    images: ['/img/journey/2021/1.svg', '/img/journey/2021/2.svg', '/img/journey/2021/3.svg', '/img/journey/2021/4.svg'],
+    body: 'Placeholder — content covering 2021\'s milestones will live here. Growing the team, landing key clients, and proving the Phitopolis approach in the market.' },
   { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA',
     images: ['/img/journey/2022/1.jpg', '/img/journey/2022/2.jpg', '/img/journey/2022/3.jpg', '/img/journey/2022/4.jpg'],
     body: 'Placeholder — content covering 2022\'s milestones will live here. Early client engagements, team growth, and the first solutions that proved the model worked.' },
@@ -2966,6 +3101,20 @@ const CHAPTERS = [
 // Unique scatter layouts per year — desktop polaroid placement
 // Each array maps to images[0], [1], [2], [3] of that chapter
 const CHAPTER_SCATTER: Record<string, { top?: string; bottom?: string; left?: string; right?: string; width: string; rotate: string; zIndex: number }[]> = {
+  // 2019 — stacked column, slightly offset
+  '2019': [
+    { top: '2%',     left: '45%',   width: '28%', rotate: '-6deg',  zIndex: 2 },
+    { top: '18%',    left: '52%',   width: '26%', rotate:  '4deg',  zIndex: 3 },
+    { bottom: '18%', left: '44%',   width: '30%', rotate: '-3deg',  zIndex: 1 },
+    { bottom: '2%',  right: '6%',   width: '24%', rotate: '10deg',  zIndex: 2 },
+  ],
+  // 2020 — V-shape layout
+  '2020': [
+    { top: '2%',     left: '38%',   width: '26%', rotate: '-10deg', zIndex: 2 },
+    { top: '4%',     right: '2%',   width: '25%', rotate:  '8deg',  zIndex: 2 },
+    { bottom: '10%', left: '48%',   width: '32%', rotate: '-2deg',  zIndex: 3 },
+    { bottom: '0%',  right: '10%',  width: '22%', rotate: '14deg',  zIndex: 1 },
+  ],
   // 2021 — spread across right half (the layout the user liked)
   '2021': [
     { top: '14%',    left: '42%',   width: '30%', rotate: '-4deg',  zIndex: 2 },
@@ -2977,8 +3126,8 @@ const CHAPTER_SCATTER: Record<string, { top?: string; bottom?: string; left?: st
   '2022': [
     { top: '4%',     left: '38%',   width: '25%', rotate: '-12deg', zIndex: 1 },
     { top: '22%',    left: '52%',   width: '29%', rotate: '-1deg',  zIndex: 2 },
-    { bottom: '14%', left: '60%',   width: '26%', rotate:  '9deg',  zIndex: 3 },
-    { bottom: '1%',  right: '-1%',  width: '23%', rotate: '16deg',  zIndex: 2 },
+    { bottom: '14%', left: '56%',   width: '26%', rotate:  '9deg',  zIndex: 3 },
+    { bottom: '1%',  right: '5%',   width: '23%', rotate: '12deg',  zIndex: 2 },
   ],
   // 2023 — fan spread from a single point (like dealing cards)
   '2023': [
@@ -2997,7 +3146,7 @@ const CHAPTER_SCATTER: Record<string, { top?: string; bottom?: string; left?: st
   // 2025 — wide scatter, images pushed to the four corners of the right side
   '2025': [
     { top: '-6%',    left: '40%',   width: '27%', rotate: '-7deg',  zIndex: 2 },
-    { top: '28%',    right: '-4%',  width: '32%', rotate: '10deg',  zIndex: 1 },
+    { top: '28%',    right: '4%',   width: '32%', rotate: '10deg',  zIndex: 1 },
     { bottom: '10%', left: '43%',   width: '25%', rotate: '-11deg', zIndex: 3 },
     { bottom: '-5%', right: '14%',  width: '26%', rotate:  '3deg',  zIndex: 2 },
   ],
@@ -3501,35 +3650,324 @@ const Closing = () => {
             </MagneticWrapper>
           </motion.div>
         </div>
+
+        {/* Technology partnerships + corporate reference strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 1.0, duration: 0.7 }}
+          style={{ marginTop: 64, borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 32 }}
+        >
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 24 }}>
+            technology partnerships
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap', marginBottom: 28 }}>
+            {([
+              { name: 'AWS',       slug: 'amazonaws' },
+              { name: 'Google',    slug: 'googlecloud' },
+              { name: 'Anthropic', slug: 'anthropic' },
+              { name: 'Azure',     slug: 'microsoftazure' },
+              { name: 'NVIDIA',    slug: 'nvidia' },
+              { name: 'Red Hat',   slug: 'redhat' },
+            ] as { name: string; slug: string }[]).map(p => (
+              <img
+                key={p.slug}
+                src={`https://cdn.simpleicons.org/${p.slug}`}
+                alt={p.name}
+                width={28}
+                height={28}
+                style={{ objectFit: 'contain', opacity: 0.28, filter: 'brightness(10)' }}
+                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ))}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 36px', alignItems: 'center' }}>
+            {(['© 2026 Phitopolis Inc.', 'Makati, Philippines', 'Est. 2021', 'AI-First Engineering'] as string[]).map(txt => (
+              <span key={txt} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.68rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '0.02em' }}>
+                {txt}
+              </span>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );
 };
 
-// ── SPECIAL END SLIDE — plain white with logo ─────────────────────────────────
+// ── END PARTICLE LOGO — idle explosions + click + cursor repulsion ────────────
+const EndParticleLogo = ({ active }: { active: boolean }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !active) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let raf: number;
+    let mounted = true;
+    const mouse = { x: -9999, y: -9999 };
+
+    type Particle = {
+      x: number; y: number;
+      tx: number; ty: number;
+      sx: number; sy: number;
+      vx: number; vy: number;
+      r: number; color: string;
+      blink: number; blinkSpeed: number;
+      delay: number;
+      sAngle: number; sDist: number;
+    };
+
+    let particles: Particle[] = [];
+    let neighborPairs: [number, number][] = [];
+    let assembled = false;
+    const ASSEMBLE_DURATION = 2200;
+    const LOGO_CONNECT_DIST = 12;
+    const LOGO_SIZE = Math.min(240, Math.max(130, window.innerWidth * 0.16));
+    const startTime = performance.now();
+
+    // Multi-click explosion support
+    const EXPLODE_DURATION = 1800;
+    const EXPLODE_HOLD = 800;
+    const REFORM_DURATION = 2000;
+    const CLUSTER_RADIUS = 50;
+    type Explosion = { indices: Set<number>; start: number; phase: 'exploding' | 'holding' | 'reforming'; phaseStart: number };
+    let explosions: Explosion[] = [];
+
+    const handleClick = (e: MouseEvent) => {
+      if (!assembled || particles.length === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+      const indices = new Set<number>();
+      for (let i = 0; i < particles.length; i++) {
+        const dx = particles[i].tx - cx, dy = particles[i].ty - cy;
+        if (dx * dx + dy * dy < CLUSTER_RADIUS * CLUSTER_RADIUS) indices.add(i);
+      }
+      if (indices.size < 5) return;
+      explosions.push({ indices, start: performance.now(), phase: 'exploding', phaseStart: performance.now() });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    };
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('mousemove', handleMouseMove);
+
+    const img = new Image();
+    img.src = '/phitopolis_logo_white_vector.svg';
+    img.onload = () => {
+      if (!mounted) return;
+      const aspect = img.naturalHeight / img.naturalWidth;
+      const w = Math.round(LOGO_SIZE), h = Math.round(LOGO_SIZE * aspect);
+      const off = document.createElement('canvas');
+      off.width = w; off.height = h;
+      const oc = off.getContext('2d')!;
+      oc.drawImage(img, 0, 0, w, h);
+      const imgData = oc.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      const step = 3;
+      const edgePixels: { x: number; y: number; isGold: boolean }[] = [];
+      for (let y = 0; y < h; y += step) {
+        for (let x = 0; x < w; x += step) {
+          const idx = (y * w + x) * 4;
+          if (d[idx + 3] < 100) continue;
+          let edge = false;
+          for (const [ex, ey] of [[-step, 0], [step, 0], [0, -step], [0, step]]) {
+            const nx = x + ex, ny = y + ey;
+            if (nx < 0 || nx >= w || ny < 0 || ny >= h || d[(ny * w + nx) * 4 + 3] < 100) { edge = true; break; }
+          }
+          if (!edge) continue;
+          const r = d[idx], g = d[idx + 1], b = d[idx + 2];
+          edgePixels.push({ x, y, isGold: r > 180 && g > 140 && b < 100 });
+        }
+      }
+      const interiorPixels: { x: number; y: number; isGold: boolean }[] = [];
+      for (let y = 0; y < h; y += 5) {
+        for (let x = 0; x < w; x += 5) {
+          const idx = (y * w + x) * 4;
+          if (d[idx + 3] < 100) continue;
+          const r = d[idx], g = d[idx + 1], b = d[idx + 2];
+          interiorPixels.push({ x, y, isGold: r > 180 && g > 140 && b < 100 });
+        }
+      }
+
+      const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+      shuffle(edgePixels); shuffle(interiorPixels);
+      const maxParticles = 700;
+      const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.7));
+      const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
+      const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
+
+      const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+      const ox = (cw - w) / 2, oy = (ch - h) / 2;
+
+      particles = selected.map((p) => {
+        const sAngle = Math.random() * Math.PI * 2;
+        const sDist = 400 + Math.random() * 600;
+        const sx = ox + p.x + Math.cos(sAngle) * sDist;
+        const sy = oy + p.y + Math.sin(sAngle) * sDist;
+        return {
+          x: sx, y: sy, tx: ox + p.x, ty: oy + p.y, sx, sy,
+          vx: 0, vy: 0,
+          r: p.isGold ? (0.8 + Math.random() * 1.2) : (0.6 + Math.random() * 1.0),
+          color: p.isGold ? 'rgba(255,199,44,' : 'rgba(10,42,102,',
+          blink: Math.random() * Math.PI * 2, blinkSpeed: 0.6 + Math.random() * 2.0,
+          delay: Math.random() * 600, sAngle, sDist,
+        };
+      });
+
+      neighborPairs = [];
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].tx - particles[j].tx, dy = particles[i].ty - particles[j].ty;
+          if (dx * dx + dy * dy < LOGO_CONNECT_DIST * LOGO_CONNECT_DIST) neighborPairs.push([i, j]);
+        }
+      }
+      assembled = true;
+    };
+
+    const tick = (now: number) => {
+      if (!mounted) return;
+      const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
+      ctx.clearRect(0, 0, cw, ch);
+
+      if (!assembled || particles.length === 0) { raf = requestAnimationFrame(tick); return; }
+
+      const elapsed = now - startTime;
+      const t = now * 0.001;
+
+      // Update explosion state machines and compute per-particle strength
+      const particleExplode = new Float32Array(particles.length); // default 0
+      for (let ei = explosions.length - 1; ei >= 0; ei--) {
+        const ex = explosions[ei];
+        let strength = 0;
+        if (ex.phase === 'exploding') {
+          const tt = (now - ex.phaseStart) / EXPLODE_DURATION;
+          if (tt >= 1) { ex.phase = 'holding'; ex.phaseStart = now; strength = 1; }
+          else strength = 1 - Math.pow(1 - tt, 3);
+        } else if (ex.phase === 'holding') {
+          strength = 1;
+          if (now - ex.phaseStart > EXPLODE_HOLD) { ex.phase = 'reforming'; ex.phaseStart = now; }
+        } else if (ex.phase === 'reforming') {
+          const tt = (now - ex.phaseStart) / REFORM_DURATION;
+          if (tt >= 1) { explosions.splice(ei, 1); continue; }
+          else strength = 1 - (tt < 0.5 ? 4 * tt * tt * tt : 1 - Math.pow(-2 * tt + 2, 3) / 2);
+        }
+        // Apply max strength per particle across all active explosions
+        for (const idx of ex.indices) {
+          if (strength > particleExplode[idx]) particleExplode[idx] = strength;
+        }
+      }
+
+      // Update particles
+      for (let pi = 0; pi < particles.length; pi++) {
+        const p = particles[pi];
+        const particleElapsed = Math.max(0, elapsed - p.delay);
+        const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
+        const ease = 1 - Math.pow(1 - assembleT, 3);
+        const pExplode = particleExplode[pi];
+
+        let goalX = p.tx, goalY = p.ty;
+        if (pExplode > 0) {
+          const dist = p.sDist * 0.45;
+          goalX = p.tx + Math.cos(p.sAngle) * pExplode * dist;
+          goalY = p.ty + Math.sin(p.sAngle) * pExplode * dist;
+        }
+
+        if (assembleT < 1) {
+          p.x = p.sx + (goalX - p.sx) * ease;
+          p.y = p.sy + (goalY - p.sy) * ease;
+        } else {
+          const springForce = 0.035 - pExplode * 0.031;
+          p.vx += (goalX - p.x) * springForce;
+          p.vy += (goalY - p.y) * springForce;
+          // Cursor repulsion
+          const dx = p.x - mouse.x, dy = p.y - mouse.y;
+          const d2 = dx * dx + dy * dy;
+          const repelRadius = 60;
+          if (d2 < repelRadius * repelRadius && d2 > 0) {
+            const dd = Math.sqrt(d2), f = (repelRadius - dd) / repelRadius;
+            p.vx += (dx / dd) * f * 3.5; p.vy += (dy / dd) * f * 3.5;
+          }
+          const damping = 0.88 - pExplode * 0.08;
+          p.vx *= damping; p.vy *= damping;
+          p.x += p.vx; p.y += p.vy;
+        }
+      }
+
+      // Logo-network connections
+      if (neighborPairs.length > 0) {
+        for (const [i, j] of neighborPairs) {
+          const pairExplode = Math.max(particleExplode[i], particleExplode[j]);
+          const logoFade = 1 - pairExplode;
+          if (logoFade < 0.01) continue;
+          const pi = particles[i], pj = particles[j];
+          const ti = Math.min(1, Math.max(0, (elapsed - pi.delay) / ASSEMBLE_DURATION));
+          const tj = Math.min(1, Math.max(0, (elapsed - pj.delay) / ASSEMBLE_DURATION));
+          const arrivalA = Math.min(ti, tj);
+          if (arrivalA < 0.02) continue;
+          const tdx = pi.tx - pj.tx, tdy = pi.ty - pj.ty;
+          const tDist = Math.sqrt(tdx * tdx + tdy * tdy);
+          const alpha = arrivalA * logoFade * (1 - tDist / LOGO_CONNECT_DIST) * 0.42;
+          if (alpha < 0.01) continue;
+          ctx.beginPath(); ctx.moveTo(pi.x, pi.y); ctx.lineTo(pj.x, pj.y);
+          ctx.strokeStyle = `rgba(10,42,102,${alpha.toFixed(3)})`; ctx.lineWidth = 0.4; ctx.stroke();
+        }
+      }
+
+      // Draw particles
+      for (const p of particles) {
+        const particleElapsed = Math.max(0, elapsed - p.delay);
+        const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
+        const fadeIn = Math.min(1, assembleT * 2);
+        const blinkAlpha = 0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * p.blinkSpeed + p.blink));
+        const alpha = fadeIn * blinkAlpha;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + alpha.toFixed(3) + ')'; ctx.fill();
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      mounted = false;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+      canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [active]);
+
+  return (
+    <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+  );
+};
+
+// ── SPECIAL END SLIDE — white with particle logo ──────────────────────────────
 const SpecialEndSlide = () => {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
   return (
     <section id="sec-end" ref={ref}
-      style={{ background: '#FFFFFF', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+      style={{ background: '#FFFFFF', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}
     >
-      <motion.img
-        src="https://phitopolis.com/img/logo/logo-blue.png"
-        alt="Phitopolis"
-        initial={{ opacity: 0, scale: 0.88 }}
-        animate={inView ? { opacity: 1, scale: 1 } : {}}
-        transition={{ duration: 1, ease: [0.21, 1.02, 0.47, 0.98] }}
-        style={{ width: 'clamp(180px, 28vw, 380px)', objectFit: 'contain' }}
-        onError={(e) => {
-          const img = e.target as HTMLImageElement;
-          img.style.display = 'none';
-          const fb = document.createElement('div');
-          fb.style.cssText = 'font-family:Outfit,sans-serif;font-weight:900;font-size:clamp(2rem,6vw,5rem);letter-spacing:-0.04em;color:#0A2A66;text-transform:lowercase';
-          fb.textContent = 'phitopolis';
-          img.parentNode?.appendChild(fb);
-        }}
-      />
+      <EndParticleLogo active={inView} />
     </section>
   );
 };
