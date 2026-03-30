@@ -905,6 +905,7 @@ const CanvasBackground = () => {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
 };
 
+
 // ── SVG ORGANIC MORPH MASK ────────────────────────────────────────────────────
 const ORG_SMALL = 'M200,80 C235,50 285,55 305,100 C325,145 310,200 275,220 C240,240 160,240 125,220 C90,200 75,145 95,100 C115,55 165,50 200,80 Z';
 const ORG_LARGE = 'M200,-50 C295,-95 420,-70 455,85 C490,240 465,340 350,365 C235,390 -35,390 -90,360 C-145,330 -115,230 -75,75 C-35,-80 105,-95 200,-50 Z';
@@ -2012,9 +2013,8 @@ const Statement = () => {
       {/* Background image — parallax, same pattern as Demographics section */}
       <motion.div style={{ position: 'absolute', inset: '-10%', zIndex: 0, pointerEvents: 'none', y: bgY }}>
         <img
-          src="/img/story/bg.jpg"
+          src="/bg_futuristic_skyline.jpeg"
           alt=""
-          onError={(e: React.SyntheticEvent<HTMLImageElement>) => { const img = e.currentTarget; if (!img.src.endsWith('.svg')) { img.src = '/img/story/bg.svg'; } else { img.style.display = 'none'; } }}
           style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }}
         />
       </motion.div>
