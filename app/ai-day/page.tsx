@@ -905,7 +905,6 @@ const CanvasBackground = () => {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
 };
 
-
 // ── SVG ORGANIC MORPH MASK ────────────────────────────────────────────────────
 const ORG_SMALL = 'M200,80 C235,50 285,55 305,100 C325,145 310,200 275,220 C240,240 160,240 125,220 C90,200 75,145 95,100 C115,55 165,50 200,80 Z';
 const ORG_LARGE = 'M200,-50 C295,-95 420,-70 455,85 C490,240 465,340 350,365 C235,390 -35,390 -90,360 C-145,330 -115,230 -75,75 C-35,-80 105,-95 200,-50 Z';
@@ -2679,13 +2678,12 @@ const CERT_CLOUD = [
   { name: 'Azure Fundamentals',             path: 'https://learn.microsoft.com/en-us/media/learn/certification/badges/microsoft-certified-fundamentals-badge.svg' },
   { name: 'Azure Associate',                path: 'https://learn.microsoft.com/en-us/media/learn/certification/badges/microsoft-certified-associate-badge.svg' },
   { name: 'Azure Expert',                   path: 'https://learn.microsoft.com/en-us/media/learn/certification/badges/microsoft-certified-expert-badge.svg' },
-  // Local badges — SVG versions with solid colored backgrounds (no white)
-  { name: 'PMP',                            path: '/logos/certs/pmp.svg' },
-  { name: 'Red Hat (RHCSA)',                path: '/logos/certs/redhat.svg' },
-  { name: 'ITIL',                           path: '/logos/certs/itil.svg' },
-  { name: 'ISO 27001',                      path: '/logos/certs/iso27001.svg' },
-  { name: 'CFA',                            path: '/logos/certs/cfa.svg' },
-  { name: 'Six Sigma',                      path: '/logos/certs/sixsigma.svg' },
+  // Local badges already in public folder
+  { name: 'PMP',                            path: '/logos/certs/pmp.webp' },
+  { name: 'Red Hat (RHCSA)',                path: '/logos/certs/redhat.webp' },
+  { name: 'ITIL',                           path: '/logos/certs/itil.webp' },
+  { name: 'ISO 27001',                      path: '/logos/certs/iso27001.webp' },
+  { name: 'CFA',                            path: '/logos/certs/cpa.webp' },
 ];
 
 // Pre-computed scatter positions with rotation — badges cycle through all positions
@@ -2716,7 +2714,7 @@ const CERT_SCATTER_POSITIONS: { top: string; left: string; size: number; opacity
   { top: '85%', left: '30%', size: 100, opacity: 0.83, rotate:  '6deg' },
 ];
 
-type SchoolItem = { name: string; abbr: string; note: string; logo: string };
+type SchoolItem = { name: string; abbr: string; note: string; logo: string | null; stackedLogos?: string[] };
 type CourseItem = { name: string; pct: number; color: string };
 type CertItem   = { name: string; sub: string; logo: string | null };
 type HRSlide =
@@ -2730,12 +2728,15 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Schools & Education',
     sub: 'Recruiting from the top universities in the Philippines and Asia',
     items: [
-      { name: 'University of the Philippines',  abbr: 'UP',    note: 'Engineering · CS · Math',      logo: '/logos/schools/up.png' },
-      { name: 'Ateneo de Manila University',    abbr: 'ADMU',  note: 'CS · Management Science',      logo: '/logos/schools/admu.png' },
-      { name: 'De La Salle University',         abbr: 'DLSU',  note: 'Engineering · IT · Finance',   logo: '/logos/schools/dlsu.png' },
-      { name: 'Mapúa University',               abbr: 'Mapúa', note: 'Computer Engineering',         logo: '/logos/schools/mapua.webp' },
-      { name: 'University of Santo Tomas',      abbr: 'UST',   note: 'Accountancy · IT',             logo: '/logos/schools/ust.webp' },
-      { name: 'FEU Tech / PUP',                 abbr: 'FEU',   note: 'Engineering · Technology',     logo: '/logos/schools/feu.png' },
+      { name: 'University of the Philippines',         abbr: 'UP',      note: 'CS · Engineering · Sciences',   logo: '/logos/schools/up.png' },
+      { name: 'Ateneo de Manila University',           abbr: 'ADMU',    note: 'CS · Math · Engineering',       logo: '/logos/schools/admu.png' },
+      { name: 'De La Salle University',                abbr: 'DLSU',    note: 'CS · Engineering · Sciences',   logo: '/logos/schools/dlsu.png' },
+      { name: 'Mapúa University',                      abbr: 'Mapúa',   note: 'CS · Engineering',              logo: '/logos/schools/mapua.webp' },
+      { name: 'University of Santo Tomas',             abbr: 'UST',     note: 'Engineering · Finance',         logo: '/logos/schools/ust.webp' },
+      { name: 'Polytechnic University of the Philippines', abbr: 'PUP', note: 'CS · Finance · Sciences',       logo: '/logos/schools/pup.webp' },
+      { name: 'Adamson University',                    abbr: 'Adamson', note: 'CS · Accountancy',              logo: '/logos/schools/adamson.webp' },
+      { name: 'University of Mindanao',                abbr: 'UMind',   note: 'Business · Engineering',        logo: '/logos/schools/mindanao.webp' },
+      { name: 'Masters / Advanced / International',    abbr: 'Intl',    note: 'CS · Math · Business',          logo: null, stackedLogos: ['/logos/schools/aim.webp', '/logos/schools/brunel.webp', '/logos/schools/sophia.webp'] },
     ],
   },
   {
@@ -2743,11 +2744,14 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Courses & Disciplines',
     sub: 'A multi-disciplined team covering every layer of the stack',
     items: [
-      { name: 'Computer Science',         pct: 32, color: '#A78BFA' },
-      { name: 'Engineering',              pct: 27, color: '#60A5FA' },
-      { name: 'Mathematics & Statistics', pct: 18, color: '#34D399' },
-      { name: 'Information Technology',   pct: 14, color: '#FFC72C' },
-      { name: 'Business & Finance',       pct:  9, color: '#F472B6' },
+      { name: 'Computer Science',                    pct: 27, color: '#A78BFA' },
+      { name: 'Engineering',                         pct: 23, color: '#60A5FA' },
+      { name: 'Mathematics & Statistics',            pct: 16, color: '#34D399' },
+      { name: 'Sciences',                            pct: 12, color: '#FFC72C' },
+      { name: 'Business and Management',             pct:  9, color: '#F472B6' },
+      { name: 'Finance and Economics',               pct:  6, color: '#FB923C' },
+      { name: 'Accountancy',                         pct:  5, color: '#E879F9' },
+      { name: 'International / Advanced Education',  pct:  2, color: '#38BDF8' },
     ],
   },
   {
@@ -2775,6 +2779,15 @@ const HR_WIN = [
 const OurPeople = () => {
   const sRef     = useRef<HTMLElement>(null);
   const bgRef    = useRef<HTMLDivElement>(null);
+
+  const scrollToCoursesSlide = useCallback(() => {
+    const section = document.getElementById('sec-people');
+    if (!section) return;
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.offsetHeight;
+    // Courses slide (HR_WIN[1]) enters at 40% — target ~52% for stable visibility
+    window.scrollTo({ top: sectionTop + sectionHeight * 0.52, behavior: 'smooth' });
+  }, []);
   const badgeRef = useRef<HTMLDivElement>(null);
   const headRef  = useRef<HTMLDivElement>(null);
   const lineRef  = useRef<HTMLDivElement>(null);
@@ -2874,7 +2887,7 @@ const OurPeople = () => {
 
           {HR_SLIDES.map((slide, i) => (
             <div key={slide.id} ref={el => { slideRefs.current[i] = el; }}
-              style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 20px' : '0 48px', pointerEvents: 'none' }}
+              style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', padding: isMobile ? 'clamp(110px,22vh,180px) 20px 0' : 'clamp(120px,20vh,190px) 48px 0', pointerEvents: 'none' }}
             >
               {/* Ghost slide number */}
               <div ref={el => { ghostRefs.current[i] = el; }}
@@ -2884,50 +2897,102 @@ const OurPeople = () => {
               </div>
 
               {/* Slide content */}
-              <div ref={el => { contentRefs.current[i] = el; }} style={{ position: 'relative', zIndex: 1, maxWidth: isMobile ? '100%' : (slide.type === 'certs' ? '100%' : '70vw') }}>
-                {/* Heading — hidden for certs (logo cloud is fully visual) */}
-                {slide.type !== 'certs' && (
-                  <>
-                    <div style={{ marginBottom: 8 }}>
-                      <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: slide.color }}>{slide.id}</span>
-                    </div>
-                    <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(1.8rem, 7vw, 2.8rem)' : 'clamp(2.2rem, 4vw, 4rem)', letterSpacing: '-0.03em', color: '#fff', margin: '0 0 8px', lineHeight: 1.1, textTransform: 'lowercase' as const }}>
-                      {slide.heading}
-                    </h2>
-                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', margin: '0 0 32px', lineHeight: 1.6 }}>{slide.sub}</p>
-                  </>
-                )}
+              <div ref={el => { contentRefs.current[i] = el; }} style={{ position: 'relative', zIndex: 1, maxWidth: isMobile ? '100%' : '70vw' }}>
+                {/* Heading */}
+                <>
+                  <div style={{ marginBottom: 8 }}>
+                    <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: slide.color }}>{slide.id}</span>
+                  </div>
+                  <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: isMobile ? 'clamp(1.5rem, 6vw, 2.2rem)' : 'clamp(1.7rem, 3vw, 2.8rem)', letterSpacing: '-0.03em', color: '#fff', margin: '0 0 6px', lineHeight: 1.1, textTransform: 'lowercase' as const }}>
+                    {slide.heading}
+                  </h2>
+                  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', margin: '0 0 16px', lineHeight: 1.5 }}>{slide.sub}</p>
+                </>
 
                 {/* ── Schools grid ─────────────────────────────────────────── */}
                 {slide.type === 'schools' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: isMobile ? 8 : 10 }}>
                     {(slide.items as SchoolItem[]).map((s, idx) => (
-                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '28px 20px 22px', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                      <div key={s.abbr} style={{ position: 'relative', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '14px 14px 12px', overflow: s.stackedLogos ? 'visible' : 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                         {/* Accent glow */}
-                        <div style={{ position: 'absolute', top: -32, left: -32, width: 120, height: 120, borderRadius: '50%', background: `${slide.color}1A`, filter: 'blur(28px)', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', top: -24, left: -24, width: 80, height: 80, borderRadius: '50%', background: `${slide.color}1A`, filter: 'blur(20px)', pointerEvents: 'none' }} />
                         {/* Rank badge */}
-                        <div style={{ position: 'absolute', top: 14, right: 16, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 10, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>
+                        <div style={{ position: 'absolute', top: 10, right: 12, fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 9, color: 'rgba(255,255,255,0.18)', letterSpacing: '0.12em' }}>
                           {String(idx + 1).padStart(2, '0')}
                         </div>
                         {/* Logo */}
-                        <div style={{ width: 80, height: 80, borderRadius: 16, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, padding: 10, flexShrink: 0 }}>
-                          <img
-                            src={s.logo} alt={s.abbr}
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                              const el = e.currentTarget;
-                              el.style.display = 'none';
-                              (el.nextElementSibling as HTMLElement).style.display = 'flex';
-                            }}
-                          />
-                          <span style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '1.1rem', color: slide.color }}>{s.abbr}</span>
-                        </div>
+                        {s.stackedLogos ? (
+                          /* ── Stacked logos (AIM / Brunel / Sophia) ── */
+                          <div style={{ position: 'relative', width: 60, height: 34, marginBottom: 10, flexShrink: 0, pointerEvents: 'auto' }}>
+                            {s.stackedLogos.map((src, si) => (
+                              <div key={si}
+                                style={{
+                                  position: 'absolute',
+                                  left: si * 16,
+                                  top: 0,
+                                  width: 34, height: 34,
+                                  zIndex: s.stackedLogos!.length - si,
+                                  borderRadius: 9,
+                                  background: 'rgba(255,255,255,0.95)',
+                                  border: `2px solid rgba(10,42,102,0.25)`,
+                                  boxShadow: `${si > 0 ? '-3px' : '0px'} 0 8px rgba(0,0,0,0.28)`,
+                                  overflow: 'hidden',
+                                  padding: 4,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  transition: 'transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease',
+                                  transformOrigin: 'center center',
+                                  cursor: 'default',
+                                }}
+                                onMouseEnter={e => {
+                                  const el = e.currentTarget as HTMLElement;
+                                  el.style.transform = 'scale(2.1)';
+                                  el.style.zIndex = '99';
+                                  el.style.boxShadow = '0 10px 24px rgba(0,0,0,0.45)';
+                                }}
+                                onMouseLeave={e => {
+                                  const el = e.currentTarget as HTMLElement;
+                                  el.style.transform = 'scale(1)';
+                                  el.style.zIndex = String(s.stackedLogos!.length - si);
+                                  el.style.boxShadow = `${si > 0 ? '-3px' : '0px'} 0 8px rgba(0,0,0,0.28)`;
+                                }}
+                              >
+                                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div
+                            style={{ width: 54, height: 54, borderRadius: 12, background: 'rgba(255,255,255,0.92)', border: `1px solid ${slide.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10, padding: 7, flexShrink: 0, transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)', pointerEvents: 'auto' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.15)'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; }}
+                          >
+                            {s.logo ? (
+                              <>
+                                <img
+                                  src={s.logo} alt={s.abbr}
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                    const el = e.currentTarget;
+                                    el.style.display = 'none';
+                                    (el.nextElementSibling as HTMLElement).style.display = 'flex';
+                                  }}
+                                />
+                                <span style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '0.9rem', color: slide.color }}>{s.abbr}</span>
+                              </>
+                            ) : (
+                              <span style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '0.85rem', color: slide.color, textAlign: 'center', lineHeight: 1.2 }}>{s.abbr}</span>
+                            )}
+                          </div>
+                        )}
                         {/* Name */}
-                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: isMobile ? '0.72rem' : '0.82rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.45, marginBottom: 12 }}>{s.name}</div>
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: isMobile ? '0.66rem' : '0.73rem', color: 'rgba(255,255,255,0.88)', lineHeight: 1.35, marginBottom: 6 }}>{s.name}</div>
                         {/* Discipline tags */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'center' }}>
                           {s.note.split(' · ').map(tag => (
-                            <span key={tag} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, padding: '3px 10px', letterSpacing: '0.04em' }}>{tag}</span>
+                            <span key={tag} onClick={scrollToCoursesSlide} style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 100, padding: '2px 8px', letterSpacing: '0.04em', cursor: 'pointer', pointerEvents: 'auto', transition: 'background 0.15s, color 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,199,44,0.15)'; (e.currentTarget as HTMLElement).style.color = '#FFC72C'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)'; }}
+                            >{tag}</span>
                           ))}
                         </div>
                       </div>
@@ -2959,45 +3024,40 @@ const OurPeople = () => {
                     {!isMobile && (
                       <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>5+</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>disciplines represented</div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>9</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>QS Global Top 1000 school educated</div>
                         </div>
                         <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
                         <div>
                           <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: '#60A5FA', letterSpacing: '-0.04em', lineHeight: 1 }}>100%</div>
                           <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>equal opportunity employer</div>
                         </div>
-                        <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
-                        <div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, fontStyle: 'italic' }}>
-                            "What matters to us is values and skills."
-                          </div>
-                        </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* ── Certifications badge cloud — scattered local assets ── */}
+                {/* ── Certifications grid ───────────────────────────────────── */}
                 {slide.type === 'certs' && (
-                  <div style={{ position: 'relative', width: '100%', height: isMobile ? '60vw' : '62vh', marginTop: 4 }}>
-                    {CERT_SCATTER_POSITIONS.map((pos, idx) => {
-                      const cert = CERT_CLOUD[idx % CERT_CLOUD.length];
-                      return (
-                        <div key={`${cert.path}-${idx}`} style={{ position: 'absolute', top: pos.top, left: pos.left, opacity: pos.opacity }}>
-                          <img
-                            src={cert.path}
-                            alt={cert.name}
-                            width={pos.size}
-                            height={pos.size}
-                            style={{ objectFit: 'contain', display: 'block', transform: `rotate(${pos.rotate})` }}
-                            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                              (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
-                            }}
-                          />
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12 }}>
+                    {(slide.items as CertItem[]).map(cert => (
+                      <div key={cert.name} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '18px 16px 16px', display: 'flex', flexDirection: 'column', gap: 10, overflow: 'hidden' }}>
+                        {/* Top accent line */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${slide.color}, transparent)`, borderRadius: '16px 16px 0 0' }} />
+                        {/* Icon area */}
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                          {cert.logo ? (
+                            <img src={cert.logo} alt={cert.name} width={30} height={30} style={{ objectFit: 'contain' }} onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }} />
+                          ) : (
+                            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 14, color: slide.color }}>{cert.name.slice(0, 2)}</span>
+                          )}
                         </div>
-                      );
-                    })}
+                        <div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '0.82rem', color: '#fff', lineHeight: 1.25, marginBottom: 4 }}>{cert.name}</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.62rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>{cert.sub}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
