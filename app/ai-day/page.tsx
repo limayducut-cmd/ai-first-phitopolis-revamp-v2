@@ -668,11 +668,9 @@ const FLOAT_SECTIONS = [
   { id: 'sec-process',   label: 'Values' },
   { id: 'sec-services',  label: 'Services' },
   { id: 'sec-techstack', label: 'Tech Stack' },
-  { id: 'sec-stats',     label: 'Impact' },
   { id: 'sec-people',    label: 'People' },
   { id: 'sec-vision',    label: 'Vision' },
   { id: 'sec-timeline',  label: '2021–2026' },
-  { id: 'sec-showcase',  label: 'Projects' },
   { id: 'sec-end',       label: 'End' },
 ];
 
@@ -686,7 +684,7 @@ const FloatNav = () => {
     const update = () => {
       const mid = window.scrollY + window.innerHeight * 0.45;
       let cur = FLOAT_SECTIONS[0].id;
-      for (const s of FLOAT_SECTIONS) { const el = document.getElementById(s.id); if (el && el.offsetTop <= mid) cur = s.id; }
+      for (const s of FLOAT_SECTIONS) { const el = document.getElementById(s.id); if (el && el.offsetParent !== null && el.offsetTop <= mid) cur = s.id; }
       setActive(cur);
       // detect background brightness behind nav dots
       if (navRef.current) {
@@ -1060,6 +1058,12 @@ const SI: Record<string, string> = {
   'OpenAI':        'openai',
   'Jupyter':       'jupyter',
   'ONNX':          'onnx',
+  // Additional Languages & Frameworks
+  'JavaScript':    'javascript',
+  'Express.js':    'express',
+  'React Native':  'reactnative',
+  'Swift':         'swift',
+  'Kotlin':        'kotlin',
 };
 
 const TECH_ROW1 = [
@@ -1069,6 +1073,10 @@ const TECH_ROW1 = [
   { name: 'CrewAI', cat: 'ai' }, { name: 'MLflow', cat: 'ai' },
   { name: 'Weights & Biases', cat: 'ai' }, { name: 'OpenAI', cat: 'ai' },
   { name: 'Jupyter', cat: 'ai' }, { name: 'ONNX', cat: 'ai' },
+  { name: 'JavaScript', cat: 'dev' }, { name: 'Express.js', cat: 'dev' },
+  { name: 'Vue.js', cat: 'dev' }, { name: 'Angular', cat: 'dev' },
+  { name: 'Svelte', cat: 'dev' }, { name: 'Django', cat: 'dev' },
+  { name: 'Flutter', cat: 'dev' }, { name: 'Laravel', cat: 'dev' },
 ];
 
 const TECH_ROW2 = [
@@ -1076,11 +1084,7 @@ const TECH_ROW2 = [
   { name: 'Node.js', cat: 'dev' }, { name: 'React', cat: 'dev' },
   { name: 'TypeScript', cat: 'dev' }, { name: 'Next.js', cat: 'dev' },
   { name: 'GraphQL', cat: 'dev' }, { name: 'Celery', cat: 'dev' },
-  { name: 'Go', cat: 'dev' }, { name: 'Rust', cat: 'dev' },
-  { name: 'Java', cat: 'dev' }, { name: 'Vue.js', cat: 'dev' },
-  { name: 'Angular', cat: 'dev' }, { name: 'Svelte', cat: 'dev' },
-  { name: 'Django', cat: 'dev' }, { name: 'Spring Boot', cat: 'dev' },
-  { name: 'Flutter', cat: 'dev' }, { name: 'Laravel', cat: 'dev' },
+  { name: 'React Native', cat: 'dev' }, { name: 'Spring Boot', cat: 'dev' },
   { name: '.NET', cat: 'dev' },
   { name: 'Docker', cat: 'infra' }, { name: 'Kubernetes', cat: 'infra' },
   { name: 'Terraform', cat: 'infra' }, { name: 'GCP', cat: 'infra' },
@@ -1091,6 +1095,9 @@ const TECH_ROW2 = [
 
 const TECH_ROW3 = [
   { name: 'scikit-learn', cat: 'ai' },
+  { name: 'Go', cat: 'dev' }, { name: 'Rust', cat: 'dev' },
+  { name: 'Java', cat: 'dev' }, { name: 'Swift', cat: 'dev' },
+  { name: 'Kotlin', cat: 'dev' },
   { name: 'Grafana', cat: 'infra' }, { name: 'PostgreSQL', cat: 'data' },
   { name: 'Redis', cat: 'data' }, { name: 'MongoDB', cat: 'data' },
   { name: 'Kafka', cat: 'data' }, { name: 'Snowflake', cat: 'data' },
@@ -1848,33 +1855,6 @@ const Hero = ({ ready }: { ready: boolean }) => {
       </motion.div>
 
       {/* Narrator AI placeholder — lower left */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-        style={{
-          position: 'absolute',
-          bottom: 'clamp(80px, 11vh, 120px)',
-          left: 56,
-          width: 'clamp(180px, 20vw, 260px)',
-          height: 'clamp(90px, 12vh, 140px)',
-          border: '1px dashed rgba(255,199,44,0.2)',
-          borderRadius: 12,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          zIndex: 10,
-        }}
-      >
-        <div style={{ width: 28, height: 28, borderRadius: '50%', border: `1px solid rgba(255,199,44,0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,199,44,0.2)' }} />
-        </div>
-        <span style={{ color: 'rgba(255,199,44,0.3)', fontFamily: 'Inter, sans-serif', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase' }}>narrator ai</span>
-        <span style={{ color: 'rgba(255,255,255,0.12)', fontFamily: 'Inter, sans-serif', fontSize: 8, letterSpacing: '0.1em' }}>coming soon</span>
-      </motion.div>
-
       {/* Scroll cue — bottom right */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -2008,17 +1988,26 @@ const Statement = () => {
     <section id="sec-statement" ref={sRef} style={{ background: C.base, height: '100vh', padding: 'clamp(80px, 10vw, 120px) 40px', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center' }}>
       <SectionTag name="story" />
 
-      {/* Background image — parallax, same pattern as Demographics section */}
+      {/* Background image — subtle texture layer */}
       <motion.div style={{ position: 'absolute', inset: '-10%', zIndex: 0, pointerEvents: 'none', y: bgY }}>
         <img
           src="/bg_futuristic_skyline.jpeg"
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.08 }}
         />
       </motion.div>
-      {/* Gradient overlays — fade background image into section colour */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(100deg, ${C.base} 0%, ${C.base}E0 25%, ${C.base}99 55%, ${C.base}44 100%)` }} />
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(to bottom, ${C.base} 0%, transparent 10%, transparent 90%, ${C.base} 100%)` }} />
+      {/* Video background — primary background layer */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <video
+          autoPlay muted loop playsInline
+          style={{ position: 'absolute', top: '50%', left: '50%', minWidth: '100%', minHeight: '100%', transform: 'translate(-50%, -50%)', objectFit: 'cover', opacity: 0.22 }}
+        >
+          <source src="/img/story/story-bg-video.mp4" type="video/mp4" />
+        </video>
+      </div>
+      {/* Gradient overlays — lighter veil so both backgrounds remain visible */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(100deg, ${C.base}CC 0%, ${C.base}88 20%, ${C.base}44 50%, ${C.base}22 100%)` }} />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: `linear-gradient(to bottom, ${C.base} 0%, transparent 12%, transparent 88%, ${C.base} 100%)` }} />
 
       {/* Parallax background blobs */}
       <motion.div style={{ position: 'absolute', left: '-8%', top: '10%', width: 400, height: 400, borderRadius: '50%', background: `radial-gradient(circle, ${C.accent}16 0%, transparent 70%)`, filter: 'blur(70px)', y: blobY, pointerEvents: 'none', zIndex: 2 }} />
@@ -2237,38 +2226,38 @@ const ServicesScrollStory = () => {
           trigger: containerRef.current,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 1.5,
+          scrub: 0.6,
         },
         defaults: { ease: 'none' },
       });
 
       // ── Heading fades out ─────────────────────────────────────────────────────
-      tl.to(headingRef.current, { opacity: 0, scale: 0.4, y: '-6vh', duration: 0.11 }, 0.15);
+      tl.to(headingRef.current, { opacity: 0, scale: 0.4, y: '-6vh', duration: 0.11 }, 0.12);
 
       // ── Image 1: tiny → full → thumbnail → fade ───────────────────────────────
-      tl.to(img1Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.22 }, 0);
-      tl.to(img1Ref.current,   { scale: 0.22, x: leftThumb, borderRadius: 20 / 0.22, duration: 0.20 }, 0.38);
-      tl.to(img1Ref.current,   { opacity: 0, duration: 0.15 }, 0.75);
+      tl.to(img1Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.18 }, 0);
+      tl.to(img1Ref.current,   { scale: 0.22, x: leftThumb, borderRadius: 20 / 0.22, duration: 0.18 }, 0.30);
+      tl.to(img1Ref.current,   { opacity: 0, duration: 0.12 }, 0.60);
 
       // ── Caption 1 ─────────────────────────────────────────────────────────────
-      tl.to(cap1Ref.current,   { opacity: 1, duration: 0.08 }, 0.20);
-      tl.to(cap1Ref.current,   { opacity: 0, duration: 0.08 }, 0.38);
+      tl.to(cap1Ref.current,   { opacity: 1, duration: 0.07 }, 0.16);
+      tl.to(cap1Ref.current,   { opacity: 0, duration: 0.07 }, 0.30);
 
       // ── Image 2: appears → full → thumbnail ───────────────────────────────────
-      tl.to(img2Ref.current,   { opacity: 1, duration: 0.08 }, 0.33);
-      tl.to(img2Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.20 }, 0.38);
-      tl.to(img2Ref.current,   { scale: 0.22, x: leftThumb, borderRadius: 20 / 0.22, duration: 0.15 }, 0.75);
+      tl.to(img2Ref.current,   { opacity: 1, duration: 0.07 }, 0.26);
+      tl.to(img2Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.18 }, 0.30);
+      tl.to(img2Ref.current,   { scale: 0.22, x: leftThumb, borderRadius: 20 / 0.22, duration: 0.12 }, 0.60);
 
       // ── Caption 2 ─────────────────────────────────────────────────────────────
-      tl.to(cap2Ref.current,   { opacity: 1, duration: 0.08 }, 0.50);
-      tl.to(cap2Ref.current,   { opacity: 0, duration: 0.08 }, 0.72);
+      tl.to(cap2Ref.current,   { opacity: 1, duration: 0.07 }, 0.40);
+      tl.to(cap2Ref.current,   { opacity: 0, duration: 0.07 }, 0.58);
 
       // ── Image 3: appears small → grows to full ────────────────────────────────
-      tl.to(img3Ref.current,   { opacity: 1, duration: 0.08 }, 0.48);
-      tl.to(img3Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.21 }, 0.75);
+      tl.to(img3Ref.current,   { opacity: 1, duration: 0.07 }, 0.38);
+      tl.to(img3Ref.current,   { scale: 1, x: '0vw', y: '0vh', borderRadius: 20, duration: 0.18 }, 0.60);
 
-      // ── Caption 3 — appears as image 3 approaches full size ──────────────────
-      tl.to(cap3Ref.current,   { opacity: 1, duration: 0.08 }, 0.85);
+      // ── Caption 3 — appears as image 3 reaches full size; hold through end ───
+      tl.to(cap3Ref.current,   { opacity: 1, duration: 0.07 }, 0.68);
     }, containerRef);
 
     return () => ctx.revert();
@@ -2296,7 +2285,7 @@ const ServicesScrollStory = () => {
   };
 
   return (
-    <section id="sec-services" ref={containerRef} style={{ height: '500vh', position: 'relative' }}>
+    <section id="sec-services" ref={containerRef} style={{ height: '280vh', position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', background: C.charcoal }}>
         <SectionTag name="services" />
 
@@ -2364,28 +2353,28 @@ const PHASES = [
     definition: 'We operate with unwavering honesty and transparency in every interaction, ensuring our word is our bond.',
     valueToClient: 'Builds a foundation of trust and predictability — clients can rely on truthful reporting and ethical decision-making, reducing risk and ensuring long-term partnership stability.',
     color: C.accent, glow: '#FFC72C',
-    image: '/img/values/integrity.jpg',
+    image: 'https://phitopolis.com/blog/wp-content/uploads/2025/10/IMG_7667-2048x1536.jpg',
   },
   {
     num: '02', label: 'Accountability',
     definition: 'We take full ownership of our commitments and results, standing behind the quality of our output without excuses.',
     valueToClient: 'Ensures reliability and peace of mind — by owning both successes and challenges, we provide a dependable partner who proactively manages outcomes to meet project milestones.',
     color: '#4A90D9', glow: '#4A90D9',
-    image: '/img/values/accountability.jpg',
+    image: 'https://phitopolis.com/blog/wp-content/uploads/2025/11/Ateneo-Career-Talk-2025_002.png',
   },
   {
     num: '03', label: 'Forward Thinking',
     definition: 'We don\'t just solve today\'s problems; we anticipate tomorrow\'s challenges through innovation and strategic planning.',
     valueToClient: 'Clients gain a competitive edge by leveraging our proactive approach to technology and market trends, ensuring their business remains resilient and scalable.',
     color: '#A78BFA', glow: '#A78BFA',
-    image: '/img/values/forward-thinking.jpg',
+    image: 'https://phitopolis.com/blog/wp-content/uploads/2025/03/AI-Engineering_001.png',
   },
   {
     num: '04', label: 'Excellence',
     definition: 'In everything we do — we set the highest standards for performance, continuously refining our processes to deliver superior quality.',
     valueToClient: 'Our commitment to excellence translates to reduced errors, higher efficiency, and a final product that exceeds expectations, maximizing the client\'s return on investment.',
     color: '#2ECC71', glow: '#2ECC71',
-    image: '/img/values/excellence.jpg',
+    image: 'https://phitopolis.com/blog/wp-content/uploads/2023/03/46E1B7F6-6580-4DCC-AB2A-C3E634F57080-2-2048x2048.jpg',
   },
 ];
 
@@ -2410,6 +2399,7 @@ const Process = () => {
   const badgeRef    = useRef<HTMLDivElement>(null);
   const headRef     = useRef<HTMLDivElement>(null);
   const lineRef     = useRef<HTMLDivElement>(null);
+  const ghostWatermarkRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -2418,7 +2408,7 @@ const Process = () => {
           trigger: containerRef.current,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 1.8,
+          scrub: 0.8,
         },
         defaults: { ease: 'none' },
       });
@@ -2463,6 +2453,13 @@ const Process = () => {
           tl.to(stepRefs[i].current,  { opacity: 0.25, duration: exitDur * 0.3 }, xs);
           tl.to(stepDotRefs[i].current, { scale: 0.5, backgroundColor: 'rgba(0,0,0,0.15)', duration: exitDur * 0.3 }, xs);
         }
+
+        // — Ghost watermark transitions —
+        gsap.set(ghostWatermarkRefs[i].current, { opacity: 0 });
+        tl.to(ghostWatermarkRefs[i].current, { opacity: 1, duration: enterDur * 0.4 }, es);
+        if (xs < 1) {
+          tl.to(ghostWatermarkRefs[i].current, { opacity: 0, duration: (xe - xs) * 0.35 }, xs);
+        }
       });
 
       // ── Vertical progress line grows ────────────────────────────────────────
@@ -2476,7 +2473,7 @@ const Process = () => {
   const isMobile = useIsMobile();
 
   return (
-    <section id="sec-process" ref={containerRef} style={{ background: C.base, height: '680vh', position: 'relative' }}>
+    <section id="sec-process" ref={containerRef} style={{ background: C.base, height: '360vh', position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
         <SectionTag name="values" />
 
@@ -2494,8 +2491,21 @@ const Process = () => {
         <svg style={{ position: 'absolute', bottom: 28, right: 28, zIndex: 0, pointerEvents: 'none', opacity: 0.08 }} width="72" height="72">
           <path d="M72 0 L72 72 L0 72" stroke="#0A2A66" strokeWidth="1.5" fill="none"/>
         </svg>
-        {/* Ghost watermark */}
-        <div style={{ position: 'absolute', bottom: '-0.05em', right: '-0.03em', zIndex: 0, pointerEvents: 'none', fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: '28vw', WebkitTextStroke: '1px rgba(10,42,102,0.04)', WebkitTextFillColor: 'transparent', lineHeight: 1, letterSpacing: '-0.05em', userSelect: 'none' }}>values</div>
+        {/* Dynamic ghost watermark — one per phase, animated by GSAP */}
+        {PHASES.map((ph, i) => {
+          const fontSize = ph.label.includes(' ') ? '15vw' : ph.label.length > 11 ? '20vw' : '28vw';
+          return (
+            <div key={ph.num} ref={ghostWatermarkRefs[i]} style={{
+              position: 'absolute', bottom: '-0.05em', right: '-0.03em', zIndex: 0,
+              pointerEvents: 'none', fontFamily: 'Outfit, sans-serif', fontWeight: 900,
+              fontSize, WebkitTextStroke: '1px rgba(10,42,102,0.04)',
+              WebkitTextFillColor: 'transparent', lineHeight: 1,
+              letterSpacing: '-0.05em', userSelect: 'none', opacity: 0,
+            }}>
+              {ph.label.toLowerCase()}
+            </div>
+          );
+        })}
 
         {/* ── Left rail ─────────────────────────────────────────────────── */}
         <div style={{ width: isMobile ? 80 : 'clamp(200px, 22vw, 280px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: isMobile ? '0 0 0 24px' : '0 0 0 48px', position: 'relative', zIndex: 3 }}>
@@ -2587,12 +2597,12 @@ const Process = () => {
 
                 {/* Value image */}
                 {!isMobile && (
-                  <div style={{ flex: 1, borderRadius: 20, overflow: 'hidden', minHeight: 'clamp(240px, 35vh, 420px)', border: `1px solid ${ph.color}20` }}>
+                  <div style={{ flex: 1, borderRadius: 20, overflow: 'hidden', height: 'clamp(240px, 38vh, 420px)', alignSelf: 'center', border: `1px solid ${ph.color}20`, flexShrink: 0 }}>
                     <img
                       src={ph.image}
                       alt={ph.label}
                       onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = ph.image.replace('.jpg', '.svg'); }}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
                     />
                   </div>
                 )}
@@ -2743,14 +2753,13 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Courses & Disciplines',
     sub: 'A multi-disciplined team covering every layer of the stack',
     items: [
-      { name: 'Computer Science',                    pct: 27, color: '#A78BFA' },
-      { name: 'Engineering',                         pct: 23, color: '#60A5FA' },
-      { name: 'Mathematics & Statistics',            pct: 16, color: '#34D399' },
-      { name: 'Sciences',                            pct: 12, color: '#FFC72C' },
-      { name: 'Business and Management',             pct:  9, color: '#F472B6' },
-      { name: 'Finance and Economics',               pct:  6, color: '#FB923C' },
-      { name: 'Accountancy',                         pct:  5, color: '#E879F9' },
-      { name: 'International / Advanced Education',  pct:  2, color: '#38BDF8' },
+      { name: 'Computer Science',          pct: 45, color: '#A78BFA' },
+      { name: 'Sciences',                  pct: 12, color: '#FFC72C' },
+      { name: 'Mathematics & Statistics',  pct: 10, color: '#34D399' },
+      { name: 'Engineering',               pct: 10, color: '#60A5FA' },
+      { name: 'Business and Management',   pct:  8, color: '#F472B6' },
+      { name: 'Finance and Economics',     pct:  5, color: '#FB923C' },
+      { name: 'Accountancy',               pct:  5, color: '#E879F9' },
     ],
   },
   {
@@ -2805,7 +2814,7 @@ const OurPeople = () => {
       });
 
       const tl = gsap.timeline({
-        scrollTrigger: { trigger: sRef.current, start: 'top top', end: 'bottom bottom', scrub: 1.8 },
+        scrollTrigger: { trigger: sRef.current, start: 'top top', end: 'bottom bottom', scrub: 0.8 },
         defaults: { ease: 'none' },
       });
 
@@ -2842,7 +2851,7 @@ const OurPeople = () => {
   }, []);
 
   return (
-    <section id="sec-people" ref={sRef} style={{ background: C.charcoal, height: '480vh', position: 'relative' }}>
+    <section id="sec-people" ref={sRef} style={{ background: C.charcoal, height: '280vh', position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
         <SectionTag name="demographics" />
 
@@ -3023,8 +3032,8 @@ const OurPeople = () => {
                     {!isMobile && (
                       <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>9</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>QS Global Top 1000 school educated</div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>37%</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>QS Top 1000 school educated</div>
                         </div>
                         <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
                         <div>
@@ -3222,7 +3231,7 @@ const ChapterGroup = () => {
           trigger: containerRef.current,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 1.5,
+          scrub: 0.8,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             scrollProgressRef.current = self.progress;
@@ -3290,7 +3299,7 @@ const ChapterGroup = () => {
 
   return (
     <section id="sec-timeline" ref={containerRef}
-      style={{ height: '700vh', position: 'relative', background: C.charcoal }}
+      style={{ height: '480vh', position: 'relative', background: C.charcoal }}
     >
       <SectionTag name="our journey" />
 
@@ -3974,10 +3983,6 @@ const SpecialEndSlide = () => {
 export default function AIDayPage() {
   const [ready, setReady] = useState(false);
   const handlePreloaderComplete = useCallback(() => setReady(true), []);
-  const [isPathB] = useState(() =>
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('path') === 'B'
-  );
   useEffect(() => {
     document.title = 'Phitopolis | AI Day 2026';
     document.body.style.cursor = 'none';
@@ -4019,8 +4024,8 @@ export default function AIDayPage() {
         <OurPeople />
         <Vision />
         <ChapterGroup />
-        {!isPathB && <Showcase />}
-        <Closing />
+        {false && <Showcase />}
+        {false && <Closing />}
         <SpecialEndSlide />
       </div>
     </>
