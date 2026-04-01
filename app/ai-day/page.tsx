@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   motion, AnimatePresence,
   useScroll, useTransform, useInView, useVelocity,
@@ -271,77 +271,17 @@ const CustomCursor = () => {
   );
 };
 
-// ── IRIS SECTION TRANSITION ───────────────────────────────────────────────────
-const ALL_SECTION_IDS = [
-  'sec-hero', 'sec-statement', 'sec-process', 'sec-vision',
-  'sec-services', 'sec-techstack', 'sec-stats', 'sec-people',
-  'sec-timeline',
-  'sec-showcase', 'sec-closing',
-];
-
-const IRIS_SECTIONS: Record<string, { n: string; title: string }> = {
-  'sec-statement': { n: '00', title: 'Manifesto'    },
-  'sec-vision':    { n: '01', title: 'Vision'       },
-  'sec-techstack': { n: '04', title: 'Tech Stack'   },
-  'sec-stats':     { n: '04', title: 'Impact'       },
-  'sec-process':   { n: '05', title: 'Process'      },
-  'sec-people':    { n: '06', title: 'Our People'   },
-  'sec-timeline':  { n: '07', title: 'Our Journey'   },
-  'sec-showcase':  { n: '07', title: 'Projects'     },
-  'sec-closing':   { n: '08', title: "Let's Build"  },
+// ── SUB-SECTION SNAP — wheel/touch/key snapping within Values & Services ──────
+const SUB_SNAP_SECTIONS: Record<string, number[]> = {
+  'sec-services': [0, 0.20, 0.55, 1.00],
+  'sec-process':  [0, 0.15, 0.43, 0.68, 0.92],
 };
 
-const SectionTransition = () => {
-  return null;
-
-  const [iris, setIris] = useState<{ key: number; n: string; title: string } | null>(null);
-  const locked    = useRef(false);
-  const activeId  = useRef('sec-hero');
-  const touchStartY = useRef(0);
-
-  // Fire iris + instant-scroll while covered
-  const goTo = useCallback((targetId: string) => {
-    if (locked.current) return;
-    const cfg = IRIS_SECTIONS[targetId];
-    locked.current = true;
-
-    // 1. Trigger iris immediately — section not yet visible
-    if (cfg) setIris(prev => ({ key: (prev?.key ?? 0) + 1, ...cfg }));
-
-    // 2. Instant-scroll while iris is fully open (~380ms in)
-    setTimeout(() => {
-      document.getElementById(targetId)?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
-      activeId.current = targetId;
-    }, 380);
-
-    // 3. Unlock after full iris animation completes
-    setTimeout(() => { locked.current = false; }, 1550);
-  }, []);
-
+const SubSectionSnap = () => {
   useEffect(() => {
-    // Track active section (for knowing where we are)
-    // Track active section — threshold 0.5 works for all 100vh sections
-    const tracker = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
-    }, { threshold: 0.5 });
-    document.querySelectorAll('[id^="sec-"]:not(#sec-showcase):not(#sec-services):not(#sec-process)').forEach(el => tracker.observe(el));
+    const locked = { current: false };
+    let touchStartY = 0;
 
-    // Tall sections need a low threshold since they can't reach 50% intersection
-    const tallTracker = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) activeId.current = e.target.id; });
-    }, { threshold: 0.05 });
-    ['sec-services', 'sec-process', 'sec-people', 'sec-timeline', 'sec-showcase'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) tallTracker.observe(el);
-    });
-
-    const navigate = (dir: 1 | -1) => {
-      const idx = ALL_SECTION_IDS.indexOf(activeId.current);
-      const next = ALL_SECTION_IDS[idx + dir];
-      if (next) goTo(next);
-    };
-
-    // Scroll progress (0–1) within any section taller than the viewport
     const sectionProgress = (id: string) => {
       const el = document.getElementById(id);
       if (!el) return 0;
@@ -349,63 +289,59 @@ const SectionTransition = () => {
       return max > 0 ? Math.max(0, Math.min(1, (window.scrollY - el.offsetTop) / max)) : 1;
     };
 
-    // Sections taller than 100vh that need scroll-through before transitioning
-    const TALL_SECTIONS = new Set(['sec-services', 'sec-process', 'sec-people', 'sec-timeline', 'sec-showcase']);
+    // Returns which snap section the user is currently scrolled within, or null
+    const activeSnapId = (): string | null => {
+      for (const id of Object.keys(SUB_SNAP_SECTIONS)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = el.offsetTop;
+        const bottom = top + el.offsetHeight - window.innerHeight;
+        if (window.scrollY >= top - 50 && window.scrollY <= bottom + 50) return id;
+      }
+      return null;
+    };
 
-    // Sections where natural browser scroll is used to cross the boundary (both directions)
-    const FREE_SCROLL_PAIRS = new Set(['sec-hero', 'sec-services']);
-    // Sections where only upward scroll is natural (preserves iris going down)
-    const FREE_SCROLL_UP_SECTIONS = new Set(['sec-statement']);
+    const snapTo = (id: string, dir: 1 | -1) => {
+      if (locked.current) return;
+      const p = sectionProgress(id);
+      const snaps = SUB_SNAP_SECTIONS[id];
+      const target = dir > 0
+        ? snaps.find(s => s > p + 0.05)
+        : [...snaps].reverse().find(s => s < p - 0.05);
+      if (target === undefined) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      locked.current = true;
+      window.scrollTo({ top: el.offsetTop + (el.offsetHeight - window.innerHeight) * target, behavior: 'smooth' });
+      setTimeout(() => { locked.current = false; }, 900);
+    };
 
-    // Wheel — pass through tall sections mid-scroll; intercept at boundaries
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) < 15) return;
-      if (TALL_SECTIONS.has(activeId.current)) {
-        const p = sectionProgress(activeId.current);
-        if (e.deltaY > 0 && p >= 0.98) {
-          if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
-          e.preventDefault(); navigate(1); return;
-        }
-        if (e.deltaY < 0 && p <= 0.02) {
-          if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
-          e.preventDefault(); navigate(-1); return;
-        }
-        return; // mid-section: pass through
-      }
-      if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
-      if (FREE_SCROLL_UP_SECTIONS.has(activeId.current) && e.deltaY < 0) return;
+      const id = activeSnapId();
+      if (!id) return;
+      if (locked.current) return;
       e.preventDefault();
-      navigate(e.deltaY > 0 ? 1 : -1);
+      snapTo(id, e.deltaY > 0 ? 1 : -1);
     };
 
-    // Touch swipe
-    const onTouchStart = (e: TouchEvent) => { touchStartY.current = e.touches[0].clientY; };
-    const onTouchEnd   = (e: TouchEvent) => {
-      const diff = touchStartY.current - e.changedTouches[0].clientY;
+    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
+    const onTouchEnd = (e: TouchEvent) => {
+      const diff = touchStartY - e.changedTouches[0].clientY;
       if (Math.abs(diff) < 60) return;
-      if (TALL_SECTIONS.has(activeId.current)) {
-        const p = sectionProgress(activeId.current);
-        if (diff > 0 && p >= 0.98) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { navigate(1); } return; }
-        if (diff < 0 && p <= 0.02) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { navigate(-1); } return; }
-        return;
-      }
-      if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
-      if (FREE_SCROLL_UP_SECTIONS.has(activeId.current) && diff < 0) return;
-      navigate(diff > 0 ? 1 : -1);
+      const id = activeSnapId();
+      if (!id) return;
+      snapTo(id, diff > 0 ? 1 : -1);
     };
 
-    // Keyboard arrows / Page Up / Down
     const onKey = (e: KeyboardEvent) => {
-      if (TALL_SECTIONS.has(activeId.current)) {
-        const p = sectionProgress(activeId.current);
-        if (['ArrowDown', 'PageDown'].includes(e.key) && p >= 0.98) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { e.preventDefault(); navigate(1); } return; }
-        if (['ArrowUp',  'PageUp'  ].includes(e.key) && p <= 0.02) { if (!FREE_SCROLL_PAIRS.has(activeId.current)) { e.preventDefault(); navigate(-1); } return; }
-        return;
-      }
-      if (FREE_SCROLL_PAIRS.has(activeId.current)) return;
-      if (FREE_SCROLL_UP_SECTIONS.has(activeId.current) && ['ArrowUp', 'PageUp'].includes(e.key)) return;
-      if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); navigate(1);  }
-      if (['ArrowUp',  'PageUp'  ].includes(e.key)) { e.preventDefault(); navigate(-1); }
+      const id = activeSnapId();
+      if (!id) return;
+      const isDown = ['ArrowDown', 'PageDown'].includes(e.key);
+      const isUp   = ['ArrowUp',   'PageUp'  ].includes(e.key);
+      if (!isDown && !isUp) return;
+      e.preventDefault();
+      snapTo(id, isDown ? 1 : -1);
     };
 
     window.addEventListener('wheel',      onWheel,      { passive: false });
@@ -418,74 +354,10 @@ const SectionTransition = () => {
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchend',   onTouchEnd);
       window.removeEventListener('keydown',    onKey);
-      tracker.disconnect();
-      tallTracker.disconnect();
     };
-  }, [goTo]);
+  }, []);
 
-  if (!iris) return null;
-
-  const OPEN  = 'circle(150% at 50% 50%)';
-  const CLOSE = 'circle(0%   at 50% 50%)';
-  const T     = [0, 0.38, 1] as [number, number, number];
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 250 }}>
-
-      {/* Layer 1: charcoal — leads, creates halo border */}
-      <motion.div
-        key={`ring-${iris.key}`}
-        initial={{ clipPath: CLOSE }}
-        animate={{ clipPath: [CLOSE, OPEN, CLOSE] }}
-        transition={{ duration: 1.35, times: T, ease: ['circIn', 'circOut'] }}
-        style={{ position: 'absolute', inset: 0, background: C.charcoal }}
-      />
-
-      {/* Layer 2: accent — 0.07s delayed, fills inside charcoal ring */}
-      <motion.div
-        key={`fill-${iris.key}`}
-        initial={{ clipPath: CLOSE }}
-        animate={{ clipPath: [CLOSE, OPEN, CLOSE] }}
-        transition={{ duration: 1.2, times: T, ease: ['circIn', 'circOut'], delay: 0.07 }}
-        style={{ position: 'absolute', inset: 0, background: C.accent }}
-      />
-
-      {/* Label — visible at peak */}
-      <motion.div
-        key={`label-${iris.key}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 1, 0] }}
-        transition={{ duration: 1.2, times: [0, 0.28, 0.52, 0.72] }}
-        style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-        }}
-      >
-        <span style={{
-          fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-          fontSize: 'clamp(7rem, 18vw, 16rem)',
-          color: C.charcoal, opacity: 0.07,
-          lineHeight: 1, letterSpacing: '-0.06em',
-          position: 'absolute', userSelect: 'none',
-        }}>
-          {iris.n}
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative', zIndex: 1 }}>
-          <div style={{ width: 28, height: 1.5, background: C.charcoal, opacity: 0.35 }} />
-          <span style={{
-            fontFamily: 'Outfit, sans-serif', fontWeight: 700,
-            fontSize: 11, letterSpacing: '0.32em', textTransform: 'uppercase',
-            color: C.charcoal,
-          }}>
-            {iris.title}
-          </span>
-          <div style={{ width: 28, height: 1.5, background: C.charcoal, opacity: 0.35 }} />
-        </div>
-      </motion.div>
-
-    </div>
-  );
+  return null;
 };
 
 // ── FLOATING STRING ───────────────────────────────────────────────────────────
@@ -1058,54 +930,56 @@ const SI: Record<string, string> = {
   'OpenAI':        'openai',
   'Jupyter':       'jupyter',
   'ONNX':          'onnx',
+  'Pandas':        'pandas',
+  'NumPy':         'numpy',
   // Additional Languages & Frameworks
   'JavaScript':    'javascript',
   'Express.js':    'express',
   'React Native':  'reactnative',
   'Swift':         'swift',
   'Kotlin':        'kotlin',
+  'Vite':          'vitedotjs',
+  'NestJS':        'nestjs',
+  'Tailwind CSS':  'tailwindcss',
+  // Additional Cloud & Infra
+  'Datadog':       'datadog',
+  'Helm':          'helm',
+  'Sentry':        'sentry',
+  // Additional Data & Storage
+  'MySQL':         'mysql',
+  'Neo4j':         'neo4j',
+  'BigQuery':      'googlebigquery',
 };
 
 const TECH_ROW1 = [
-  { name: 'Anthropic Claude', cat: 'ai' }, { name: 'LangChain', cat: 'ai' },
-  { name: 'Hugging Face', cat: 'ai' }, { name: 'PyTorch', cat: 'ai' },
-  { name: 'TensorFlow', cat: 'ai' }, { name: 'Ollama', cat: 'ai' },
-  { name: 'CrewAI', cat: 'ai' }, { name: 'MLflow', cat: 'ai' },
-  { name: 'Weights & Biases', cat: 'ai' }, { name: 'OpenAI', cat: 'ai' },
-  { name: 'Jupyter', cat: 'ai' }, { name: 'ONNX', cat: 'ai' },
-  { name: 'JavaScript', cat: 'dev' }, { name: 'Express.js', cat: 'dev' },
-  { name: 'Vue.js', cat: 'dev' }, { name: 'Angular', cat: 'dev' },
-  { name: 'Svelte', cat: 'dev' }, { name: 'Django', cat: 'dev' },
-  { name: 'Flutter', cat: 'dev' }, { name: 'Laravel', cat: 'dev' },
+  { name: 'Anthropic Claude', cat: 'ai' }, { name: 'Docker', cat: 'infra' }, { name: 'PostgreSQL', cat: 'data' }, { name: 'JavaScript', cat: 'dev' },
+  { name: 'LangChain', cat: 'ai' }, { name: 'Kubernetes', cat: 'infra' }, { name: 'Redis', cat: 'data' }, { name: 'Express.js', cat: 'dev' },
+  { name: 'Hugging Face', cat: 'ai' }, { name: 'Terraform', cat: 'infra' }, { name: 'MongoDB', cat: 'data' }, { name: 'Vue.js', cat: 'dev' },
+  { name: 'PyTorch', cat: 'ai' }, { name: 'GCP', cat: 'infra' }, { name: 'Kafka', cat: 'data' }, { name: 'Angular', cat: 'dev' },
+  { name: 'TensorFlow', cat: 'ai' }, { name: 'Nginx', cat: 'infra' }, { name: 'Snowflake', cat: 'data' }, { name: 'Svelte', cat: 'dev' },
+  { name: 'Django', cat: 'dev' }, { name: 'Prometheus', cat: 'infra' }, { name: 'Apache Spark', cat: 'data' }, { name: 'Laravel', cat: 'dev' },
 ];
 
 const TECH_ROW2 = [
-  { name: 'Python', cat: 'dev' }, { name: 'FastAPI', cat: 'dev' },
-  { name: 'Node.js', cat: 'dev' }, { name: 'React', cat: 'dev' },
-  { name: 'TypeScript', cat: 'dev' }, { name: 'Next.js', cat: 'dev' },
-  { name: 'GraphQL', cat: 'dev' }, { name: 'Celery', cat: 'dev' },
-  { name: 'React Native', cat: 'dev' }, { name: 'Spring Boot', cat: 'dev' },
+  { name: 'Ollama', cat: 'ai' }, { name: 'AWS', cat: 'infra' }, { name: 'Airflow', cat: 'data' }, { name: 'Python', cat: 'dev' },
+  { name: 'CrewAI', cat: 'ai' }, { name: 'Azure', cat: 'infra' }, { name: 'Elasticsearch', cat: 'data' }, { name: 'FastAPI', cat: 'dev' },
+  { name: 'MLflow', cat: 'ai' }, { name: 'GitHub Actions', cat: 'infra' }, { name: 'Cassandra', cat: 'data' }, { name: 'Node.js', cat: 'dev' },
+  { name: 'Weights & Biases', cat: 'ai' }, { name: 'Ansible', cat: 'infra' }, { name: 'ClickHouse', cat: 'data' }, { name: 'React', cat: 'dev' },
+  { name: 'OpenAI', cat: 'ai' }, { name: 'Grafana', cat: 'infra' }, { name: 'dbt', cat: 'data' }, { name: 'TypeScript', cat: 'dev' },
+  { name: 'Datadog', cat: 'infra' }, { name: 'RabbitMQ', cat: 'data' }, { name: 'Celery', cat: 'dev' }, { name: 'Spring Boot', cat: 'dev' },
   { name: '.NET', cat: 'dev' },
-  { name: 'Docker', cat: 'infra' }, { name: 'Kubernetes', cat: 'infra' },
-  { name: 'Terraform', cat: 'infra' }, { name: 'GCP', cat: 'infra' },
-  { name: 'Nginx', cat: 'infra' }, { name: 'Prometheus', cat: 'infra' },
-  { name: 'AWS', cat: 'infra' }, { name: 'Azure', cat: 'infra' },
-  { name: 'GitHub Actions', cat: 'infra' }, { name: 'Ansible', cat: 'infra' },
 ];
 
 const TECH_ROW3 = [
-  { name: 'scikit-learn', cat: 'ai' },
+  { name: 'Jupyter', cat: 'ai' }, { name: 'Helm', cat: 'infra' }, { name: 'Supabase', cat: 'data' }, { name: 'Next.js', cat: 'dev' },
+  { name: 'ONNX', cat: 'ai' }, { name: 'Sentry', cat: 'infra' }, { name: 'Firebase', cat: 'data' }, { name: 'GraphQL', cat: 'dev' },
+  { name: 'Pandas', cat: 'ai' }, { name: 'DynamoDB', cat: 'data' }, { name: 'React Native', cat: 'dev' },
+  { name: 'NumPy', cat: 'ai' }, { name: 'MySQL', cat: 'data' }, { name: 'Vite', cat: 'dev' },
+  { name: 'scikit-learn', cat: 'ai' }, { name: 'Neo4j', cat: 'data' }, { name: 'NestJS', cat: 'dev' },
+  { name: 'BigQuery', cat: 'data' }, { name: 'Tailwind CSS', cat: 'dev' },
   { name: 'Go', cat: 'dev' }, { name: 'Rust', cat: 'dev' },
   { name: 'Java', cat: 'dev' }, { name: 'Swift', cat: 'dev' },
-  { name: 'Kotlin', cat: 'dev' },
-  { name: 'Grafana', cat: 'infra' }, { name: 'PostgreSQL', cat: 'data' },
-  { name: 'Redis', cat: 'data' }, { name: 'MongoDB', cat: 'data' },
-  { name: 'Kafka', cat: 'data' }, { name: 'Snowflake', cat: 'data' },
-  { name: 'Apache Spark', cat: 'data' }, { name: 'Airflow', cat: 'data' },
-  { name: 'Elasticsearch', cat: 'data' }, { name: 'Cassandra', cat: 'data' },
-  { name: 'ClickHouse', cat: 'data' }, { name: 'dbt', cat: 'data' },
-  { name: 'RabbitMQ', cat: 'data' }, { name: 'Supabase', cat: 'data' },
-  { name: 'Firebase', cat: 'data' }, { name: 'DynamoDB', cat: 'data' },
+  { name: 'Kotlin', cat: 'dev' }, { name: 'Flutter', cat: 'dev' }
 ];
 
 // Individual item — flat logo + text, no pill container
@@ -1171,6 +1045,8 @@ const TechMarqueeTrack = ({ items, basePPS = 55, reverse = false, activeCat = nu
   );
 };
 
+
+
 const TechStack = () => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
@@ -1178,8 +1054,8 @@ const TechStack = () => {
   return (
     <section id="sec-techstack" ref={ref} style={{ background: C.base, height: '100vh', padding: 'clamp(80px, 10vw, 120px) 0', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <SectionTag name="tech stack" />
-      {/* Section header */}
-      <div style={{ paddingLeft: 40, paddingRight: 40, marginBottom: 64 }}>
+      {/* Section header — always visible, sits above scatter */}
+      <div style={{ paddingLeft: 40, paddingRight: 40, marginBottom: 64, position: 'relative', zIndex: 2 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Divider inView={inView} color="rgba(0,0,0,0.1)" />
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
@@ -1211,12 +1087,14 @@ const TechStack = () => {
           </motion.div>
         </div>
       </div>
-      {/* Three scrolling rows — full bleed, no horizontal padding */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+      {/* Marquee rows (always visible, pills dim when filter active) */}
+      <motion.div key="marquee"
+        style={{ display: 'flex', flexDirection: 'column', gap: 36 }}
+      >
         <TechMarqueeTrack items={TECH_ROW1} basePPS={28} activeCat={activeCat} />
         <TechMarqueeTrack items={TECH_ROW2} basePPS={22} reverse activeCat={activeCat} />
         <TechMarqueeTrack items={TECH_ROW3} basePPS={34} activeCat={activeCat} />
-      </div>
+      </motion.div>
     </section>
   );
 };
@@ -2353,7 +2231,8 @@ const PHASES = [
     definition: 'We operate with unwavering honesty and transparency in every interaction, ensuring our word is our bond.',
     valueToClient: 'Builds a foundation of trust and predictability — clients can rely on truthful reporting and ethical decision-making, reducing risk and ensuring long-term partnership stability.',
     color: C.accent, glow: '#FFC72C',
-    image: 'https://phitopolis.com/blog/wp-content/uploads/2025/10/IMG_7667-2048x1536.jpg',
+    image: 'https://phitopolis.com/img/core-competencies/proactive-communication.jpg',
+    imagePos: 'center 40%',
   },
   {
     num: '02', label: 'Accountability',
@@ -2361,6 +2240,10 @@ const PHASES = [
     valueToClient: 'Ensures reliability and peace of mind — by owning both successes and challenges, we provide a dependable partner who proactively manages outcomes to meet project milestones.',
     color: '#4A90D9', glow: '#4A90D9',
     image: 'https://phitopolis.com/blog/wp-content/uploads/2025/11/Ateneo-Career-Talk-2025_002.png',
+    imagePos: 'center top',
+    imageHeight: 'clamp(300px, 46vh, 500px)',
+    imageFit: 'contain' as const,
+    imageBg: 'rgba(10,42,102,0.08)',
   },
   {
     num: '03', label: 'Forward Thinking',
@@ -2368,13 +2251,15 @@ const PHASES = [
     valueToClient: 'Clients gain a competitive edge by leveraging our proactive approach to technology and market trends, ensuring their business remains resilient and scalable.',
     color: '#A78BFA', glow: '#A78BFA',
     image: 'https://phitopolis.com/blog/wp-content/uploads/2025/03/AI-Engineering_001.png',
+    imagePos: 'center top',
   },
   {
     num: '04', label: 'Excellence',
     definition: 'In everything we do — we set the highest standards for performance, continuously refining our processes to deliver superior quality.',
     valueToClient: 'Our commitment to excellence translates to reduced errors, higher efficiency, and a final product that exceeds expectations, maximizing the client\'s return on investment.',
     color: '#2ECC71', glow: '#2ECC71',
-    image: 'https://phitopolis.com/blog/wp-content/uploads/2023/03/46E1B7F6-6580-4DCC-AB2A-C3E634F57080-2-2048x2048.jpg',
+    image: 'https://phitopolis.com/img/core-competencies/technical-excellence.jpg',
+    imagePos: 'center 35%',
   },
 ];
 
@@ -2597,12 +2482,12 @@ const Process = () => {
 
                 {/* Value image */}
                 {!isMobile && (
-                  <div style={{ flex: 1, borderRadius: 20, overflow: 'hidden', height: 'clamp(240px, 38vh, 420px)', alignSelf: 'center', border: `1px solid ${ph.color}20`, flexShrink: 0 }}>
+                  <div style={{ flex: 1, borderRadius: 20, overflow: 'hidden', height: (ph as any).imageHeight ?? 'clamp(240px, 38vh, 420px)', alignSelf: 'center', border: `1px solid ${ph.color}20`, flexShrink: 0, background: (ph as any).imageBg ?? 'transparent' }}>
                     <img
                       src={ph.image}
                       alt={ph.label}
                       onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = ph.image.replace('.jpg', '.svg'); }}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                      style={{ width: '100%', height: '100%', objectFit: (ph as any).imageFit ?? 'cover', objectPosition: (ph as any).imagePos ?? 'center', display: 'block' }}
                     />
                   </div>
                 )}
@@ -2805,6 +2690,8 @@ const OurPeople = () => {
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const ghostRefs   = useRef<(HTMLDivElement | null)[]>([]);
   const dotRefs     = useRef<(HTMLDivElement | null)[]>([]);
+  // Bar fill refs for the Courses slide (7 disciplines)
+  const barFillRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null, null]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -2844,6 +2731,23 @@ const OurPeople = () => {
           tl.to(ghostRefs.current[i],   { scale: 0.82, opacity: 0, duration: xD * 0.55 }, xs);
           tl.to(slideRefs.current[i],   { opacity: 0, duration: xD * 0.12 }, xs + xD * 0.88);
           tl.to(dotRefs.current[i],     { backgroundColor: 'rgba(255,255,255,0.1)', scale: 0.65, duration: xD * 0.3 }, xs);
+        }
+      });
+
+      // ── Courses bar fill animations (slide index 1) ───────────────────────
+      const [ces, cee, cxs, cxe] = HR_WIN[1];
+      const ceD = cee - ces;
+      const cxD = cxe - cxs;
+      const courseItems = (HR_SLIDES[1] as HRSlide & { type: 'courses'; items: CourseItem[] }).items;
+      courseItems.forEach((course, j) => {
+        gsap.set(barFillRefs.current[j], { width: '0%' });
+        tl.to(barFillRefs.current[j], {
+          width: `${course.pct}%`,
+          duration: ceD * 0.55,
+          ease: 'power2.out',
+        }, ces + ceD * 0.18 + j * 0.008);
+        if (cxs < 0.97) {
+          tl.to(barFillRefs.current[j], { width: '0%', duration: cxD * 0.35 }, cxs);
         }
       });
     }, sRef);
@@ -3013,14 +2917,16 @@ const OurPeople = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 14 : 24, alignItems: 'start' }}>
                     {/* Bar chart column */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      {(slide.items as CourseItem[]).map(c => (
+                      {(slide.items as CourseItem[]).map((c, j) => (
                         <div key={c.name}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
                             <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.83rem', color: 'rgba(255,255,255,0.82)', fontWeight: 500 }}>{c.name}</span>
                             <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1rem', color: c.color, letterSpacing: '-0.02em' }}>{c.pct}%</span>
                           </div>
                           <div style={{ height: 10, borderRadius: 5, background: 'rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${c.pct}%`, background: `linear-gradient(90deg, ${c.color}99, ${c.color})`, borderRadius: 5, position: 'relative' }}>
+                            {/* width starts at 0%; GSAP animates to c.pct% on scroll */}
+                            <div ref={el => { if (i === 1) barFillRefs.current[j] = el; }}
+                              style={{ height: '100%', width: '0%', background: `linear-gradient(90deg, ${c.color}99, ${c.color})`, borderRadius: 5, position: 'relative' }}>
                               {/* Glow cap */}
                               <div style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, borderRadius: '50%', background: c.color, boxShadow: `0 0 8px 2px ${c.color}88` }} />
                             </div>
@@ -3030,15 +2936,20 @@ const OurPeople = () => {
                     </div>
                     {/* Summary stat card */}
                     {!isMobile && (
-                      <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                      <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                         <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>37%</div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 3.5vw, 3rem)', color: slide.color, letterSpacing: '-0.04em', lineHeight: 1 }}>37%</div>
                           <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>QS Top 1000 school educated</div>
                         </div>
                         <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
                         <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', color: '#60A5FA', letterSpacing: '-0.04em', lineHeight: 1 }}>100%</div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 3.5vw, 3rem)', color: '#60A5FA', letterSpacing: '-0.04em', lineHeight: 1 }}>100%</div>
                           <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>equal opportunity employer</div>
+                        </div>
+                        <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
+                        <div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 3.5vw, 3rem)', color: '#34D399', letterSpacing: '-0.04em', lineHeight: 1 }}>15%</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>internationally educated</div>
                         </div>
                       </div>
                     )}
@@ -3079,87 +2990,119 @@ const OurPeople = () => {
 
 // ── CHAPTERS ──────────────────────────────────────────────────────────────────
 const CHAPTERS = [
-  { num: '2019', id: 'sec-ch0a', tag: 'The Beginning', title: '2019', sub: 'Where it all started',                 color: '#E879F9',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2020/06/Cheers-1024x683.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2020/06/karaoke-1024x683.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2020/06/Mgmt-1024x683.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-4-1024x768.jpg'],
-    body: 'Placeholder — content covering Phitopolis\'s founding year will live here. The vision, the first team members, and the early decisions that set the direction for everything that followed.' },
-  { num: '2020', id: 'sec-ch0b', tag: 'Laying Ground', title: '2020', sub: 'Setting the stage',                   color: '#38BDF8',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-2-1024x768.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-6-1024x768.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2020/06/karaoke-1024x683.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2020/06/Mgmt-1024x683.jpg'],
-    body: 'Placeholder — content covering 2020\'s groundwork will live here. Building the blueprint amid a global shift, assembling the founding pieces, and preparing to launch.' },
-  { num: '2021', id: 'sec-ch1', tag: 'Taking Off', title: '2021', sub: 'Gaining momentum',                       color: '#FFC72C',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-1024x768.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-7-768x1024.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2021/12/DSCF0566-1024x683.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2021/12/DSCF0249-1024x683.jpg'],
-    body: 'Placeholder — content covering 2021\'s milestones will live here. Growing the team, landing key clients, and proving the Phitopolis approach in the market.' },
-  { num: '2022', id: 'sec-ch2', tag: 'Taking Shape',  title: '2022', sub: 'Building the foundation',             color: '#60A5FA',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2022/03/Image-from-iOS-35-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2022/03/20220219_210659-1024x768.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2022/08/Image-from-iOS-33-1-1024x683.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2022/12/Image-from-iOS-1-1024x768.jpg'],
-    body: 'Placeholder — content covering 2022\'s milestones will live here. Early client engagements, team growth, and the first solutions that proved the model worked.' },
-  { num: '2023', id: 'sec-ch3', tag: 'Momentum',      title: '2023', sub: 'Accelerating the mission',            color: '#34D399',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2023/04/IMG_9159-1-1-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2023/05/IMG_1945-1-1-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2023/04/IMG_3842-1-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2023/08/IMG_5547-2-scaled.jpg'],
-    body: 'Placeholder — content covering 2023\'s growth will live here. Expanded capabilities, deeper partnerships, and the projects that put Phitopolis on the map.' },
-  { num: '2024', id: 'sec-ch4', tag: 'Scaling Up',    title: '2024', sub: 'Reaching new heights',                color: '#A78BFA',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2024/04/Summer-Outing_001.png', 'https://phitopolis.com/blog/wp-content/uploads/2024/04/Summer-Outing_002.png', 'https://phitopolis.com/blog/wp-content/uploads/2024/11/Phitopolis-5th-Year-Anniversary_001-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2024/11/IMG_3680-scaled.jpg'],
-    body: 'Placeholder — content covering 2024\'s expansion will live here. Larger engagements, new service lines, and a growing team aligned around AI-first delivery.' },
-  { num: '2025', id: 'sec-ch5', tag: 'Full Stride',   title: '2025', sub: 'Operating at full capacity',          color: '#F59E0B',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2025/05/05-2025_Enrique_Summer_Outing-7049.jpeg-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2025/05/image2-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2025/08/42a0de2d-e49e-44f4-83e4-2f159ed7852f.png', 'https://phitopolis.com/blog/wp-content/uploads/2025/10/IMG20250924113010-scaled.jpg'],
-    body: 'Placeholder — content covering 2025\'s achievements will live here. Flagship deployments, measurable client impact, and the refinement of what makes Phitopolis different.' },
-  { num: '2026', id: 'sec-ch6', tag: 'AI Day',        title: '2026', sub: 'Five years in, the work continues',   color: '#F472B6',
-    images: ['https://phitopolis.com/blog/wp-content/uploads/2026/02/5-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2026/02/1-scaled.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2026/03/Jogging-1024x719.jpg', 'https://phitopolis.com/blog/wp-content/uploads/2026/03/Painting-1024x768.jpg'],
-    body: 'Placeholder — content covering where Phitopolis stands today will live here. Five years of learning, shipping, and building — and a clear view of what comes next.' },
+  { num: '2019', id: 'sec-ch0a', tag: 'The Beginning', title: 'Where it all started', sub: 'Where it all started', color: '#E879F9',
+    images: [
+      'https://phitopolis.com/blog/wp-content/uploads/2020/06/Cheers-1024x683.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2020/06/Mgmt-1024x683.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2020/06/karaoke-1024x683.jpg',
+    ],
+    body: 'Phitopolis was founded, establishing a top-tier tech R&D firm in Manila with backing from global investors. A small but focused team set out to prove that world-class engineering could be built right here.' },
+  { num: '2020', id: 'sec-ch0b', tag: 'Pandemic', title: 'Pandemic', sub: 'Adapting under pressure', color: '#38BDF8',
+    images: [
+      '/2020/1.png',
+      '/2020/2.jpg',
+    ],
+    body: 'Transitioned our technical team to strategic remote work setups to ensure safety and continuity. The disruption forced us to rethink how distributed teams collaborate — and we came out stronger for it.' },
+  { num: '2021', id: 'sec-ch1', tag: 'New Normal',  title: 'Adjusting to the new normal', sub: 'Distributed, but never disconnected', color: '#FFC72C',
+    images: [
+      'https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-4-768x576.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-8-768x1024.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2021/12/DSCF0257-768x512.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2021/10/Image-from-iOS-7-768x1024.jpg',
+    ],
+    body: 'Solidified our distributed workflow while continuing to provide fascinating work and reliable support for our global clients. Culture and quality remained non-negotiable, regardless of where the team sat.' },
+  { num: '2022', id: 'sec-ch2', tag: 'Momentum',    title: 'Gaining momentum',            sub: 'Engineering at scale',               color: '#60A5FA',
+    images: [
+      'https://phitopolis.com/blog/wp-content/uploads/2022/03/Image-from-iOS-21-768x576.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2022/08/Image-from-iOS-33-1-768x512.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2022/12/Image-from-iOS-1-768x576.jpg',
+    ],
+    body: 'Expanded our teams in Manila and strengthened our core engineering capabilities as global demand for tech solutions surged. New practices, new hires, and a growing appetite for harder problems.' },
+  { num: '2023', id: 'sec-ch3', tag: 'Acceleration', title: 'Accelerating the mission',   sub: 'Deeper, faster, further',            color: '#34D399',
+    images: [
+      'https://phitopolis.com/blog/wp-content/uploads/2023/03/46E1B7F6-6580-4DCC-AB2A-C3E634F57080-2-2048x2048.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2023/04/IMG_9159-1-1-2048x1336.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2023/05/IMG_1945-1-1-2048x1536.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2023/08/IMG_5547-2-2048x1536.jpg',
+    ],
+    body: 'Scaled operations and integrated more advanced technologies into our development and research pipelines to meet growing client needs. The work got harder — and the team rose to match it.' },
+  { num: '2024', id: 'sec-ch4', tag: 'New Heights',  title: 'Reaching new heights',        sub: 'Milestones that matter',             color: '#A78BFA',
+    images: [
+      'https://phitopolis.com/blog/wp-content/uploads/2024/01/hike-with-mike-blog-1.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2024/04/group-pic-final-2048x1687.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2024/05/2Q-CSR_001-min-1-2048x1536.png',
+      'https://phitopolis.com/blog/wp-content/uploads/2024/08/HPC-With-Tom_001.png',
+    ],
+    body: 'Achieved major milestones in project deliveries and significantly grew our workforce, firmly establishing our reputation. Five years in, Phitopolis had become the partner clients came back to.' },
+  { num: '2025', id: 'sec-ch5', tag: 'Expansion',    title: 'Expansion',                   sub: 'New frontiers, new possibilities',   color: '#F59E0B',
+    images: [
+      'https://phitopolis.com/blog/wp-content/uploads/2025/01/image8.png',
+      'https://phitopolis.com/blog/wp-content/uploads/2025/03/DLSU-Job-Expo_001.png',
+      'https://phitopolis.com/blog/wp-content/uploads/2025/05/05-2025_Enrique_Summer_Outing-7049.jpeg-2048x1536.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2025/08/3029999c-3cc5-4a42-8e66-c1d181babbc3.png',
+    ],
+    body: 'Broadened our market presence and explored new technological frontiers, laying the groundwork for substantial future scale. The pipeline of ideas grew as fast as the team delivering them.' },
+  { num: '2026', id: 'sec-ch6', tag: 'AI Day',       title: 'New challenges, the work continues', sub: 'Tomorrow\'s technology, available today', color: '#F472B6',
+    images: [
+      'https://phitopolis.com/blog/wp-content/uploads/2026/02/5-2048x870.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2026/02/Image-2-2048x1536.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2026/03/Jogging-768x539.jpg',
+      'https://phitopolis.com/blog/wp-content/uploads/2026/03/3-768x485.png',
+    ],
+    body: 'Looking ahead with a renewed commitment to making tomorrow\'s technology available today through relentless innovation. The mission is clearer than ever — and the best work is still ahead of us.' },
 ];
 
 // Unique scatter layouts per year — desktop polaroid placement
 // Each array maps to images[0], [1], [2], [3] of that chapter
 const CHAPTER_SCATTER: Record<string, { top?: string; bottom?: string; left?: string; right?: string; width: string; rotate: string; zIndex: number }[]> = {
-  // 2019 — stacked column, slightly offset
+  // 2019 — 3 images: triangle spread, large but clear of text (left edge ≥ 46%)
   '2019': [
-    { top: '2%',     left: '45%',   width: '28%', rotate: '-6deg',  zIndex: 2 },
-    { top: '18%',    left: '52%',   width: '26%', rotate:  '4deg',  zIndex: 3 },
-    { bottom: '18%', left: '44%',   width: '30%', rotate: '-3deg',  zIndex: 1 },
-    { bottom: '2%',  right: '6%',   width: '24%', rotate: '10deg',  zIndex: 2 },
+    { top: '-2%',    left: '48%',   width: '36%', rotate: '-7deg',  zIndex: 2 },
+    { top: '20%',    right: '2%',   width: '34%', rotate:  '6deg',  zIndex: 3 },
+    { bottom: '2%',  left: '50%',   width: '38%', rotate: '-3deg',  zIndex: 1 },
   ],
-  // 2020 — V-shape layout
+  // 2020 — 2 images: two large photos dominating the right half
   '2020': [
-    { top: '2%',     left: '38%',   width: '26%', rotate: '-10deg', zIndex: 2 },
-    { top: '4%',     right: '2%',   width: '25%', rotate:  '8deg',  zIndex: 2 },
-    { bottom: '10%', left: '48%',   width: '32%', rotate: '-2deg',  zIndex: 3 },
-    { bottom: '0%',  right: '10%',  width: '22%', rotate: '14deg',  zIndex: 1 },
+    { top: '4%',     left: '46%',   width: '44%', rotate: '-9deg',  zIndex: 2 },
+    { top: '18%',    right: '0%',   width: '44%', rotate:  '7deg',  zIndex: 3 },
   ],
-  // 2021 — spread across right half (the layout the user liked)
+  // 2021 — spread across right half
   '2021': [
-    { top: '14%',    left: '42%',   width: '30%', rotate: '-4deg',  zIndex: 2 },
+    { top: '14%',    left: '46%',   width: '30%', rotate: '-4deg',  zIndex: 2 },
     { top: '-4%',    right: '4%',   width: '24%', rotate:  '9deg',  zIndex: 3 },
     { bottom: '8%',  left: '50%',   width: '27%', rotate: '-8deg',  zIndex: 1 },
     { bottom: '-3%', right: '9%',   width: '22%', rotate:  '6deg',  zIndex: 3 },
   ],
-  // 2022 — diagonal cascade top-left to bottom-right
+  // 2022 — 3 images: diagonal cascade, large but clear of text
   '2022': [
-    { top: '4%',     left: '38%',   width: '25%', rotate: '-12deg', zIndex: 1 },
-    { top: '22%',    left: '52%',   width: '29%', rotate: '-1deg',  zIndex: 2 },
-    { bottom: '14%', left: '56%',   width: '26%', rotate:  '9deg',  zIndex: 3 },
-    { bottom: '1%',  right: '5%',   width: '23%', rotate: '12deg',  zIndex: 2 },
+    { top: '0%',     left: '46%',   width: '36%', rotate: '-10deg', zIndex: 1 },
+    { top: '22%',    left: '54%',   width: '38%', rotate:  '-1deg', zIndex: 2 },
+    { bottom: '3%',  right: '2%',   width: '36%', rotate:   '8deg', zIndex: 3 },
   ],
-  // 2023 — fan spread from a single point (like dealing cards)
+  // 2023 — fan spread, slightly more open but still compressed
   '2023': [
-    { top: '8%',     left: '36%',   width: '33%', rotate: '-18deg', zIndex: 1 },
-    { top: '14%',    left: '47%',   width: '31%', rotate:  '-6deg', zIndex: 2 },
-    { top: '20%',    left: '55%',   width: '28%', rotate:   '5deg', zIndex: 3 },
-    { top: '26%',    right: '2%',   width: '24%', rotate:  '17deg', zIndex: 4 },
+    { top: '4%',     left: '46%',   width: '32%', rotate: '-21deg', zIndex: 1 },
+    { top: '14%',    left: '54%',   width: '30%', rotate:  '-7deg', zIndex: 2 },
+    { top: '24%',    left: '61%',   width: '27%', rotate:   '6deg', zIndex: 3 },
+    { top: '34%',    right: '2%',   width: '23%', rotate:  '20deg', zIndex: 4 },
   ],
-  // 2024 — chaotic pile, all overlapping in a cluster
+  // 2024 — cluster pile, spread slightly but anchored right of text
   '2024': [
-    { top: '20%',    left: '44%',   width: '36%', rotate: '-2deg',  zIndex: 1 },
-    { top: '10%',    left: '53%',   width: '28%', rotate: '13deg',  zIndex: 2 },
-    { top: '32%',    left: '40%',   width: '26%', rotate: '-15deg', zIndex: 3 },
-    { top: '15%',    right: '3%',   width: '22%', rotate:  '6deg',  zIndex: 4 },
+    { top: '14%',    left: '46%',   width: '36%', rotate: '-3deg',  zIndex: 1 },
+    { top: '4%',     left: '55%',   width: '29%', rotate: '14deg',  zIndex: 2 },
+    { top: '36%',    left: '48%',   width: '27%', rotate: '-16deg', zIndex: 3 },
+    { top: '10%',    right: '2%',   width: '25%', rotate:  '8deg',  zIndex: 4 },
   ],
   // 2025 — wide scatter, images pushed to the four corners of the right side
   '2025': [
-    { top: '-6%',    left: '40%',   width: '27%', rotate: '-7deg',  zIndex: 2 },
+    { top: '-6%',    left: '46%',   width: '27%', rotate: '-7deg',  zIndex: 2 },
     { top: '28%',    right: '4%',   width: '32%', rotate: '10deg',  zIndex: 1 },
-    { bottom: '10%', left: '43%',   width: '25%', rotate: '-11deg', zIndex: 3 },
+    { bottom: '10%', left: '48%',   width: '25%', rotate: '-11deg', zIndex: 3 },
     { bottom: '-5%', right: '14%',  width: '26%', rotate:  '3deg',  zIndex: 2 },
   ],
   // 2026 — curated trio with a small peeker in the corner
   '2026': [
-    { top: '6%',     left: '44%',   width: '34%', rotate: '-5deg',  zIndex: 2 },
+    { top: '6%',     left: '46%',   width: '34%', rotate: '-5deg',  zIndex: 2 },
     { top: '38%',    right: '3%',   width: '29%', rotate:  '8deg',  zIndex: 3 },
     { bottom: '4%',  left: '50%',   width: '31%', rotate: '-3deg',  zIndex: 1 },
     { top: '-3%',    right: '5%',   width: '18%', rotate: '15deg',  zIndex: 4 },
@@ -3369,21 +3312,12 @@ const ChapterGroup = () => {
                     {ch.num}
                   </div>
                   <Badge n={ch.num} label={ch.tag} />
-                  <div style={{ overflow: 'hidden', marginTop: 4 }}>
-                    <h2 style={{
-                      fontFamily: 'Outfit, sans-serif', fontWeight: 900,
-                      fontSize: 'clamp(2.4rem, 4.8vw, 4.2rem)', color: C.base,
-                      letterSpacing: '-0.03em', lineHeight: 1.05, margin: 0, textTransform: 'lowercase',
-                    }}>
-                      {ch.title}
-                    </h2>
-                  </div>
                   <p style={{
                     fontFamily: 'Outfit, sans-serif', fontWeight: 600,
                     fontSize: 'clamp(0.9rem, 1.3vw, 1.1rem)', color: ch.color,
-                    margin: '16px 0 0', letterSpacing: '-0.01em',
+                    margin: '12px 0 0', letterSpacing: '-0.01em',
                   }}>
-                    {ch.sub}
+                    {ch.title}
                   </p>
                   <p style={{
                     fontFamily: 'Inter, sans-serif', fontSize: 'clamp(0.8rem, 1vw, 0.92rem)',
@@ -3488,7 +3422,7 @@ const Showcase = () => {
     }
   });
 
-  // Per-card wheel navigation — capture phase runs before SectionTransition's bubble listener
+  // Per-card wheel navigation (capture phase)
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       const sec = sectionRef.current;
@@ -3522,7 +3456,7 @@ const Showcase = () => {
         window.scrollTo({ top: sec.offsetTop + (prev / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
         setTimeout(() => { isAdvancingRef.current = false; }, 700);
       }
-      // At first/last card: don't preventDefault → SectionTransition handles section navigation
+      // At first/last card: don't preventDefault → natural scroll takes over
     };
 
     window.addEventListener('wheel', onWheel, { passive: false, capture: true });
@@ -4025,7 +3959,7 @@ export default function AIDayPage() {
       <div>
         <ScrollProgressBar />
         <CustomCursor />
-        <SectionTransition />
+        <SubSectionSnap />
         <FloatNav />
         <Hero ready={ready} />
         <Statement />
