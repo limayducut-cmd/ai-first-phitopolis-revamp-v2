@@ -930,6 +930,8 @@ const SI: Record<string, string> = {
   'ONNX':          'onnx',
   'Pandas':        'pandas',
   'NumPy':         'numpy',
+  'Polars':        'polars',
+  'Gemini':        'googlegemini',
   // Additional Languages & Frameworks
   'JavaScript':    'javascript',
   'Express.js':    'express',
@@ -955,7 +957,7 @@ const TECH_ROW1 = [
   { name: 'Hugging Face', cat: 'ai' }, { name: 'Terraform', cat: 'infra' }, { name: 'MongoDB', cat: 'data' }, { name: 'Vue.js', cat: 'dev' },
   { name: 'PyTorch', cat: 'ai' }, { name: 'GCP', cat: 'infra' }, { name: 'Kafka', cat: 'data' }, { name: 'Angular', cat: 'dev' },
   { name: 'TensorFlow', cat: 'ai' }, { name: 'Nginx', cat: 'infra' }, { name: 'Snowflake', cat: 'data' }, { name: 'Svelte', cat: 'dev' },
-  { name: 'Django', cat: 'dev' }, { name: 'Prometheus', cat: 'infra' }, { name: 'Apache Spark', cat: 'data' }, { name: 'Laravel', cat: 'dev' },
+  { name: 'Gemini', cat: 'ai' }, { name: 'Django', cat: 'dev' }, { name: 'Prometheus', cat: 'infra' }, { name: 'Apache Spark', cat: 'data' }, { name: 'Laravel', cat: 'dev' },
 ];
 
 const TECH_ROW2 = [
@@ -971,7 +973,7 @@ const TECH_ROW2 = [
 const TECH_ROW3 = [
   { name: 'Jupyter', cat: 'ai' }, { name: 'Helm', cat: 'infra' }, { name: 'Supabase', cat: 'data' }, { name: 'Next.js', cat: 'dev' },
   { name: 'ONNX', cat: 'ai' }, { name: 'Sentry', cat: 'infra' }, { name: 'Firebase', cat: 'data' }, { name: 'GraphQL', cat: 'dev' },
-  { name: 'Pandas', cat: 'ai' }, { name: 'DynamoDB', cat: 'data' }, { name: 'React Native', cat: 'dev' },
+  { name: 'Pandas', cat: 'ai' }, { name: 'Polars', cat: 'data' }, { name: 'DynamoDB', cat: 'data' }, { name: 'React Native', cat: 'dev' },
   { name: 'NumPy', cat: 'ai' }, { name: 'MySQL', cat: 'data' }, { name: 'Vite', cat: 'dev' },
   { name: 'scikit-learn', cat: 'ai' }, { name: 'Neo4j', cat: 'data' }, { name: 'NestJS', cat: 'dev' },
   { name: 'BigQuery', cat: 'data' }, { name: 'Tailwind CSS', cat: 'dev' },
@@ -2253,7 +2255,7 @@ const PHASES = [
     definition: 'In everything we do — we set the highest standards for performance, continuously refining our processes to deliver superior quality.',
     valueToClient: 'Our commitment to excellence translates to reduced errors, higher efficiency, and a final product that exceeds expectations, maximizing the client\'s return on investment.',
     color: '#2ECC71', glow: '#2ECC71',
-    image: '/values/excelence.png',
+    image: '/values/excellence.png',
     imagePos: 'center 35%',
   },
 ];
@@ -2647,32 +2649,49 @@ const HR_SLIDES: HRSlide[] = [
     heading: 'Certifications',
     sub: 'Certified across the stack. Upskilling never stops.',
     items: [
-      { name: 'AWS Solutions Architect',     sub: 'Associate',                        logo: '/logos/certs/aws-certs/solutions-architect.png' },
-      { name: 'AWS Developer',              sub: 'Associate',                        logo: '/logos/certs/aws-certs/developer.png' },
-      { name: 'Red Hat (RHCSA)',            sub: 'Linux System Administrator',        logo: '/logos/certs/redhat.webp' },
-      { name: 'AWS DevOps Engineer',        sub: 'Professional',                     logo: '/logos/certs/aws-certs/dev-ops-engineer-pro.png' },
-      { name: 'AWS Cloud Ops Engineer',     sub: 'Associate',                        logo: '/logos/certs/aws-certs/cloud-ops-engineer.png' },
-      { name: 'PMP',                        sub: 'Project Management Professional',   logo: '/logos/certs/pmp.webp' },
-      { name: 'AWS Cloud Practitioner',     sub: 'Foundational',                     logo: '/logos/certs/aws-certs/cloud-practitioner.png' },
-      { name: 'AWS AI Practitioner',        sub: 'Foundational',                     logo: '/logos/certs/aws-certs/ai-practitioner.png' },
-      { name: 'ITIL',                       sub: 'Foundation & Practitioner',         logo: '/logos/certs/itil.webp' },
-      { name: 'AWS Solutions Architect',     sub: 'Professional',                     logo: '/logos/certs/aws-certs/solutions-architect-pro.png' },
-      { name: 'AWS Data Engineer',          sub: 'Associate',                        logo: '/logos/certs/aws-certs/data-engineer.png' },
-      { name: 'ISO 27001',                  sub: 'Lead Implementer & Internal Auditor', logo: '/logos/certs/iso27001.webp' },
-      { name: 'AWS Machine Learning',       sub: 'Specialty',                        logo: '/logos/certs/aws-certs/machine-learning.png' },
-      { name: 'AWS ML Engineer',            sub: 'Associate',                        logo: '/logos/certs/aws-certs/machine-learning-engineer.png' },
-      { name: 'CFA / CPA',                  sub: 'Finance & Accounting Professionals', logo: '/logos/certs/cpa.webp' },
-      { name: 'AWS Gen AI Developer',       sub: 'Associate',                        logo: '/logos/certs/aws-certs/generative-ai-developer.png' },
-      { name: 'AWS Security',              sub: 'Specialty',                        logo: '/logos/certs/aws-certs/security.png' },
-      { name: 'AWS Advanced Networking',    sub: 'Specialty',                        logo: '/logos/certs/aws-certs/advanced-networking.png' },
+      // Google
+      { name: 'Google Cloud Architect',       sub: 'Professional',                     logo: '/logos/certs/more-certs/google-cloud-architect.webp' },
+      { name: 'Google Cloud Engineer',        sub: 'Associate',                        logo: '/logos/certs/more-certs/google-cloud-engineer.webp' },
+      { name: 'Google Gen AI Leader',         sub: 'Generative AI',                    logo: '/logos/certs/more-certs/google-generative-ai-leader.webp' },
+      // AWS
+      { name: 'AWS Cloud Practitioner',       sub: 'Foundational',                     logo: '/logos/certs/aws-certs/cloud-practitioner.png' },
+      { name: 'AWS AI Practitioner',          sub: 'Foundational',                     logo: '/logos/certs/aws-certs/ai-practitioner.png' },
+      { name: 'AWS Developer',                sub: 'Associate',                        logo: '/logos/certs/aws-certs/developer.png' },
+      { name: 'AWS Solutions Architect',      sub: 'Associate',                        logo: '/logos/certs/aws-certs/solutions-architect.png' },
+      { name: 'AWS Cloud Ops Engineer',       sub: 'Associate',                        logo: '/logos/certs/aws-certs/cloud-ops-engineer.png' },
+      { name: 'AWS Data Engineer',            sub: 'Associate',                        logo: '/logos/certs/aws-certs/data-engineer.png' },
+      { name: 'AWS ML Engineer',              sub: 'Associate',                        logo: '/logos/certs/aws-certs/machine-learning-engineer.png' },
+      { name: 'AWS Gen AI Developer',         sub: 'Associate',                        logo: '/logos/certs/aws-certs/generative-ai-developer.png' },
+      { name: 'AWS Solutions Architect',      sub: 'Professional',                     logo: '/logos/certs/aws-certs/solutions-architect-pro.png' },
+      { name: 'AWS DevOps Engineer',          sub: 'Professional',                     logo: '/logos/certs/aws-certs/dev-ops-engineer-pro.png' },
+      { name: 'AWS Machine Learning',         sub: 'Specialty',                        logo: '/logos/certs/aws-certs/machine-learning.png' },
+      { name: 'AWS Security',                 sub: 'Specialty',                        logo: '/logos/certs/aws-certs/security.png' },
+      { name: 'AWS Advanced Networking',      sub: 'Specialty',                        logo: '/logos/certs/aws-certs/advanced-networking.png' },
+      // Azure
+      { name: 'Azure Solutions Architect',    sub: 'Expert',                           logo: '/logos/certs/more-certs/ms-azure-solutions-architect.webp' },
+      { name: 'Azure Network Engineer',       sub: 'Associate',                        logo: '/logos/certs/more-certs/ms-azure-network-engineer.webp' },
+      { name: 'Azure Cybersecurity Architect',sub: 'Expert',                           logo: '/logos/certs/more-certs/ms-cybersecurity-architect.webp' },
+      { name: 'Microsoft Certified',          sub: 'General',                          logo: '/logos/certs/more-certs/ms-certified-general.webp' },
+      { name: 'Microsoft Expert',             sub: 'Microsoft Certified',              logo: '/logos/certs/more-certs/ms-expert.webp' },
+      { name: 'Microsoft Power Platform',     sub: 'Microsoft Certified',              logo: '/logos/certs/more-certs/ms-power-platform.webp' },
+      { name: 'Microsoft Specialist',         sub: 'Microsoft Certified',              logo: '/logos/certs/more-certs/ms-specialist.webp' },
+      // Other
+      { name: 'Red Hat (RHCSA)',              sub: 'Linux System Administrator',        logo: '/logos/certs/redhat.webp' },
+      { name: 'PMP',                          sub: 'Project Management Professional',   logo: '/logos/certs/pmp.webp' },
+      { name: 'ITIL',                         sub: 'Foundation & Practitioner',         logo: '/logos/certs/itil.webp' },
+      { name: 'ISO 27001',                    sub: 'Lead Implementer & Internal Auditor', logo: '/logos/certs/iso27001.webp' },
+      { name: 'CFA / CPA',                    sub: 'Finance & Accounting Professionals', logo: '/logos/certs/cpa.webp' },
     ],
   },
 ];
 
+// Section height: 340vh (extra 60vh allocated to certs scroll hold)
+// Schools/Courses windows rescaled proportionally (×0.824 of original 280vh timing)
+// Certs window extended: hold from 0.70→0.93 ≈ 78vh of scroll for inner cert scroll
 const HR_WIN = [
-  [0.05, 0.15, 0.32, 0.40],
-  [0.40, 0.50, 0.67, 0.75],
-  [0.75, 0.85, 0.96, 1.00],
+  [0.04, 0.12, 0.26, 0.33],
+  [0.33, 0.41, 0.55, 0.62],
+  [0.62, 0.70, 0.93, 0.99],
 ];
 
 const OurPeople = () => {
@@ -2698,6 +2717,8 @@ const OurPeople = () => {
   const dotRefs     = useRef<(HTMLDivElement | null)[]>([]);
   // Bar fill refs for the Courses slide (7 disciplines)
   const barFillRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null, null]);
+  // Scrollable cert container — driven by page scroll via GSAP
+  const certScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -2756,12 +2777,27 @@ const OurPeople = () => {
           tl.to(barFillRefs.current[j], { width: '0%', duration: cxD * 0.35 }, cxs);
         }
       });
+
+      // ── Cert inner scroll — page scroll drives container scrollTop ────────
+      const [, certEE, certXS] = HR_WIN[2]; // fully-in → exit-start window
+      const certHoldDuration = certXS - certEE;
+      const certProxy = { progress: 0 };
+      tl.to(certProxy, {
+        progress: 1,
+        duration: certHoldDuration,
+        onUpdate() {
+          const el = certScrollRef.current;
+          if (!el) return;
+          const maxScroll = el.scrollHeight - el.clientHeight;
+          el.scrollTop = certProxy.progress * maxScroll;
+        },
+      }, certEE);
     }, sRef);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section id="sec-people" ref={sRef} style={{ background: C.charcoal, height: '280vh', position: 'relative' }}>
+    <section id="sec-people" ref={sRef} style={{ background: C.charcoal, height: '340vh', position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
         <SectionTag name="demographics" />
 
@@ -2949,13 +2985,13 @@ const OurPeople = () => {
                         </div>
                         <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
                         <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 3.5vw, 3rem)', color: '#60A5FA', letterSpacing: '-0.04em', lineHeight: 1 }}>100%</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>equal opportunity employer</div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 3.5vw, 3rem)', color: '#34D399', letterSpacing: '-0.04em', lineHeight: 1 }}>15%</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>advanced degree / internationally educated</div>
                         </div>
                         <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
                         <div>
-                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 3.5vw, 3rem)', color: '#34D399', letterSpacing: '-0.04em', lineHeight: 1 }}>15%</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>internationally educated</div>
+                          <div style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 3.5vw, 3rem)', color: '#60A5FA', letterSpacing: '-0.04em', lineHeight: 1 }}>100%</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginTop: 4 }}>equal opportunity employer</div>
                         </div>
                       </div>
                     )}
@@ -2964,6 +3000,7 @@ const OurPeople = () => {
 
                 {/* ── Certifications grid ───────────────────────────────────── */}
                 {slide.type === 'certs' && (
+                  <div ref={certScrollRef} style={{ maxHeight: 'clamp(280px, 46vh, 520px)', overflowY: 'auto', paddingRight: 6, scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(6, 1fr)', gap: 10 }}>
                     {(slide.items as CertItem[]).map((cert, idx) => (
                       <div key={`${cert.name}-${idx}`} style={{ position: 'relative', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 12px 12px', display: 'flex', flexDirection: 'column', gap: 8, overflow: 'hidden' }}>
@@ -2983,6 +3020,7 @@ const OurPeople = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
                   </div>
                 )}
               </div>
