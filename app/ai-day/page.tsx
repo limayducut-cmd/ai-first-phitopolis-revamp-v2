@@ -2253,7 +2253,7 @@ const PHASES = [
     definition: 'In everything we do — we set the highest standards for performance, continuously refining our processes to deliver superior quality.',
     valueToClient: 'Our commitment to excellence translates to reduced errors, higher efficiency, and a final product that exceeds expectations, maximizing the client\'s return on investment.',
     color: '#2ECC71', glow: '#2ECC71',
-    image: '/values/excelence.png',
+    image: '/values/excellence.png',
     imagePos: 'center 35%',
   },
 ];
