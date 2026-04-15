@@ -455,6 +455,57 @@ interface CareersData {
   careers: Career[];
 }
 
+const STITCH_VIDEOS = [
+  '/videostitches/towervideo.mp4',
+  '/videostitches/towervideo2.mp4',
+];
+
+function StitchedVideoBackground() {
+  const refs = [useRef<HTMLVideoElement>(null), useRef<HTMLVideoElement>(null)];
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const videos = refs.map(r => r.current!);
+
+    // Preload both, play only the first
+    videos.forEach((v, i) => {
+      v.load();
+      if (i === 0) v.play().catch(() => {});
+    });
+
+    const handlers = videos.map((v, i) => {
+      const onEnded = () => {
+        const next = (i + 1) % videos.length;
+        videos[next].currentTime = 0;
+        videos[next].play().catch(() => {});
+        setActive(next);
+      };
+      v.addEventListener('ended', onEnded);
+      return () => v.removeEventListener('ended', onEnded);
+    });
+
+    return () => handlers.forEach(cleanup => cleanup());
+  }, []);
+
+  return (
+    <>
+      {STITCH_VIDEOS.map((src, i) => (
+        <video
+          key={src}
+          ref={refs[i]}
+          muted
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: active === i ? 1 : 0, transition: 'opacity 0.5s ease' }}
+        >
+          <source src={src} type="video/mp4" />
+        </video>
+      ))}
+    </>
+  );
+}
+
 export default function Home() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -535,16 +586,8 @@ export default function Home() {
 
       {/* Video Stitches Section */}
       <section className="relative overflow-hidden bg-primary" style={{ height: '100vh' }}>
-        {/* Background video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source src="/videostitches/towervideo.mp4" type="video/mp4" />
-        </video>
+        {/* Stitched background videos — crossfade on end */}
+        <StitchedVideoBackground />
 
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-primary/60" />
@@ -557,23 +600,14 @@ export default function Home() {
 
         {/* Content overlay */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-6">
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-accent font-bold tracking-widest uppercase text-xs mb-4"
-          >
-            At Work
-          </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1 }}
+            transition={{ duration: 0.7 }}
             className="text-4xl md:text-6xl font-display font-bold leading-tight max-w-3xl"
           >
-            Engineering the future, one system at a time.
+            Making tomorrow's technology available today.
           </motion.h2>
           <motion.div
             initial={{ scaleX: 0 }}
