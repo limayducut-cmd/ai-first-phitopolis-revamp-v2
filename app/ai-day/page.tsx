@@ -9,7 +9,6 @@ import {
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
-import TextScramble from '../../components/TextScramble';
 import MagneticWrapper from '../../components/MagneticWrapper';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -3444,7 +3443,7 @@ const ChapterGroup = () => {
   );
 };
 
-const Showcase = () => {
+export const Showcase = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const leftRef = useRef(null);
   const inView = useInView(leftRef, { once: true, margin: '-60px' });
@@ -4143,7 +4142,6 @@ export default function AIDayPage({ isAbout = false }: { isAbout?: boolean }) {
         <FloatNav />
         {!isAbout && <Hero ready={ready} />}
         <Statement />
-        {isAbout && <EngineeringInMotion />}
         <Process />
         <MarqueeSection />
         <ServicesScrollStory />
@@ -4152,7 +4150,6 @@ export default function AIDayPage({ isAbout = false }: { isAbout?: boolean }) {
         <OurPeople />
         <Vision />
         <ChapterGroup />
-        {isAbout && <Showcase />}
         {isAbout && <Closing />}
         <SpecialEndSlide />
       </div>

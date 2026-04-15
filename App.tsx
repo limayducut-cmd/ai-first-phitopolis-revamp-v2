@@ -94,7 +94,8 @@ const Header = () => {
   const [atTop, setAtTop] = useState(true);
 
   useEffect(() => {
-    const onScroll = () => setAtTop(window.scrollY < window.innerHeight);
+    const onScroll = () => setAtTop(window.scrollY < 80);
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -110,7 +111,7 @@ const Header = () => {
   ];
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 group/header transition-all duration-300 ${transparent ? 'bg-transparent border-b border-transparent' : 'bg-primary/95 backdrop-blur-md border-b border-primary-light'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 group/header transition-colors duration-150 ${transparent ? 'bg-transparent border-b border-transparent' : 'bg-primary/95 backdrop-blur-md border-b border-primary-light'}`}>
       <nav className="container mx-auto px-6 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-3 group/brand">
           <Image

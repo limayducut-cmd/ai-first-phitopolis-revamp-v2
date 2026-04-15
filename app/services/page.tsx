@@ -125,7 +125,7 @@ function ServiceImagePanel({ service, index, activeIndex, onMouseEnter, onMouseL
         onMouseLeave={handleMouseLeaveAll}
         onClick={onClick}
         style={{ rotateX: rX, rotateY: rY }}
-        className="w-full bg-slate-100 rounded-3xl aspect-video relative overflow-hidden border border-slate-200 group shadow-lg cursor-pointer"
+        className="w-full bg-slate-100 rounded-3xl aspect-video relative overflow-hidden border border-slate-200 group shadow-lg"
       >
         <img
           src={service.image}

@@ -7,7 +7,7 @@ import { ArrowRight, ChevronRight, Zap, Shield, TrendingUp, Hexagon, Circle, Tri
 import { SERVICES } from '../constants.tsx';
 import { apolloClient } from '../lib/apollo-client';
 import { GET_CAREERS } from '../lib/graphql/queries';
-import { Hero } from './ai-day/page.tsx';
+import { Hero, Showcase } from './ai-day/page.tsx';
 
 // Floating shapes for the practitioners section
 const PractitionersFloatingShapes = () => {
@@ -424,7 +424,7 @@ function HomeSvcCard({ service, i }: HomeSvcCardProps) {
             ))}
           </ul>
           <div
-            className="relative mt-auto -mx-8 -mb-8 overflow-hidden h-48 cursor-pointer"
+            className="relative mt-auto -mx-8 -mb-8 overflow-hidden h-48"
             onMouseEnter={() => setIsImageHovered(true)}
             onMouseLeave={() => setIsImageHovered(false)}
           >
@@ -532,6 +532,58 @@ export default function Home() {
     <div className="space-y-0">
       {/* Hero Section (AI Day particle hero) */}
       <Hero ready={true} hideDecorations />
+
+      {/* Video Stitches Section */}
+      <section className="relative overflow-hidden bg-primary" style={{ height: '100vh' }}>
+        {/* Background video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/videostitches/towervideo.mp4" type="video/mp4" />
+        </video>
+
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-primary/60" />
+
+        {/* Gradient top fade (blends with hero above) */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary to-transparent pointer-events-none" />
+
+        {/* Gradient bottom fade (blends with section below) */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary to-transparent pointer-events-none" />
+
+        {/* Content overlay */}
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-6">
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-accent font-bold tracking-widest uppercase text-xs mb-4"
+          >
+            At Work
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-4xl md:text-6xl font-display font-bold leading-tight max-w-3xl"
+          >
+            Engineering the future, one system at a time.
+          </motion.h2>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mt-6 w-16 h-0.5 bg-accent origin-left"
+          />
+        </div>
+      </section>
 
       {/* === OLD HERO — commented out for potential restoration ===
       <section
@@ -839,6 +891,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Innovation Hub */}
+      <Showcase />
 
       {/* Featured Jobs */}
       <section className="py-24 bg-slate-50">

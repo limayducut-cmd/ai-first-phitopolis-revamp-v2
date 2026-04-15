@@ -5,7 +5,6 @@ import { Linkedin, ExternalLink, Award, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { TeamMember } from '../../types';
-import TextScramble from '../../components/TextScramble';
 import MagneticWrapper from '../../components/MagneticWrapper';
 
 // Fixed Type: Explicitly defining props interface and including key to resolve list rendering TS error
@@ -130,7 +129,7 @@ export default function TeamPage() {
             The Collective
           </span>
           <h1 className="text-5xl md:text-7xl font-display font-bold mt-4 mb-8 text-primary">
-            <TextScramble text="Meet the practitioners." />
+            Meet the practitioners.
           </h1>
           <p className="text-xl text-slate-600 font-light leading-relaxed">
             At Phitopolis, caliber is our only currency. We are a team of global technologists and entrepreneurs 

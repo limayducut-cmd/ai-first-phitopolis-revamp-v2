@@ -20,7 +20,7 @@ export const SERVICES: Service[] = [
     icon: <Cpu className="w-8 h-8 text-primary" />,
     features: ["Custom Algorithm Design", "Proof of Concept Building", "Performance Optimization"],
     image: "https://phitopolis.com/img/core-competencies/innovation.jpg",
-    story: "A Tier-1 trading firm's HFT pipeline was bottlenecked at 2ms end-to-end latency—unacceptable in a market where microseconds are alpha. We bypassed the Linux network stack entirely with DPDK kernel-bypass, implemented a custom lock-free SPSC ring buffer in C++, and deployed NUMA-aware memory allocation to eliminate cross-socket cache misses. Final result: 18μs median latency, P99 under 40μs—a 100x improvement that directly translated to measurable edge in the market."
+    story: "DPDK kernel-bypass + lock-free SPSC ring buffer in C++ + NUMA-aware allocation. Result: 18μs median latency, P99 <40μs — 100× improvement."
   },
   {
     type: ServiceType.DATA_SCIENCE,
@@ -29,7 +29,7 @@ export const SERVICES: Service[] = [
     icon: <Database className="w-8 h-8 text-primary" />,
     features: ["Predictive Analytics", "Natural Language Processing", "Quant Strategy Dev"],
     image: "https://phitopolis.com/img/core-competencies/technical-excellence.jpg",
-    story: "A global hedge fund needed to extract signal from 50,000+ financial research papers per quarter—an impossible manual task. We deployed a fine-tuned transformer pipeline with semantic chunking, domain-specific embeddings, and a custom vector store. The system auto-classifies, de-duplicates, and surfaces statistically significant alpha signals in real time. Analyst throughput increased 8x, and the fund identified 3 novel strategy themes within the first month of deployment."
+    story: "Fine-tuned transformer pipeline with domain embeddings over 50K+ papers/quarter. Auto-classifies and surfaces alpha signals in real time. Analyst throughput ↑8×."
   },
   {
     type: ServiceType.FULL_STACK,
@@ -38,7 +38,7 @@ export const SERVICES: Service[] = [
     icon: <Layout className="w-8 h-8 text-primary" />,
     features: ["High-Frequency Systems", "Cloud-Native Architecture", "Real-time Dashboards"],
     image: "https://phitopolis.com/img/core-competencies/proactive-communication.jpg",
-    story: "A prime brokerage needed to monitor 4M+ transactions/second across 12 asset classes with a legacy dashboard that refreshed every 30 seconds. We re-architected the entire stack: Kafka-backed event bus, Flink stream processor, Redis CRDT for conflict-free state, and a React frontend with binary WebSocket frames. The new system delivers sub-50ms UI refresh at peak load, handles 10x traffic spikes without degradation, and reduced operational incidents by 90%."
+    story: "Kafka event bus → Flink processor → Redis CRDT → React + binary WebSocket. Sub-50ms UI at 4M+ tx/sec. Operational incidents ↓90%."
   }
 ];
 
