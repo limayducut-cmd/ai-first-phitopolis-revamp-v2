@@ -122,25 +122,29 @@ const Header = () => {
     }
 
     const update = () => {
-      const section = document.getElementById('scroll-sequence-section');
-      if (!section) {
+      const seqSection = document.getElementById('scroll-sequence-section');
+      const headingSection = document.getElementById('parallax-heading');
+      if (!seqSection) {
         bg.style.opacity = '0';
         setDarkText(false);
         return;
       }
-      const rect = section.getBoundingClientRect();
-      const vh   = window.innerHeight;
+      const seqRect = seqSection.getBoundingClientRect();
+      const vh = window.innerHeight;
       // rect.bottom travels from ~vh (section bottom entering from below) to 0
       // (section fully scrolled past). Fade 0 → 1 as it approaches 0.
-      const t = Math.max(0, Math.min(1, 1 - rect.bottom / vh));
+      const t = Math.max(0, Math.min(1, 1 - seqRect.bottom / vh));
       bg.style.opacity = String(t);
 
-      // Dark text when: nav sits over the light sequence section AND the nav
-      // background is still largely transparent (t < 0.5). The 140 px
-      // threshold accounts for the spacing gap (mb-32 = 128 px) between
-      // the hero and the sequence so the switch happens as the hero
-      // scrolls away, not after the gap has fully passed.
-      const overLightArea = rect.top <= 140 && rect.bottom > 0;
+      // Dark text when the bottom edge of the navbar touches a white section.
+      // Navbar height is ~72px; trigger when section top scrolls above that line.
+      const navH = 72;
+      const overSeq = seqRect.top <= navH && seqRect.bottom > 0;
+      const headingRect = headingSection?.getBoundingClientRect();
+      const overHeading = headingRect
+        ? headingRect.top <= navH && headingRect.bottom > 0
+        : false;
+      const overLightArea = overSeq || overHeading;
       const next = overLightArea && t < 0.5;
       setDarkText(prev => (prev !== next ? next : prev));
     };

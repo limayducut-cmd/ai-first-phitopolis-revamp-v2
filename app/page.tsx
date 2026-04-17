@@ -805,7 +805,7 @@ const ParallaxHeading = () => {
   const y = useTransform(scrollYProgress, [0, 1], [120, -120]);
 
   return (
-    <div ref={ref} className="relative overflow-hidden bg-white pt-32 pb-10">
+    <div id="parallax-heading" ref={ref} className="relative overflow-hidden bg-white pt-32 pb-10">
       <motion.div style={{ y }} className="text-center">
         <h2 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-widest text-primary select-none">
           PH<span className="text-accent">IT</span>OPOLIS
