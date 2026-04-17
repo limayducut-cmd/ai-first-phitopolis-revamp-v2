@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValue, useSpring, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import MagneticWrapper from '../components/MagneticWrapper';
 import { ArrowRight, ChevronRight, Zap, Shield, TrendingUp, Hexagon, Circle, Triangle } from 'lucide-react';
 import { SERVICES } from '../constants.tsx';
@@ -365,11 +365,20 @@ interface HomeSvcCardProps {
 
 function HomeSvcCard({ service, i }: HomeSvcCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
   const [isImageHovered, setIsImageHovered] = useState(false);
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
   const rX = useSpring(rotateX, { stiffness: 280, damping: 28 });
   const rY = useSpring(rotateY, { stiffness: 280, damping: 28 });
+
+  // Parallax: shift the image as the card travels through the viewport so it
+  // scrolls slightly slower than the card itself.
+  const { scrollYProgress } = useScroll({
+    target: imageContainerRef,
+    offset: ['start end', 'end start'],
+  });
+  const imageY = useTransform(scrollYProgress, [0, 1], ['15%', '-15%']);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!cardRef.current) return;
@@ -424,15 +433,23 @@ function HomeSvcCard({ service, i }: HomeSvcCardProps) {
             ))}
           </ul>
           <div
+            ref={imageContainerRef}
             className="relative mt-auto -mx-8 -mb-8 overflow-hidden h-48"
             onMouseEnter={() => setIsImageHovered(true)}
             onMouseLeave={() => setIsImageHovered(false)}
           >
-            <img
-              src={images[i % 3]}
-              alt={service.title}
-              className={`w-full h-full object-cover transition-all duration-700 ${isImageHovered ? 'scale-110 grayscale' : 'scale-100 group-hover:scale-110'}`}
-            />
+            {/* Parallax wrapper — sized 140% of the container so the ±15%
+                translate stays within bounds and never reveals empty edges. */}
+            <motion.div
+              style={{ y: imageY, top: '-20%', bottom: '-20%' }}
+              className="absolute left-0 right-0"
+            >
+              <img
+                src={images[i % 3]}
+                alt={service.title}
+                className={`w-full h-full object-cover transition-all duration-700 ${isImageHovered ? 'scale-110 grayscale' : 'scale-100 group-hover:scale-110'}`}
+              />
+            </motion.div>
             <DataStreamOverlay story={service.story} isVisible={isImageHovered} />
           </div>
         </div>
@@ -763,6 +780,48 @@ const TOTAL_FRAMES = 151;
 const getFrameUrl = (n: number) =>
   `/seq/ezgif-frame-${String(n).padStart(3, '0')}.png`;
 
+const ParallaxHeading = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end start'],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [120, -120]);
+
+  return (
+    <div ref={ref} className="relative overflow-hidden bg-white pt-32 pb-10">
+      <motion.div style={{ y }} className="text-center">
+        <h2 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-widest text-primary select-none">
+          PH<span className="text-accent">IT</span>OPOLIS
+        </h2>
+        <div className="mx-auto mt-6 mb-4 w-12 h-0.5 bg-accent rounded-full" />
+        <p className="text-lg md:text-xl text-slate-400 tracking-wide">
+          Built for what's next
+        </p>
+      </motion.div>
+    </div>
+  );
+};
+
+const HeroWithRadius = () => {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+  const borderRadius = useTransform(scrollYProgress, [0, 1], [0, 164]);
+
+  return (
+    <motion.div
+      ref={heroRef}
+      className="overflow-hidden"
+      style={{ borderBottomLeftRadius: borderRadius, borderBottomRightRadius: borderRadius }}
+    >
+      <Hero ready={true} hideDecorations />
+    </motion.div>
+  );
+};
+
 const ScrollSequenceSection = () => {
   const containerRef    = useRef<HTMLDivElement>(null);
   const frameWrapperRef = useRef<HTMLDivElement>(null);
@@ -859,7 +918,7 @@ const ScrollSequenceSection = () => {
         const expandP   = Math.max(0, Math.min(1, progress / 0.4));
         const scale     = 0.75 + 0.25 * expandP;
         const radiusP   = Math.max(0, Math.min(1, (progress - 0.4) / 0.1));
-        const radius    = 48 * (1 - radiusP);
+        const radius    = 144 * (1 - radiusP);
         const parallaxY = releaseP * vh * 0.3;
         frameWrapperRef.current.style.transform    = `translateY(${parallaxY}px) scale(${scale})`;
         frameWrapperRef.current.style.borderRadius = `${radius}px ${radius}px 0 0`;
@@ -889,28 +948,34 @@ const ScrollSequenceSection = () => {
           style={{
             transform: 'scale(0.75)',
             transformOrigin: 'bottom center',
-            borderRadius: '48px 48px 0 0',
+            borderRadius: '144px 144px 0 0',
+            // Squircle / superellipse corners (Chrome 139+). Falls back to
+            // regular circular corners on browsers that don't support
+            // corner-shape yet — same border-radius, just sharper-looking.
+            ['cornerShape' as any]: 'squircle',
             willChange: 'transform, border-radius',
           }}
         >
           <canvas ref={canvasRef} className="w-full h-full" />
         </div>
-        <h2
+        <div
           ref={headingRef}
-          className="absolute inset-0 flex items-center justify-center text-center pointer-events-none"
-          style={{
-            opacity: 0,
-            fontFamily: "'Outfit', sans-serif",
-            fontSize: 'clamp(1.75rem, 4vw, 3.5rem)',
-            fontWeight: 700,
-            color: '#ffffff',
-            textShadow: '0 2px 32px rgba(0,0,0,0.6)',
-            padding: '0 1.5rem',
-            display: 'flex',
-          }}
+          className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-6"
+          style={{ opacity: 0 }}
         >
-          Making tomorrow&apos;s technology available today.
-        </h2>
+          <h2
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: 'clamp(1.75rem, 4vw, 3.5rem)',
+              fontWeight: 700,
+              color: '#ffffff',
+              textShadow: '0 2px 32px rgba(0,0,0,0.6)',
+            }}
+          >
+            Making tomorrow&apos;s technology<br />available today.
+          </h2>
+          <div className="mt-6 w-12 h-0.5 bg-accent rounded-full" />
+        </div>
       </div>
     </div>
   );
@@ -993,28 +1058,20 @@ export default function Home() {
   return (
     <div className="space-y-0">
       {/* Hero Section (AI Day particle hero) */}
-      <div className="mb-32">
-        <Hero ready={true} hideDecorations />
-      </div>
+      <HeroWithRadius />
+
+      {/* Parallax heading */}
+      <ParallaxHeading />
 
       {/* Scroll-to-play sequence */}
       <ScrollSequenceSection />
 
-      {/* Video Stitches Section */}
+      {/* === Video Stitches Section — commented out, may reuse on other section/page ===
       <section className="relative overflow-hidden bg-primary" style={{ height: '100vh' }}>
-        {/* Stitched background videos — crossfade on end */}
         <StitchedVideoBackground />
-
-        {/* Dark overlay */}
         <div className="absolute inset-0 bg-primary/60" />
-
-        {/* Gradient top fade (blends with hero above) */}
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary to-transparent pointer-events-none" />
-
-        {/* Gradient bottom fade (blends with section below) */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary to-transparent pointer-events-none" />
-
-        {/* Content overlay */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-6">
           <motion.h2
             initial={{ opacity: 0, y: 24 }}
@@ -1034,6 +1091,7 @@ export default function Home() {
           />
         </div>
       </section>
+      === */}
 
       {/* === OLD HERO — commented out for potential restoration ===
       <section
@@ -1111,10 +1169,10 @@ export default function Home() {
       </section>
       === END OLD HERO === */}
 
-      {/* Services Summary */}
+      {/* === Services Summary (card layout) — commented out, may reuse on other section/page ===
       <section className="py-24 bg-white relative">
         <div className="container mx-auto px-6">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -1126,7 +1184,7 @@ export default function Home() {
               <h2 className="text-4xl md:text-5xl font-display font-bold mt-2 text-primary">Services we offer</h2>
             </div>
           </motion.div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
             {SERVICES.map((service, i) => (
               <HomeSvcCard key={i} service={service} i={i} />
@@ -1134,6 +1192,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      === */}
 
       {/* Sticky Services Alternative Layout */}
       <StickyServicesSection />
