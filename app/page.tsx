@@ -819,7 +819,7 @@ const ParallaxHeading = () => {
   );
 };
 
-const HeroWithRadius = ({ onReady }: { onReady?: () => void }) => {
+const HeroWithRadius = ({ onReady, ready }: { onReady?: () => void; ready?: boolean }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -833,7 +833,7 @@ const HeroWithRadius = ({ onReady }: { onReady?: () => void }) => {
       className="overflow-hidden"
       style={{ borderBottomLeftRadius: borderRadius, borderBottomRightRadius: borderRadius }}
     >
-      <Hero ready={true} hideDecorations onReady={onReady} />
+      <Hero ready={ready ?? false} hideDecorations onReady={onReady} />
     </motion.div>
   );
 };
@@ -1009,6 +1009,15 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [careers, setCareers] = useState<Career[]>([]);
   const [videoReady, setVideoReady] = useState(false);
+  const [loadingDone, setLoadingDone] = useState(false);
+
+  // Listen for loading screen dismissal so Hero animation starts at the right time
+  useEffect(() => {
+    if ((window as any).__homeAssetsReady) { setLoadingDone(true); return; }
+    const onDone = () => setLoadingDone(true);
+    window.addEventListener('home-assets-ready', onDone, { once: true });
+    return () => window.removeEventListener('home-assets-ready', onDone);
+  }, []);
 
   // Track asset loading — report progress and dispatch event when all ready
   // 1 hero video + 151 seq frames + 3 service videos = 155 total
@@ -1102,7 +1111,7 @@ export default function Home() {
   return (
     <div className="space-y-0">
       {/* Hero Section (AI Day particle hero) */}
-      <HeroWithRadius onReady={reportAssetLoaded} />
+      <HeroWithRadius onReady={reportAssetLoaded} ready={loadingDone} />
 
       {/* Parallax heading */}
       <ParallaxHeading />
