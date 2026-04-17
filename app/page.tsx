@@ -536,7 +536,7 @@ const NAV_H  = '4.5rem';   // ~72px fixed header
 const VPAD   = '1rem';     // padding above and below the box
 const BOX_H  = `calc(100vh - ${NAV_H} - ${VPAD} * 2)`;
 
-function StickyServicesSection() {
+function StickyServicesSection({ onReady }: { onReady?: () => void }) {
   const [activeService, setActiveService] = useState(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -562,6 +562,22 @@ function StickyServicesSection() {
   useEffect(() => {
     videoRefs.current.forEach(v => { if (v) v.playbackRate = 0.35; });
   }, []);
+
+  // Track each service video loaded
+  useEffect(() => {
+    if (!onReady) return;
+    let stale = false;
+    const report = () => { if (!stale) onReady(); };
+    const videos = videoRefs.current.filter(Boolean) as HTMLVideoElement[];
+    const listeners: Array<[HTMLVideoElement, () => void]> = [];
+    videos.forEach(v => {
+      if (v.readyState >= 4) { report(); return; }
+      const handler = () => report();
+      v.addEventListener('canplaythrough', handler, { once: true });
+      listeners.push([v, handler]);
+    });
+    return () => { stale = true; listeners.forEach(([v, h]) => v.removeEventListener('canplaythrough', h)); };
+  }, [onReady]);
 
   // Pause inactive, play active
   useEffect(() => {
@@ -803,7 +819,7 @@ const ParallaxHeading = () => {
   );
 };
 
-const HeroWithRadius = () => {
+const HeroWithRadius = ({ onReady }: { onReady?: () => void }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -817,12 +833,12 @@ const HeroWithRadius = () => {
       className="overflow-hidden"
       style={{ borderBottomLeftRadius: borderRadius, borderBottomRightRadius: borderRadius }}
     >
-      <Hero ready={true} hideDecorations />
+      <Hero ready={true} hideDecorations onReady={onReady} />
     </motion.div>
   );
 };
 
-const ScrollSequenceSection = () => {
+const ScrollSequenceSection = ({ onReady }: { onReady?: () => void }) => {
   const containerRef    = useRef<HTMLDivElement>(null);
   const frameWrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef       = useRef<HTMLCanvasElement>(null);
@@ -877,17 +893,23 @@ const ScrollSequenceSection = () => {
 
   // Preload all frames; render frame 0 as soon as it's ready
   useEffect(() => {
+    let stale = false;
     const images: HTMLImageElement[] = [];
     for (let i = 1; i <= TOTAL_FRAMES; i++) {
       const img = new Image();
       img.src = getFrameUrl(i);
-      if (i === 1) {
-        img.onload = () => drawFrame(0);
-      }
+      const onLoad = () => {
+        if (stale) return;
+        if (i === 1) drawFrame(0);
+        if (onReady) onReady();
+      };
+      img.onload = onLoad;
+      img.onerror = onLoad;
       images.push(img);
     }
     imagesRef.current = images;
-  }, [drawFrame]);
+    return () => { stale = true; };
+  }, [drawFrame, onReady]);
 
   // Advance frame based on scroll position
   useEffect(() => {
@@ -988,6 +1010,28 @@ export default function Home() {
   const [careers, setCareers] = useState<Career[]>([]);
   const [videoReady, setVideoReady] = useState(false);
 
+  // Track asset loading — report progress and dispatch event when all ready
+  // 1 hero video + 151 seq frames + 3 service videos = 155 total
+  const TOTAL_ASSETS = 1 + TOTAL_FRAMES + SERVICE_VIDEOS.length;
+  const loadedRef = useRef(0);
+  const firedRef = useRef(false);
+  // Reset on mount (handles Strict Mode remount and route re-entry)
+  useEffect(() => {
+    loadedRef.current = 0;
+    firedRef.current = false;
+    (window as any).__homeAssetsReady = false;
+  }, []);
+  const reportAssetLoaded = useCallback(() => {
+    loadedRef.current++;
+    const pct = Math.min(100, Math.round((loadedRef.current / TOTAL_ASSETS) * 100));
+    window.dispatchEvent(new CustomEvent('home-assets-progress', { detail: pct }));
+    if (!firedRef.current && loadedRef.current >= TOTAL_ASSETS) {
+      firedRef.current = true;
+      (window as any).__homeAssetsReady = true;
+      window.dispatchEvent(new CustomEvent('home-assets-ready'));
+    }
+  }, [TOTAL_ASSETS]);
+
   useEffect(() => {
     document.title = 'Phitopolis | AI-First Engineering Solutions';
   }, []);
@@ -1058,13 +1102,13 @@ export default function Home() {
   return (
     <div className="space-y-0">
       {/* Hero Section (AI Day particle hero) */}
-      <HeroWithRadius />
+      <HeroWithRadius onReady={reportAssetLoaded} />
 
       {/* Parallax heading */}
       <ParallaxHeading />
 
       {/* Scroll-to-play sequence */}
-      <ScrollSequenceSection />
+      <ScrollSequenceSection onReady={reportAssetLoaded} />
 
       {/* === Video Stitches Section — commented out, may reuse on other section/page ===
       <section className="relative overflow-hidden bg-primary" style={{ height: '100vh' }}>
@@ -1195,7 +1239,7 @@ export default function Home() {
       === */}
 
       {/* Sticky Services Alternative Layout */}
-      <StickyServicesSection />
+      <StickyServicesSection onReady={reportAssetLoaded} />
 
       {/* Trust / Credentials Section */}
       <section className="py-24 bg-primary relative overflow-hidden text-white">

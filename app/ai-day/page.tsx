@@ -1665,7 +1665,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
 };
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
-export const Hero = ({ ready, hideDecorations }: { ready: boolean; hideDecorations?: boolean }) => {
+export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hideDecorations?: boolean; onReady?: () => void }) => {
   const containerRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
@@ -1687,6 +1687,16 @@ export const Hero = ({ ready, hideDecorations }: { ready: boolean; hideDecoratio
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
   }, [mouseX, mouseY]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !onReady) return;
+    let stale = false;
+    const report = () => { if (!stale) onReady(); };
+    if (v.readyState >= 4) { report(); return; }
+    v.addEventListener('canplaythrough', report, { once: true });
+    return () => { stale = true; v.removeEventListener('canplaythrough', report); };
+  }, [onReady]);
 
   return (
     <section id="sec-hero" ref={containerRef} style={{ height: '100vh', background: C.charcoal, position: 'relative', overflow: 'hidden' }}>

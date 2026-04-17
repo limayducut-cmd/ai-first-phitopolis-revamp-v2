@@ -20,41 +20,52 @@ import AIDayPage from './app/ai-day/page.tsx';
 // Updated to use the requested external logo image
 const LOGO_PATH = 'https://phitopolis.com/img/phitopolis-logo.png';
 
-const LoadingScreen = ({ isVisible }: { isVisible: boolean }) => (
-  <AnimatePresence>
-    {isVisible && (
-      <motion.div
-        initial={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5, ease: 'easeInOut' }}
-        className="fixed inset-0 z-[200] bg-primary flex flex-col items-center justify-center gap-5"
-      >
-        <div className="relative flex items-center justify-center">
-          {/* Rotating glow ring */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="absolute w-24 h-24 border-t-2 border-r-2 border-accent/40 rounded-full"
-          />
-          <motion.div
-            animate={{ rotate: -360 }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="absolute w-28 h-28 border-b-2 border-l-2 border-white/10 rounded-full"
-          />
+const LoadingScreen = ({ isVisible }: { isVisible: boolean }) => {
+  const [pct, setPct] = useState(0);
 
-          <motion.img
-            src="/phitopolis_logo_white.svg"
-            alt="Phitopolis"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="h-10 w-auto relative z-10"
-          />
-        </div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
+  useEffect(() => {
+    const onProgress = (e: Event) => setPct((e as CustomEvent).detail);
+    window.addEventListener('home-assets-progress', onProgress);
+    return () => window.removeEventListener('home-assets-progress', onProgress);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          className="fixed inset-0 z-[200] bg-primary flex flex-col items-center justify-center gap-5"
+        >
+          <div className="relative flex items-center justify-center">
+            {/* Rotating glow ring */}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute w-24 h-24 border-t-2 border-r-2 border-accent/40 rounded-full"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="absolute w-28 h-28 border-b-2 border-l-2 border-white/10 rounded-full"
+            />
+
+            <motion.img
+              src="/phitopolis_logo_white.svg"
+              alt="Phitopolis"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="h-10 w-auto relative z-10"
+            />
+          </div>
+          <span className="text-white/60 text-sm font-mono tracking-wider">{pct}%</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 /**
  * ScrollToTop Component: Resets scroll position on route change
@@ -317,8 +328,32 @@ export default function App() {
 
   useEffect(() => {
     if (isAIDayRoute) return;
-    const t = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(t);
+    const isHome = window.location.pathname === '/';
+    // Non-home routes: short splash then show page
+    if (!isHome) {
+      const t = setTimeout(() => setIsLoading(false), 1000);
+      return () => clearTimeout(t);
+    }
+    // Home route: wait for all assets (hero video + seq frames + service videos)
+    let done = false;
+    let assetsReady = (window as any).__homeAssetsReady === true;
+    let minTimePassed = false;
+    const finish = () => {
+      if (!done && assetsReady && minTimePassed) { done = true; setIsLoading(false); }
+    };
+    // Min 1s so the splash doesn't flash
+    const minTimer = setTimeout(() => { minTimePassed = true; finish(); }, 1000);
+    // Safety fallback — if assets never load (e.g. broken network), don't trap user forever
+    const maxTimer = setTimeout(() => { done = true; setIsLoading(false); }, 60000);
+    const onReady = () => { assetsReady = true; finish(); };
+    window.addEventListener('home-assets-ready', onReady, { once: true });
+    // If assets were already loaded (cached), try to finish now
+    if (assetsReady) finish();
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(maxTimer);
+      window.removeEventListener('home-assets-ready', onReady);
+    };
   }, []);
 
   useEffect(() => {
