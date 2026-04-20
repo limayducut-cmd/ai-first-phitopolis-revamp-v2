@@ -591,30 +591,7 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
 
   return (
     <>
-      {/* ── Section 1: Header ─────────────────────────────────────────── */}
-      <section
-        className="h-screen bg-white flex flex-col justify-center px-6"
-        style={{ paddingTop: NAV_H }}
-      >
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.21, 1.02, 0.47, 0.98] }}
-          >
-            <span className="text-accent font-bold tracking-widest uppercase text-xs">Our Expertise</span>
-            <h2 className="text-6xl md:text-8xl font-display font-bold mt-4 text-primary leading-none">
-              Services<br />we offer
-            </h2>
-            <p className="mt-6 text-slate-400 text-base max-w-xs leading-relaxed">
-              Scroll to explore how we deliver results for our clients.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Section 2: tall scroll space + sticky viewer ───────────────── */}
+      {/* ── Sticky scroll space + viewer ───────────────────────────────── */}
       {/* Outer: SERVICES.length * 100vh gives scroll room per service */}
       <div
         ref={sectionRef}
@@ -697,15 +674,23 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
               {/* ── Right: animated service content ── */}
               <div className="flex-1 flex flex-col justify-between py-10 overflow-hidden">
 
-                {/* Top: counter */}
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-[11px] text-slate-300 tracking-widest select-none">
-                    0{activeService + 1}
-                  </span>
-                  <div className="flex-1 h-px bg-slate-100" />
-                  <span className="font-mono text-[11px] text-slate-300 tracking-widest select-none">
-                    0{SERVICES.length}
-                  </span>
+                {/* Top: section heading + counter */}
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-accent font-bold tracking-widest uppercase text-xs">Our Expertise</span>
+                    <h2 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mt-2 text-primary leading-none">
+                      Services<br />we offer
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-3 pt-1">
+                    <span className="font-mono text-[11px] text-slate-300 tracking-widest select-none">
+                      0{activeService + 1}
+                    </span>
+                    <div className="flex-1 h-px bg-slate-100" />
+                    <span className="font-mono text-[11px] text-slate-300 tracking-widest select-none">
+                      0{SERVICES.length}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Middle: animated content block */}
