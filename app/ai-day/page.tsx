@@ -3524,12 +3524,12 @@ export const Showcase = () => {
 
   if (isMobile) {
     return (
-      <section id="sec-showcase" style={{ background: C.base, height: '100vh', padding: 'clamp(80px, 10vw, 120px) 24px', position: 'relative', overflow: 'hidden' }}>
+      <section id="sec-showcase" style={{ background: C.charcoal, height: '100vh', padding: 'clamp(80px, 10vw, 120px) 24px', position: 'relative', overflow: 'hidden' }}>
         <SectionTag name="showcase" />
         <div ref={leftRef}>
           <div style={{ marginBottom: 52 }}>
             <Badge n="06" label="Innovation Hub" />
-            <SplitHeading outline="ai projects" solid="at work" inView={inView} color={C.charcoal} fontSize="clamp(2.8rem, 8vw, 4.5rem)" />
+            <SplitHeading outline="ai projects" solid="at work" inView={inView} color="#ffffff" fontSize="clamp(2.8rem, 8vw, 4.5rem)" />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
             {CARDS.map((card, i) => (
@@ -3544,17 +3544,17 @@ export const Showcase = () => {
   }
 
   return (
-    <section id="sec-showcase" ref={sectionRef} style={{ background: C.base, height: `${(CARDS.length + 1.5) * 100}vh`, position: 'relative' }}>
+    <section id="sec-showcase" ref={sectionRef} style={{ background: C.charcoal, height: `${(CARDS.length + 1.5) * 100}vh`, position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
         <SectionTag name="showcase" />
 
         {/* ── Left panel: heading + card meta + progress ── */}
         <motion.div ref={leftRef}
           initial={{ opacity: 0, x: -24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.7 }}
-          style={{ width: 'clamp(280px, 34vw, 440px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 48px', borderRight: '1px solid rgba(0,0,0,0.06)', position: 'relative', zIndex: 2 }}
+          style={{ width: 'clamp(280px, 34vw, 440px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 48px', borderRight: '1px solid rgba(255,255,255,0.1)', position: 'relative', zIndex: 2 }}
         >
           <Badge n="06" label="Innovation Hub" />
-          <SplitHeading outline="ai projects" solid="at work" inView={inView} color={C.charcoal} fontSize="clamp(1.9rem, 2.8vw, 3rem)" />
+          <SplitHeading outline="ai projects" solid="at work" inView={inView} color="#ffffff" fontSize="clamp(1.9rem, 2.8vw, 3rem)" />
 
           {/* Current card details */}
           <AnimatePresence mode="wait">
@@ -3566,10 +3566,10 @@ export const Showcase = () => {
               <span style={{ display: 'inline-block', padding: '5px 14px', borderRadius: 100, background: `${activeCard.color}18`, color: activeCard.color, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
                 {activeCard.tag}
               </span>
-              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1rem, 1.5vw, 1.45rem)', color: C.charcoal, lineHeight: 1.2, marginBottom: 12, letterSpacing: '-0.015em' }}>
+              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1rem, 1.5vw, 1.45rem)', color: '#ffffff', lineHeight: 1.2, marginBottom: 12, letterSpacing: '-0.015em' }}>
                 {activeCard.label}
               </h3>
-              <p style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', lineHeight: 1.75 }}>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', lineHeight: 1.75 }}>
                 {activeCard.desc}
               </p>
             </motion.div>
@@ -3578,21 +3578,21 @@ export const Showcase = () => {
           {/* Counter + dots + scroll bar */}
           <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2rem', color: C.charcoal, letterSpacing: '-0.04em', lineHeight: 1 }}>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2rem', color: '#ffffff', letterSpacing: '-0.04em', lineHeight: 1 }}>
                 {String(activeIdx + 1).padStart(2, '0')}
               </span>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 400, fontSize: '1rem', color: C.muted }}>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 400, fontSize: '1rem', color: 'rgba(255,255,255,0.4)' }}>
                 / {String(CARDS.length).padStart(2, '0')}
               </span>
             </div>
             <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
               {CARDS.map((_, i) => (
-                <div key={i} style={{ height: 4, borderRadius: 2, background: i === activeIdx ? activeCard.color : 'rgba(0,0,0,0.12)', transition: 'width 0.35s ease, background 0.35s ease', width: i === activeIdx ? 28 : 6 }} />
+                <div key={i} style={{ height: 4, borderRadius: 2, background: i === activeIdx ? activeCard.color : 'rgba(255,255,255,0.15)', transition: 'width 0.35s ease, background 0.35s ease', width: i === activeIdx ? 28 : 6 }} />
               ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>scroll to explore</span>
-              <div style={{ flex: 1, height: 1.5, background: 'rgba(0,0,0,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>scroll to explore</span>
+              <div style={{ flex: 1, height: 1.5, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
                 <motion.div style={{ height: '100%', background: C.accent, scaleX: scrollYProgress, transformOrigin: 'left' }} />
               </div>
             </div>

@@ -1250,212 +1250,49 @@ export default function Home() {
       {/* Sticky Services Alternative Layout */}
       <StickyServicesSection onReady={reportAssetLoaded} />
 
-      {/* Trust / Credentials Section */}
+      {/* === Trust / Credentials Section — commented out, preserved for later use ===
       <section className="py-24 bg-primary relative overflow-hidden text-white">
-        {/* Animated background elements */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Large watermark background text with pulsing outline */}
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-            {/* Glowing outline layer */}
             <motion.div
               className="absolute text-[6rem] sm:text-[8rem] md:text-[12rem] lg:text-[18rem] xl:text-[24rem] 2xl:text-[28rem] font-display font-bold whitespace-nowrap select-none leading-none tracking-tight"
-              style={{
-                WebkitTextStroke: '1px rgba(255,199,44,0.1)',
-                WebkitTextFillColor: 'transparent',
-              }}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              animate={{
-                WebkitTextStroke: [
-                  '1px rgba(255,199,44,0.05)',
-                  '2px rgba(255,199,44,0.15)',
-                  '1px rgba(255,199,44,0.05)',
-                ],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              7 YEARS
-            </motion.div>
-            {/* Main text with subtle pulse */}
+              style={{ WebkitTextStroke: '1px rgba(255,199,44,0.1)', WebkitTextFillColor: 'transparent' }}
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              animate={{ WebkitTextStroke: ['1px rgba(255,199,44,0.05)', '2px rgba(255,199,44,0.15)', '1px rgba(255,199,44,0.05)'] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >7 YEARS</motion.div>
             <motion.div
               className="text-[6rem] sm:text-[8rem] md:text-[12rem] lg:text-[18rem] xl:text-[24rem] 2xl:text-[28rem] font-display font-bold text-white/[0.03] whitespace-nowrap select-none leading-none tracking-tight"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-              animate={{
-                opacity: [0.03, 0.045, 0.03],
-              }}
-              style={{
-                textShadow: '0 0 80px rgba(255,199,44,0.05)',
-              }}
-            >
-              7 YEARS
-            </motion.div>
-            {/* Ambient glow behind text */}
-            <motion.div
-              className="absolute w-full h-full"
-              style={{
-                background: 'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,199,44,0.03) 0%, transparent 70%)',
-              }}
-              animate={{
-                opacity: [0.5, 1, 0.5],
-                scale: [1, 1.05, 1],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+              initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
+              transition={{ duration: 1.5, ease: "easeOut" }} animate={{ opacity: [0.03, 0.045, 0.03] }}
+              style={{ textShadow: '0 0 80px rgba(255,199,44,0.05)' }}
+            >7 YEARS</motion.div>
+            <motion.div className="absolute w-full h-full"
+              style={{ background: 'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,199,44,0.03) 0%, transparent 70%)' }}
+              animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.05, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             />
           </div>
           <div className="absolute inset-0 flex items-end justify-center overflow-hidden pb-4 sm:pb-6 md:pb-8">
-            <motion.div
-              className="text-[0.7rem] sm:text-[1rem] md:text-[1.5rem] lg:text-[2rem] xl:text-[2.5rem] 2xl:text-[3rem] font-display font-bold text-white/[0.04] whitespace-nowrap select-none uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em]"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+            <motion.div className="text-[0.7rem] sm:text-[1rem] md:text-[1.5rem] lg:text-[2rem] xl:text-[2.5rem] 2xl:text-[3rem] font-display font-bold text-white/[0.04] whitespace-nowrap select-none uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em]"
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-            >
-              Building Tomorrow's Technology
-            </motion.div>
+            >Building Tomorrow's Technology</motion.div>
           </div>
-
-          {/* Animated gradient orbs */}
-          <motion.div
-            className="absolute w-[500px] h-[500px] rounded-full"
-            style={{
-              background: 'radial-gradient(circle, rgba(255,199,44,0.1) 0%, transparent 70%)',
-              filter: 'blur(80px)',
-              left: '-10%',
-              top: '20%',
-            }}
-            animate={{
-              x: [0, 50, 0],
-              y: [0, -30, 0],
-            }}
-            transition={{
-              duration: 15,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
+          <motion.div className="absolute w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(255,199,44,0.1) 0%, transparent 70%)', filter: 'blur(80px)', left: '-10%', top: '20%' }}
+            animate={{ x: [0, 50, 0], y: [0, -30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
           />
-          <motion.div
-            className="absolute w-[400px] h-[400px] rounded-full"
-            style={{
-              background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)',
-              filter: 'blur(60px)',
-              right: '-5%',
-              bottom: '10%',
-            }}
-            animate={{
-              x: [0, -40, 0],
-              y: [0, 40, 0],
-            }}
-            transition={{
-              duration: 18,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
+          <motion.div className="absolute w-[400px] h-[400px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)', filter: 'blur(60px)', right: '-5%', bottom: '10%' }}
+            animate={{ x: [0, -40, 0], y: [0, 40, 0] }} transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
           />
-
-          {/* Floating geometric shapes */}
           <PractitionersFloatingShapes />
-
-          {/* Subtle grid overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)
-              `,
-              backgroundSize: '80px 80px',
-            }}
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '80px 80px' }}
           />
-        </div>
-
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="space-y-8"
-            >
-              <h2 className="text-4xl md:text-5xl font-display font-bold">Built by practitioners, for practitioners.</h2>
-              <p className="text-slate-200 text-lg">
-                Our leadership team brings decades of experience from Morgan Stanley, JPMorgan, and Deutsche Bank.
-                We understand the rigors of high-frequency, data-intensive environments.
-              </p>
-              <Link to="/about" className="inline-flex items-center text-accent font-bold hover:underline group">
-                Our Story <ArrowRight size={18} className="ml-2 group-hover:translate-x-2 transition-transform" />
-              </Link>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="bg-white/5 p-8 rounded-3xl border border-white/10 relative overflow-hidden shadow-2xl backdrop-blur-sm group"
-            >
-              {/* Animated corner glow */}
-              <motion.div
-                className="absolute top-0 right-0 w-32 h-32 bg-accent/20 blur-3xl rounded-full"
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.2, 0.4, 0.2],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/10 blur-2xl rounded-full"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.1, 0.3, 0.1],
-                }}
-                transition={{
-                  duration: 5,
-                  delay: 1,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              <div className="space-y-4 relative z-10">
-                <CredentialCard
-                  iconType="zap"
-                  title="Ultra Low Latency"
-                  description="Sub-microsecond execution systems"
-                  index={0}
-                />
-                <CredentialCard
-                  iconType="shield"
-                  title="Enterprise Security"
-                  description="Military grade encryption standards"
-                  index={1}
-                />
-                <CredentialCard
-                  iconType="trending"
-                  title="Scalable Alpha"
-                  description="Statistical arbitrage & ML strategy"
-                  index={2}
-                />
-              </div>
-            </motion.div>
-          </div>
         </div>
       </section>
+      === */}
 
       {/* Innovation Hub */}
       <Showcase />
