@@ -1198,7 +1198,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
     const LOGO_SIZE = Math.min(480, Math.max(260, window.innerWidth * 0.32));
 
     // ── Idle explosion state ──
-    const IDLE_TIMEOUT = 3000;          // ms before first idle explosion
+    const IDLE_TIMEOUT = 10000;          // ms before first idle explosion
     const EXPLODE_DURATION = 1800;      // ms for explosion outward
     const EXPLODE_HOLD = 1200;          // ms to hold scattered
     const REFORM_DURATION = 2000;       // ms for particles to reform
@@ -1340,8 +1340,8 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       shuffle(edgePixels);
       shuffle(interiorPixels);
-      const maxParticles = 1400;
-      const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.7));
+      const maxParticles = 1600;
+      const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.8));
       const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
       const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
 
@@ -1349,7 +1349,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       const cw = canvas.offsetWidth;
       const ch = canvas.offsetHeight;
       const ox = (cw - w) / 2;
-      const oy = (ch - h) / 2;
+      const oy = (ch - h) / 2 - ch * 0.06;
 
       particles = selected.map((p) => {
         // Each particle starts at its scatter position and flies to the logo on load
@@ -1750,7 +1750,7 @@ export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hide
         >
           <source src="/seamless-tech-loop.mp4" type="video/mp4" />
         </video>
-        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${C.charcoal}cc 0%, transparent 30%, transparent 70%, ${C.charcoal} 100%)` }} />
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${C.charcoal}cc 0%, transparent 30%, transparent 55%, ${C.charcoal}cc 80%, ${C.charcoal} 100%)` }} />
       </motion.div>
 
       {/* Canvas particle network */}
@@ -1783,18 +1783,6 @@ export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hide
           phitopolis
         </motion.div>
       )}
-
-      {/* Slogan — directly below P logo */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.8 }}
-        style={{ position: 'absolute', top: '72%', left: '50%', transform: 'translateX(-50%)', zIndex: 10, textAlign: 'center' }}
-      >
-        <p style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(1.1rem, 2vw, 1.5rem)', fontWeight: 500, letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-          Making tomorrow&apos;s technology, available today.
-        </p>
-      </motion.div>
 
       {/* Scroll cue — bottom right */}
       <motion.div

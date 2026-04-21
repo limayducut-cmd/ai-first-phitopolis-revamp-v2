@@ -801,14 +801,24 @@ const HeroWithRadius = ({ onReady, ready }: { onReady?: () => void; ready?: bool
     offset: ['start start', 'end start'],
   });
   const borderRadius = useTransform(scrollYProgress, [0, 1], [0, 164]);
+  const headingY = useTransform(scrollYProgress, [0, 1], ['0%', '-75%']);
 
   return (
     <motion.div
       ref={heroRef}
-      className="overflow-hidden"
+      className="overflow-hidden relative"
       style={{ borderBottomLeftRadius: borderRadius, borderBottomRightRadius: borderRadius }}
     >
       <Hero ready={ready ?? false} hideDecorations onReady={onReady} />
+      <motion.h1
+        initial={{ opacity: 0, y: 30 }}
+        animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+        transition={{ delay: 3.2, duration: 1.2, ease: 'easeOut' }}
+        className="absolute bottom-10 left-0 right-0 z-10 text-center"
+        style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 500, letterSpacing: '0.04em', margin: 0, y: headingY }}
+      >
+        Making tomorrow&apos;s technology<br /><span style={{ color: '#FFC72C' }}>available today.</span>
+      </motion.h1>
     </motion.div>
   );
 };
