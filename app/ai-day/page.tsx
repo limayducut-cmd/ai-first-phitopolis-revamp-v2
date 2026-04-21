@@ -1194,11 +1194,11 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
     let neighborPairs: [number, number][] = []; // precomputed pairs of logo-adjacent particles
     let assembled = false;
     const ASSEMBLE_DURATION = 2200; // ms for particles to reach targets
-    const LOGO_CONNECT_DIST = 12;   // px between target positions to be considered neighbors
+    const LOGO_CONNECT_DIST = 10;   // px between target positions to be considered neighbors
     const LOGO_SIZE = Math.min(480, Math.max(260, window.innerWidth * 0.32));
 
     // ── Idle explosion state ──
-    const IDLE_TIMEOUT = 5000;          // ms before first idle explosion
+    const IDLE_TIMEOUT = 3000;          // ms before first idle explosion
     const EXPLODE_DURATION = 1800;      // ms for explosion outward
     const EXPLODE_HOLD = 1200;          // ms to hold scattered
     const REFORM_DURATION = 2000;       // ms for particles to reform
@@ -1259,12 +1259,18 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       return clusters;
     };
 
+    // Click repulse state
+    let clickRepulse: { x: number; y: number; time: number } | null = null;
+    const CLICK_REPULSE_DURATION = 400; // ms
+    const CLICK_REPULSE_RADIUS = 160;   // px
+
     // Click handler: explode cluster at click position (concurrent with existing explosions)
     const handleClick = (e: MouseEvent) => {
       if (!assembled || particles.length === 0) return;
       const rect = canvas.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
+      clickRepulse = { x: cx, y: cy, time: performance.now() };
       const cluster = buildClusterAt(cx, cy, CLUSTER_RADIUS);
       if (cluster.size < 5) return; // ignore clicks far from logo
       explosions.push({
@@ -1319,7 +1325,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
 
       // Also sample some interior points for density
       const interiorPixels: { x: number; y: number; isGold: boolean }[] = [];
-      const interiorStep = 5;
+      const interiorStep = 4;
       for (let y = 0; y < h; y += interiorStep) {
         for (let x = 0; x < w; x += interiorStep) {
           const idx = (y * w + x) * 4;
@@ -1334,7 +1340,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       shuffle(edgePixels);
       shuffle(interiorPixels);
-      const maxParticles = 700;
+      const maxParticles = 1400;
       const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.7));
       const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
       const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
@@ -1435,10 +1441,9 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       }
 
       // ── Idle explosion detection ──
-      // Detect mouse movement — cancel non-click explosions
+      // Detect mouse movement — reset idle timer but let active explosions finish
       if (Math.abs(mouse.x - prevMouseX) > 2 || Math.abs(mouse.y - prevMouseY) > 2 || scroll > 0.01) {
         lastInteractionRef.current = now;
-        explosions = explosions.filter(ex => ex.fromClick);
       }
       prevMouseX = mouse.x;
       prevMouseY = mouse.y;
@@ -1560,17 +1565,31 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
           p.vx += (goalX - p.x) * springForce;
           p.vy += (goalY - p.y) * springForce;
 
-          // Cursor attraction (magnet) — disabled while any explosion is active
-          if (explosions.length === 0) {
-            const dx = mouse.x - p.x;
-            const dy = mouse.y - p.y;
-            const d2 = dx * dx + dy * dy;
-            const magnetRadius = 120;
-            if (d2 < magnetRadius * magnetRadius && d2 > 0) {
-              const d = Math.sqrt(d2);
-              const f = (magnetRadius - d) / magnetRadius;
-              p.vx += (dx / d) * f * 3.5;
-              p.vy += (dy / d) * f * 3.5;
+          if (!allActiveIndices.has(pi)) {
+            // Click repulse — briefly push particles away from click point
+            if (clickRepulse && now - clickRepulse.time < CLICK_REPULSE_DURATION) {
+              const dx = p.x - clickRepulse.x;
+              const dy = p.y - clickRepulse.y;
+              const d2 = dx * dx + dy * dy;
+              if (d2 < CLICK_REPULSE_RADIUS * CLICK_REPULSE_RADIUS && d2 > 0) {
+                const d = Math.sqrt(d2);
+                const fade = 1 - (now - clickRepulse.time) / CLICK_REPULSE_DURATION;
+                const f = (CLICK_REPULSE_RADIUS - d) / CLICK_REPULSE_RADIUS;
+                p.vx += (dx / d) * f * fade * 5;
+                p.vy += (dy / d) * f * fade * 5;
+              }
+            } else {
+              // Normal cursor attraction (magnet)
+              const dx = mouse.x - p.x;
+              const dy = mouse.y - p.y;
+              const d2 = dx * dx + dy * dy;
+              const magnetRadius = 120;
+              if (d2 < magnetRadius * magnetRadius && d2 > 0) {
+                const d = Math.sqrt(d2);
+                const f = (magnetRadius - d) / magnetRadius;
+                p.vx += (dx / d) * f * 3.5;
+                p.vy += (dy / d) * f * 3.5;
+              }
             }
           }
 
@@ -1596,27 +1615,27 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
           if (arrivalA < 0.02) continue;
           const tdx = pi.tx - pj.tx, tdy = pi.ty - pj.ty;
           const tDist = Math.sqrt(tdx * tdx + tdy * tdy);
-          const alpha = arrivalA * logoFade * (1 - tDist / LOGO_CONNECT_DIST) * 0.42;
+          const alpha = arrivalA * logoFade * (1 - tDist / LOGO_CONNECT_DIST) * 0.28;
           if (alpha < 0.01) continue;
           ctx.beginPath();
           ctx.moveTo(pi.x, pi.y);
           ctx.lineTo(pj.x, pj.y);
           ctx.strokeStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
-          ctx.lineWidth = 0.4;
+          ctx.lineWidth = 0.3;
           ctx.stroke();
         }
       }
 
       // Draw connections: P particles ↔ background dots (on scroll AND during initial load)
       if (bgVisibility > 0.05) {
-        const bgConnectDist = 110;
+        const bgConnectDist = 80;
         for (const p of particles) {
           for (const b of bgDots) {
             const dx = p.x - b.x, dy = p.y - b.y;
             const d2 = dx * dx + dy * dy;
             if (d2 < bgConnectDist * bgConnectDist) {
               const dist = Math.sqrt(d2);
-              const alpha = (1 - dist / bgConnectDist) * bgVisibility * 0.2;
+              const alpha = (1 - dist / bgConnectDist) * bgVisibility * 0.12;
               ctx.beginPath();
               ctx.moveTo(p.x, p.y);
               ctx.lineTo(b.x, b.y);
