@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo, useContext, createContext } from 'react';
 import {
   motion, AnimatePresence,
   useScroll, useTransform, useInView, useVelocity,
@@ -19,6 +19,9 @@ const C = {
   mid:     '#0E2F6E',   // slightly lighter deep blue for card surfaces
   muted:   '#6B7FA8',   // blue-tinted muted gray
 };
+
+// ── About page context — simplifies decorative headings when rendering as /about ─
+const AboutCtx = createContext(false);
 
 // ── Responsive hook ───────────────────────────────────────────────────────────
 function useIsMobile() {
@@ -649,26 +652,32 @@ const SplitText = ({ text, style, inView, delay = 0 }: { text: string; style?: R
 // ── OUTLINE + SOLID SECTION HEADING ──────────────────────────────────────────
 const SplitHeading = ({
   outline, solid, inView, color, fontSize = 'clamp(2.8rem, 5vw, 5rem)', delay = 0,
-}: { outline: string; solid: string; inView: boolean; color: string; fontSize?: string; delay?: number }) => (
-  <div style={{ overflow: 'hidden' }}>
-    <motion.div
-      initial={{ y: '110%' }} animate={inView ? { y: 0 } : {}}
-      transition={{ duration: 0.8, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
-      style={{ display: 'flex', alignItems: 'baseline', gap: '0.22em', flexWrap: 'wrap' }}
-    >
-      <span style={{
-        fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
-        letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
-        WebkitTextStroke: `2px ${color}`, WebkitTextFillColor: 'transparent', display: 'inline-block',
-      }}>{outline}</span>
-      <span style={{
-        fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
-        letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
-        color, display: 'inline-block',
-      }}>{solid}</span>
-    </motion.div>
-  </div>
-);
+}: { outline: string; solid: string; inView: boolean; color: string; fontSize?: string; delay?: number }) => {
+  const isAbout = useContext(AboutCtx);
+  return (
+    <div style={{ overflow: 'hidden' }}>
+      <motion.div
+        initial={{ y: '110%' }} animate={inView ? { y: 0 } : {}}
+        transition={{ duration: 0.8, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
+        style={{ display: 'flex', alignItems: 'baseline', gap: '0.22em', flexWrap: 'wrap' }}
+      >
+        <span style={{
+          fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
+          letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
+          ...(isAbout
+            ? { color, display: 'inline-block' }
+            : { WebkitTextStroke: `2px ${color}`, WebkitTextFillColor: 'transparent', display: 'inline-block' }
+          ),
+        }}>{outline}</span>
+        <span style={{
+          fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
+          letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
+          color, display: 'inline-block',
+        }}>{solid}</span>
+      </motion.div>
+    </div>
+  );
+};
 
 // ── CANVAS PARTICLE NETWORK ───────────────────────────────────────────────────
 const CanvasBackground = () => {
@@ -1194,22 +1203,30 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
     let neighborPairs: [number, number][] = []; // precomputed pairs of logo-adjacent particles
     let assembled = false;
     const ASSEMBLE_DURATION = 2200; // ms for particles to reach targets
-    const LOGO_CONNECT_DIST = 12;   // px between target positions to be considered neighbors
+    const LOGO_CONNECT_DIST = 10;   // px between target positions to be considered neighbors
     const LOGO_SIZE = Math.min(480, Math.max(260, window.innerWidth * 0.32));
 
     // ── Idle explosion state ──
-    const IDLE_TIMEOUT = 5000;          // ms before first idle explosion
+    const IDLE_TIMEOUT = 10000;          // ms before first idle explosion
     const EXPLODE_DURATION = 1800;      // ms for explosion outward
     const EXPLODE_HOLD = 1200;          // ms to hold scattered
     const REFORM_DURATION = 2000;       // ms for particles to reform
     const REFORM_COOLDOWN = 3000;       // ms to stay assembled before next cycle
-    let idlePhase: 'assembled' | 'exploding' | 'holding' | 'reforming' = 'assembled';
-    let idlePhaseStart = 0;
     let prevMouseX = -9999;
     let prevMouseY = -9999;
-    let idleCluster = new Set<number>();   // indices of particles in current explosion cluster
+    type IdleCluster = { indices: Set<number>; delay: number };
     const CLUSTER_RADIUS = 80;            // px radius around random center to select particles
-    let clickTriggered = false;           // true when explosion was triggered by click (don't cancel on mouse move)
+    type Explosion = {
+      clusters: IdleCluster[];
+      allIndices: Set<number>;
+      phase: 'exploding' | 'holding' | 'reforming';
+      phaseStart: number;
+      fromClick: boolean;
+    };
+    let explosions: Explosion[] = [];
+    let scrollScattered = false;          // whether scroll has triggered the explosion
+    let scrollScatterStart = 0;          // when the scroll scatter transition began
+    const SCROLL_SCATTER_DURATION = 800; // ms for consistent scatter/reform animation
 
     // Build a cluster of particles near a given target position
     const buildClusterAt = (cx: number, cy: number, radius: number) => {
@@ -1224,25 +1241,54 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       return cluster;
     };
 
-    // Build a cluster around a random particle
-    const buildRandomCluster = () => {
-      if (particles.length === 0) return new Set<number>();
-      const seed = particles[Math.floor(Math.random() * particles.length)];
-      return buildClusterAt(seed.tx, seed.ty, CLUSTER_RADIUS);
+    // Build 1 or 2 clusters around random particles (with staggered delays when 2)
+    const buildRandomClusters = (): IdleCluster[] => {
+      if (particles.length === 0) return [];
+      const count = Math.random() < 0.5 ? 1 : 2;
+      const clusters: IdleCluster[] = [];
+      const seeds: { tx: number; ty: number }[] = [];
+      for (let c = 0; c < count; c++) {
+        // Pick a seed that's not too close to previous seeds
+        for (let attempts = 0; attempts < 20; attempts++) {
+          const s = particles[Math.floor(Math.random() * particles.length)];
+          const tooClose = seeds.some(prev => {
+            const dx = prev.tx - s.tx; const dy = prev.ty - s.ty;
+            return dx * dx + dy * dy < (CLUSTER_RADIUS * 1.5) ** 2;
+          });
+          if (!tooClose || attempts === 19) {
+            seeds.push(s);
+            const indices = buildClusterAt(s.tx, s.ty, CLUSTER_RADIUS);
+            // First cluster explodes immediately; second has a staggered delay
+            const delay = c === 0 ? 0 : 300 + Math.random() * 400;
+            clusters.push({ indices, delay });
+            break;
+          }
+        }
+      }
+      return clusters;
     };
 
-    // Click handler: explode cluster at click position
+    // Click repulse state
+    let clickRepulse: { x: number; y: number; time: number } | null = null;
+    const CLICK_REPULSE_DURATION = 400; // ms
+    const CLICK_REPULSE_RADIUS = 160;   // px
+
+    // Click handler: explode cluster at click position (concurrent with existing explosions)
     const handleClick = (e: MouseEvent) => {
       if (!assembled || particles.length === 0) return;
       const rect = canvas.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
+      clickRepulse = { x: cx, y: cy, time: performance.now() };
       const cluster = buildClusterAt(cx, cy, CLUSTER_RADIUS);
       if (cluster.size < 5) return; // ignore clicks far from logo
-      idleCluster = cluster;
-      idlePhase = 'exploding';
-      idlePhaseStart = performance.now();
-      clickTriggered = true;
+      explosions.push({
+        clusters: [{ indices: cluster, delay: 0 }],
+        allIndices: cluster,
+        phase: 'exploding',
+        phaseStart: performance.now(),
+        fromClick: true,
+      });
     };
 
     // Load SVG and sample edge points
@@ -1288,7 +1334,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
 
       // Also sample some interior points for density
       const interiorPixels: { x: number; y: number; isGold: boolean }[] = [];
-      const interiorStep = 5;
+      const interiorStep = 4;
       for (let y = 0; y < h; y += interiorStep) {
         for (let x = 0; x < w; x += interiorStep) {
           const idx = (y * w + x) * 4;
@@ -1303,8 +1349,8 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       shuffle(edgePixels);
       shuffle(interiorPixels);
-      const maxParticles = 700;
-      const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.7));
+      const maxParticles = 1600;
+      const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.8));
       const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
       const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
 
@@ -1312,7 +1358,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       const cw = canvas.offsetWidth;
       const ch = canvas.offsetHeight;
       const ox = (cw - w) / 2;
-      const oy = (ch - h) / 2;
+      const oy = (ch - h) / 2 - ch * 0.06;
 
       particles = selected.map((p) => {
         // Each particle starts at its scatter position and flies to the logo on load
@@ -1357,7 +1403,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
     let bgDots: BgDot[] = [];
     const initBgDots = () => {
       const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
-      bgDots = Array.from({ length: 200 }, () => ({
+      bgDots = Array.from({ length: 120 }, () => ({
         x: Math.random() * cw,
         y: Math.random() * ch,
         vx: (Math.random() - 0.5) * 0.25,
@@ -1404,69 +1450,94 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       }
 
       // ── Idle explosion detection ──
-      // Detect mouse movement (don't cancel click-triggered explosions)
+      // Detect mouse movement — reset idle timer but let active explosions finish
       if (Math.abs(mouse.x - prevMouseX) > 2 || Math.abs(mouse.y - prevMouseY) > 2 || scroll > 0.01) {
         lastInteractionRef.current = now;
-        if (idlePhase !== 'assembled' && !clickTriggered) {
-          idlePhase = 'assembled';
-        }
       }
       prevMouseX = mouse.x;
       prevMouseY = mouse.y;
 
-      // Idle explosion state machine (only when scroll is near top and assembly is complete)
-      let idleExplodeStrength = 0;
-      const timeSinceInteraction = now - lastInteractionRef.current;
-      const assemblyDone = elapsed > ASSEMBLE_DURATION + 600; // all particles arrived
-
-      if (assemblyDone && scroll < 0.01 && lastInteractionRef.current > 0) {
-        if (idlePhase === 'assembled' && timeSinceInteraction > IDLE_TIMEOUT) {
-          idlePhase = 'exploding';
-          idlePhaseStart = now;
-          clickTriggered = false;
-          idleCluster = buildRandomCluster();
-        } else if (idlePhase === 'exploding') {
-          const t = (now - idlePhaseStart) / EXPLODE_DURATION;
-          if (t >= 1) {
-            idlePhase = 'holding';
-            idlePhaseStart = now;
-            idleExplodeStrength = 1;
-          } else {
-            // Ease-out cubic for smooth explosion
-            idleExplodeStrength = 1 - Math.pow(1 - t, 3);
+      // Advance each explosion's state machine independently
+      for (const ex of explosions) {
+        if (ex.phase === 'exploding') {
+          const maxDelay = ex.clusters.reduce((m, c) => Math.max(m, c.delay), 0);
+          if (now - ex.phaseStart >= EXPLODE_DURATION + maxDelay) {
+            ex.phase = 'holding';
+            ex.phaseStart = now;
           }
-        } else if (idlePhase === 'holding') {
-          idleExplodeStrength = 1;
-          if (now - idlePhaseStart > EXPLODE_HOLD) {
-            idlePhase = 'reforming';
-            idlePhaseStart = now;
-          }
-        } else if (idlePhase === 'reforming') {
-          const t = (now - idlePhaseStart) / REFORM_DURATION;
-          if (t >= 1) {
-            idlePhase = 'assembled';
-            clickTriggered = false;
-            // Push interaction time forward so cooldown applies before next cycle
-            lastInteractionRef.current = now - IDLE_TIMEOUT + REFORM_COOLDOWN;
-            idleExplodeStrength = 0;
-          } else {
-            // Ease-in-out for smooth reformation
-            idleExplodeStrength = 1 - (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+        } else if (ex.phase === 'holding') {
+          if (now - ex.phaseStart > EXPLODE_HOLD) {
+            ex.phase = 'reforming';
+            ex.phaseStart = now;
           }
         }
       }
 
-      // Scroll scatter — stronger as we scroll down
-      const scatterStrength = Math.min(scroll * 3, 1); // reaches full scatter at 33% scroll
+      // Remove finished explosions and reset idle cooldown
+      const beforeCount = explosions.length;
+      explosions = explosions.filter(ex => {
+        if (ex.phase === 'reforming' && (now - ex.phaseStart) / REFORM_DURATION >= 1) return false;
+        return true;
+      });
+      if (explosions.length < beforeCount) {
+        lastInteractionRef.current = now - IDLE_TIMEOUT + REFORM_COOLDOWN;
+      }
 
-      // Load-time scatter visibility: full during hold, fades out as logo forms
-      const tSinceLoad = now - svgLoadedAtRef.current; // ms since SVG loaded
+      // Spawn idle explosion when nothing is active and idle timeout passed
+      const assemblyDone = elapsed > ASSEMBLE_DURATION + 600;
+      if (assemblyDone && scroll < 0.01 && explosions.length === 0 && lastInteractionRef.current > 0 && now - lastInteractionRef.current > IDLE_TIMEOUT) {
+        const clusters = buildRandomClusters();
+        const allIndices = new Set<number>();
+        for (const c of clusters) for (const idx of c.indices) allIndices.add(idx);
+        explosions.push({ clusters, allIndices, phase: 'exploding', phaseStart: now, fromClick: false });
+      }
+
+      // Compute per-particle explosion strength across all active explosions
+      const particleStrength = new Float32Array(particles.length);
+      let allActiveIndices = new Set<number>();
+      let maxExplodeStrength = 0;
+
+      for (const ex of explosions) {
+        const cStrengths: number[] = [];
+        if (ex.phase === 'exploding') {
+          for (const cluster of ex.clusters) {
+            const ct = Math.max(0, now - ex.phaseStart - cluster.delay) / EXPLODE_DURATION;
+            cStrengths.push(ct >= 1 ? 1 : (ct <= 0 ? 0 : 1 - Math.pow(1 - ct, 3)));
+          }
+        } else if (ex.phase === 'holding') {
+          for (let i = 0; i < ex.clusters.length; i++) cStrengths.push(1);
+        } else if (ex.phase === 'reforming') {
+          const t = (now - ex.phaseStart) / REFORM_DURATION;
+          const s = t >= 1 ? 0 : 1 - (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+          for (let i = 0; i < ex.clusters.length; i++) cStrengths.push(s);
+        }
+        const exMax = cStrengths.length > 0 ? Math.max(...cStrengths) : 0;
+        if (exMax > maxExplodeStrength) maxExplodeStrength = exMax;
+        for (const idx of ex.allIndices) allActiveIndices.add(idx);
+        for (let ci = 0; ci < ex.clusters.length; ci++) {
+          for (const idx of ex.clusters[ci].indices) {
+            if (cStrengths[ci] > particleStrength[idx]) particleStrength[idx] = cStrengths[ci];
+          }
+        }
+      }
+
+      // Scroll scatter — trigger-based with fixed-duration transition
+      const shouldScatter = scroll > 0.02;
+      if (shouldScatter !== scrollScattered) {
+        scrollScattered = shouldScatter;
+        scrollScatterStart = now;
+      }
+      const scatterT = Math.min(1, (now - scrollScatterStart) / SCROLL_SCATTER_DURATION);
+      const scatterEase = scatterT < 0.5 ? 2 * scatterT * scatterT : 1 - Math.pow(-2 * scatterT + 2, 2) / 2;
+      const scatterStrength = scrollScattered ? scatterEase : 1 - scatterEase;
+
+      // Load-time scatter visibility
+      const tSinceLoad = now - svgLoadedAtRef.current;
       const loadFadeIn = Math.min(1, Math.max(0, tSinceLoad / 400));
       const assemblyProgress = Math.min(1, Math.max(0, elapsed / ASSEMBLE_DURATION));
       const loadScatter = loadFadeIn * (1 - assemblyProgress);
-      // Scale idle contribution to bg by cluster fraction (partial explosion shouldn't light up all bg dots)
-      const clusterFraction = particles.length > 0 ? idleCluster.size / particles.length : 0;
-      const bgVisibility = Math.max(scatterStrength, loadScatter, idleExplodeStrength * clusterFraction);
+      const clusterFraction = particles.length > 0 ? allActiveIndices.size / particles.length : 0;
+      const bgVisibility = Math.max(scatterStrength, loadScatter, maxExplodeStrength * clusterFraction);
 
       // Update background ambient dots
       for (const b of bgDots) {
@@ -1479,52 +1550,59 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
         const p = particles[pi];
         const particleElapsed = Math.max(0, elapsed - p.delay);
         const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
-        // Smooth ease-out cubic
         const ease = 1 - Math.pow(1 - assembleT, 3);
 
-        // Per-particle idle strength: only particles in the cluster are affected
-        const pIdleStrength = idleCluster.has(pi) ? idleExplodeStrength : 0;
+        const pIdleStrength = particleStrength[pi];
 
-        // Target is the logo position
         let goalX = p.tx;
         let goalY = p.ty;
 
         // Combined scatter: scroll OR idle explosion (take the stronger one)
         const combinedScatter = Math.max(scatterStrength, pIdleStrength);
 
-        // On scroll or idle, scatter in each particle's own random direction — chaotic explosion
         if (combinedScatter > 0) {
-          // Idle explosion uses a shorter scatter distance for a gentler burst
           const dist = pIdleStrength > scatterStrength ? p.sDist * 0.45 : p.sDist;
           goalX = p.tx + Math.cos(p.sAngle) * combinedScatter * dist;
           goalY = p.ty + Math.sin(p.sAngle) * combinedScatter * dist;
         }
 
-        // During assembly, interpolate from start to goal
         if (assembleT < 1) {
           p.x = p.sx + (goalX - p.sx) * ease;
           p.y = p.sy + (goalY - p.sy) * ease;
         } else {
-          // After assembly, use spring physics toward goal
-          // Spring force weakens during scatter for a slow drift outward
-          const springForce = 0.035 - combinedScatter * 0.031; // 0.035 at rest → 0.004 at full scatter
+          const springForce = 0.035 - combinedScatter * 0.031;
           p.vx += (goalX - p.x) * springForce;
           p.vy += (goalY - p.y) * springForce;
 
-          // Cursor repulsion
-          const dx = p.x - mouse.x;
-          const dy = p.y - mouse.y;
-          const d2 = dx * dx + dy * dy;
-          const repelRadius = 80;
-          if (d2 < repelRadius * repelRadius && d2 > 0) {
-            const d = Math.sqrt(d2);
-            const f = (repelRadius - d) / repelRadius;
-            p.vx += (dx / d) * f * 3.5;
-            p.vy += (dy / d) * f * 3.5;
+          if (!allActiveIndices.has(pi)) {
+            // Click repulse — briefly push particles away from click point
+            if (clickRepulse && now - clickRepulse.time < CLICK_REPULSE_DURATION) {
+              const dx = p.x - clickRepulse.x;
+              const dy = p.y - clickRepulse.y;
+              const d2 = dx * dx + dy * dy;
+              if (d2 < CLICK_REPULSE_RADIUS * CLICK_REPULSE_RADIUS && d2 > 0) {
+                const d = Math.sqrt(d2);
+                const fade = 1 - (now - clickRepulse.time) / CLICK_REPULSE_DURATION;
+                const f = (CLICK_REPULSE_RADIUS - d) / CLICK_REPULSE_RADIUS;
+                p.vx += (dx / d) * f * fade * 5;
+                p.vy += (dy / d) * f * fade * 5;
+              }
+            } else {
+              // Normal cursor attraction (magnet)
+              const dx = mouse.x - p.x;
+              const dy = mouse.y - p.y;
+              const d2 = dx * dx + dy * dy;
+              const magnetRadius = 120;
+              if (d2 < magnetRadius * magnetRadius && d2 > 0) {
+                const d = Math.sqrt(d2);
+                const f = (magnetRadius - d) / magnetRadius;
+                p.vx += (dx / d) * f * 3.5;
+                p.vy += (dy / d) * f * 3.5;
+              }
+            }
           }
 
-          // Lower damping during scatter = more friction = slower movement
-          const damping = 0.88 - combinedScatter * 0.08; // 0.88 at rest → 0.80 at full scatter
+          const damping = 0.88 - combinedScatter * 0.08;
           p.vx *= damping;
           p.vy *= damping;
           p.x += p.vx;
@@ -1532,13 +1610,12 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
         }
       }
 
-      // Logo-network connections: fade in as each pair of neighbors arrives at the logo
+      // Logo-network connections
       const logoFadeScroll = 1 - scatterStrength;
       if (logoFadeScroll > 0.01 && neighborPairs.length > 0) {
         for (const [i, j] of neighborPairs) {
-          // Per-pair fade: if either particle is in idle cluster, fade that connection
-          const pairIdleStrength = (idleCluster.has(i) || idleCluster.has(j)) ? idleExplodeStrength : 0;
-          const logoFade = 1 - Math.max(scatterStrength, pairIdleStrength);
+          const pairStrength = Math.max(particleStrength[i], particleStrength[j]);
+          const logoFade = 1 - Math.max(scatterStrength, pairStrength);
           if (logoFade < 0.01) continue;
           const pi = particles[i], pj = particles[j];
           const ti = Math.min(1, Math.max(0, (elapsed - pi.delay) / ASSEMBLE_DURATION));
@@ -1547,55 +1624,27 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
           if (arrivalA < 0.02) continue;
           const tdx = pi.tx - pj.tx, tdy = pi.ty - pj.ty;
           const tDist = Math.sqrt(tdx * tdx + tdy * tdy);
-          const alpha = arrivalA * logoFade * (1 - tDist / LOGO_CONNECT_DIST) * 0.42;
+          const alpha = arrivalA * logoFade * (1 - tDist / LOGO_CONNECT_DIST) * 0.28;
           if (alpha < 0.01) continue;
           ctx.beginPath();
           ctx.moveTo(pi.x, pi.y);
           ctx.lineTo(pj.x, pj.y);
           ctx.strokeStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
-          ctx.lineWidth = 0.4;
+          ctx.lineWidth = 0.3;
           ctx.stroke();
-        }
-      }
-
-      // Scatter connections: expand and brighten as particles explode on scroll or idle
-      // For idle, only draw connections between cluster particles
-      const hasScrollScatter = scatterStrength > 0.05;
-      const hasIdleScatter = idleExplodeStrength > 0.05 && idleCluster.size > 0;
-      if (hasScrollScatter || hasIdleScatter) {
-        const scatterVisibility = Math.max(scatterStrength, idleExplodeStrength);
-        const connectDist = 28 + scatterVisibility * 80;
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < particles.length; j++) {
-            // During idle (no scroll), only connect cluster particles to each other
-            if (!hasScrollScatter && !(idleCluster.has(i) && idleCluster.has(j))) continue;
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const d2 = dx * dx + dy * dy;
-            if (d2 < connectDist * connectDist) {
-              const pairStrength = hasScrollScatter ? scatterVisibility : idleExplodeStrength;
-              const alpha = (1 - Math.sqrt(d2) / connectDist) * pairStrength * 0.35;
-              ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.strokeStyle = `rgba(255,199,44,${alpha.toFixed(3)})`;
-              ctx.lineWidth = 0.4;
-              ctx.stroke();
-            }
-          }
         }
       }
 
       // Draw connections: P particles ↔ background dots (on scroll AND during initial load)
       if (bgVisibility > 0.05) {
-        const bgConnectDist = 160;
+        const bgConnectDist = 80;
         for (const p of particles) {
           for (const b of bgDots) {
             const dx = p.x - b.x, dy = p.y - b.y;
             const d2 = dx * dx + dy * dy;
             if (d2 < bgConnectDist * bgConnectDist) {
               const dist = Math.sqrt(d2);
-              const alpha = (1 - dist / bgConnectDist) * bgVisibility * 0.28;
+              const alpha = (1 - dist / bgConnectDist) * bgVisibility * 0.12;
               ctx.beginPath();
               ctx.moveTo(p.x, p.y);
               ctx.lineTo(b.x, b.y);
@@ -1620,11 +1669,10 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
         }
       }
 
-      // Draw P particles — visible at scatter positions during hold, fade in during assembly
+      // Draw P particles
       for (const p of particles) {
         const particleElapsed = Math.max(0, elapsed - p.delay);
         const assembleT = Math.min(1, particleElapsed / ASSEMBLE_DURATION);
-        // Before assembleStart: show at full opacity; during assembly: fade in with assembleT
         const fadeIn = elapsed < 0 ? loadFadeIn : Math.min(1, assembleT * 2);
         const blinkAlpha = 0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * p.blinkSpeed + p.blink));
         const alpha = fadeIn * blinkAlpha;
@@ -1711,7 +1759,7 @@ export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hide
         >
           <source src="/seamless-tech-loop.mp4" type="video/mp4" />
         </video>
-        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${C.charcoal}cc 0%, transparent 30%, transparent 70%, ${C.charcoal} 100%)` }} />
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${C.charcoal}cc 0%, transparent 30%, transparent 55%, ${C.charcoal}cc 80%, ${C.charcoal} 100%)` }} />
       </motion.div>
 
       {/* Canvas particle network */}
@@ -1745,7 +1793,6 @@ export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hide
         </motion.div>
       )}
 
-      {/* Narrator AI placeholder — lower left */}
       {/* Scroll cue — bottom right */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -1753,7 +1800,7 @@ export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hide
         transition={{ delay: 0.85, duration: 0.7 }}
         style={{ position: 'absolute', bottom: 'clamp(32px, 5vh, 48px)', right: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, zIndex: 10 }}
       >
-        <span style={{ color: 'rgba(255,255,255,0.25)', fontFamily: 'Inter, sans-serif', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase' }}>scroll</span>
+        <span style={{ color: C.accent, fontFamily: 'Inter, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase' }}>scroll</span>
         <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}>
           <div style={{ width: 1, height: 48, background: `linear-gradient(to bottom, ${C.accent}, transparent)` }} />
         </motion.div>
@@ -1769,6 +1816,7 @@ const HEADING_FONT: React.CSSProperties = {
 };
 
 const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLElement | null> }) => {
+  const isAbout = useContext(AboutCtx);
   const line1Ref = useRef<HTMLDivElement>(null);
   const line2Ref = useRef<HTMLDivElement>(null);
 
@@ -1776,6 +1824,13 @@ const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLE
     if (!line1Ref.current || !line2Ref.current || !triggerRef.current) return;
     const chars1 = line1Ref.current.querySelectorAll<HTMLSpanElement>('.sl-char');
     const chars2 = line2Ref.current.querySelectorAll<HTMLSpanElement>('.sl-char');
+
+    if (isAbout) {
+      // Simple solid styling — no outline/stroke effect on the About page
+      gsap.set(chars1, { webkitTextFillColor: C.charcoal, webkitTextStroke: '0px' });
+      gsap.set(chars2, { webkitTextFillColor: C.charcoal, webkitTextStroke: '0px' });
+      return;
+    }
 
     // Line 1: filled → outline (staggered per letter, sharp snap)
     gsap.set(chars1, { webkitTextStroke: `2px ${C.charcoal}`, webkitTextFillColor: C.charcoal });
@@ -1796,7 +1851,7 @@ const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLE
     });
 
     return () => { tl1.scrollTrigger?.kill(); tl2.scrollTrigger?.kill(); };
-  }, [triggerRef]);
+  }, [triggerRef, isAbout]);
 
   const renderChars = (text: string, uppercase?: boolean) =>
     text.split('').map((ch, i) => (
@@ -2083,6 +2138,7 @@ const SCROLL_ITEMS = [
 //   Desktop leftThumb: screen(14vw,  6vh) → relative(-11vw, 0)
 //   Mobile leftThumb:  screen(-24vw, 0)   → relative(-24vw, 0)   [off-screen left]
 const ServicesScrollStory = () => {
+  const isAbout      = useContext(AboutCtx);
   const containerRef = useRef<HTMLDivElement>(null);
   const headingRef   = useRef<HTMLDivElement>(null);
   const img1Ref      = useRef<HTMLDivElement>(null);
@@ -2187,7 +2243,7 @@ const ServicesScrollStory = () => {
           whiteSpace: isMobile ? 'normal' : 'nowrap',
           width: isMobile ? '80vw' : 'auto',
         }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', ...(isAbout ? { color: C.base } : { WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }) }}>
             what we{' '}
           </span>
           <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>
@@ -2282,6 +2338,7 @@ const PHASE_WIN = [
 ];
 
 const Process = () => {
+  const isAbout      = useContext(AboutCtx);
   const containerRef = useRef<HTMLDivElement>(null);
   // per-phase refs
   const phaseRefs   = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
@@ -2442,7 +2499,7 @@ const Process = () => {
 
           {/* Section heading — fades out as phases take over */}
           <div ref={headRef} style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)', zIndex: 3, textAlign: 'center', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.charcoal}`, WebkitTextFillColor: 'transparent' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', ...(isAbout ? { color: C.charcoal } : { WebkitTextStroke: `2px ${C.charcoal}`, WebkitTextFillColor: 'transparent' }) }}>
               phitopolis is{' '}
             </span>
             <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.charcoal }}>
@@ -2512,14 +2569,14 @@ const Process = () => {
 
 // ── 06 HORIZONTAL SHOWCASE ────────────────────────────────────────────────────
 const CARDS = [
-  { label: 'LLM Orchestration Engine', tag: 'Generative AI', desc: 'a production-grade multi-agent framework that routes complex tasks across specialized AI models with sub-second latency.', color: '#FFC72C' },
-  { label: 'Real-Time Risk Dashboard', tag: 'FinTech', desc: 'live risk visualization for institutional portfolios, processing 1M+ events/sec with intelligent anomaly detection.', color: '#4A90D9' },
-  { label: 'Predictive Analytics Platform', tag: 'Data Science', desc: 'end-to-end ML pipeline for customer churn prediction, driving 40% reduction in attrition for enterprise clients.', color: '#6C63FF' },
-  { label: 'Agentic Research Assistant', tag: 'AI Agents', desc: 'autonomous research agent that synthesizes market intelligence from 500+ sources with human-in-the-loop validation.', color: '#2ECC71' },
-  { label: 'Automated Trading Signal System', tag: 'Quantitative Finance', desc: 'ML-driven alpha signal generator processing tick-level market data, delivering sub-millisecond trade recommendations.', color: '#E91E8C' },
-  { label: 'RAG Knowledge Base', tag: 'Enterprise AI', desc: 'retrieval-augmented generation system indexing 10M+ internal documents, enabling natural language querying across an entire organization.', color: '#F59E0B' },
-  { label: 'Computer Vision QA Pipeline', tag: 'Vision AI', desc: 'real-time defect detection system trained on manufacturing imagery, achieving 99.4% accuracy and reducing inspection costs by 60%.', color: '#06B6D4' },
-  { label: 'AI-Powered Compliance Monitor', tag: 'RegTech', desc: 'NLP-based regulatory compliance engine that continuously scans communications and flags violations before they become liabilities.', color: '#A78BFA' },
+  { label: 'Low-Latency Trading Engine', tag: 'High-Frequency Systems', desc: 'C++ order-routing engine built on DPDK kernel-bypass and lock-free ring buffers. Delivers 18μs median latency at P99 under 40μs, processing 10M+ order events per second with zero packet loss.', color: '#FFC72C' },
+  { label: 'Alpha Signal Intelligence', tag: 'Quantitative Finance', desc: 'domain-tuned transformer pipeline scanning 50,000+ research papers and live market feeds per quarter. Surfaces actionable trade signals in real time, multiplying analyst throughput by 8x.', color: '#4A90D9' },
+  { label: 'Streaming Risk Monitor', tag: 'Real-Time Analytics', desc: 'Kafka-to-Flink event pipeline backed by Redis CRDT state and binary WebSocket delivery. Handles 4M+ transactions per second with sub-50ms dashboard refresh for institutional risk teams.', color: '#6C63FF' },
+  { label: 'Agentic Research Platform', tag: 'AI Agents', desc: 'multi-agent orchestration system that autonomously synthesizes regulatory filings, earnings transcripts, and alternative datasets into structured investment theses with human-in-the-loop review.', color: '#2ECC71' },
+  { label: 'NLP Compliance Engine', tag: 'RegTech', desc: 'fine-tuned language model scanning internal communications and trade records in real time to flag regulatory violations before they escalate into material risk or reportable incidents.', color: '#E91E8C' },
+  { label: 'Cloud-Native Market Infrastructure', tag: 'Cloud Engineering', desc: 'Kubernetes-native microservices deployed across multi-cloud environments. GitOps-driven pipelines enforce zero-downtime blue-green releases at every cycle, with full observability baked in.', color: '#F59E0B' },
+  { label: 'Predictive Attrition Model', tag: 'Data Science', desc: 'end-to-end ML pipeline combining behavioral signals and transaction history to forecast client attrition 90 days ahead, enabling targeted intervention before churn becomes a revenue event.', color: '#06B6D4' },
+  { label: 'Enterprise Knowledge Retrieval', tag: 'Enterprise AI', desc: 'retrieval-augmented generation layer over 10M+ internal documents, trade records, and research notes—giving teams natural language access to institutional knowledge at query time.', color: '#A78BFA' },
 ];
 const CARD_W = 480;
 const GAP = 28;
@@ -2708,6 +2765,7 @@ const HR_WIN = [
 ];
 
 const OurPeople = () => {
+  const isAbout  = useContext(AboutCtx);
   const sRef     = useRef<HTMLElement>(null);
   const bgRef    = useRef<HTMLDivElement>(null);
 
@@ -2848,7 +2906,7 @@ const OurPeople = () => {
         {/* ── Main stage ───────────────────────────────────────────────────── */}
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden', zIndex: 2 }}>
           <div ref={headRef} style={{ position: 'absolute', top: '10%', left: isMobile ? 20 : 48, zIndex: 3, pointerEvents: 'none', display: 'flex', alignItems: 'baseline', gap: 14 }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>our</span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', ...(isAbout ? { color: C.base } : { WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }) }}>our</span>
             <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>people</span>
           </div>
 
@@ -3458,12 +3516,48 @@ export const Showcase = () => {
   const leftRef = useRef(null);
   const inView = useInView(leftRef, { once: true, margin: '-60px' });
   const isMobile = useIsMobile();
+  // Treat tablets (< 1024px) the same as mobile — stacked scrollable layout
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const check = () => setIsNarrow(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
   const x = useMotionValue(0);
   const xSpring = useSpring(x, { stiffness: 180, damping: 28, mass: 0.8 });
   const [activeIdx, setActiveIdx] = useState(0);
   const activeIdxRef = useRef(0);
   const isAdvancingRef = useRef(false);
+
+  // Mobile swipe carousel state
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const [mobileActiveIdx, setMobileActiveIdx] = useState(0);
+
+  // Desktop arrow navigation
+  const handleArrow = (dir: 1 | -1) => {
+    const sec = sectionRef.current;
+    if (!sec || isAdvancingRef.current) return;
+    const cur = activeIdxRef.current;
+    if (dir > 0 && cur < CARDS.length - 1) {
+      isAdvancingRef.current = true;
+      const next = cur + 1;
+      activeIdxRef.current = next;
+      setActiveIdx(next);
+      const scrollable = sec.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: sec.offsetTop + (next / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+      setTimeout(() => { isAdvancingRef.current = false; }, 700);
+    } else if (dir < 0 && cur > 0) {
+      isAdvancingRef.current = true;
+      const prev = cur - 1;
+      activeIdxRef.current = prev;
+      setActiveIdx(prev);
+      const scrollable = sec.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: sec.offsetTop + (prev / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+      setTimeout(() => { isAdvancingRef.current = false; }, 700);
+    }
+  };
 
   // Sync track position whenever activeIdx changes
   useEffect(() => {
@@ -3520,90 +3614,178 @@ export const Showcase = () => {
     return () => window.removeEventListener('wheel', onWheel, { capture: true });
   }, []);
 
+  // Touch swipe support for the desktop sticky layout (large tablets, etc.)
+  useEffect(() => {
+    if (isNarrow) return;
+    let touchStartY = 0;
+    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
+    const onTouchEnd = (e: TouchEvent) => {
+      const sec = sectionRef.current;
+      if (!sec) return;
+      const rect = sec.getBoundingClientRect();
+      if (rect.top > 2 || rect.bottom < window.innerHeight - 2) return;
+      const deltaY = touchStartY - e.changedTouches[0].clientY;
+      if (Math.abs(deltaY) < 40) return;
+      const dir = Math.sign(deltaY);
+      const cur = activeIdxRef.current;
+      if (dir > 0 && cur < CARDS.length - 1) {
+        if (isAdvancingRef.current) return;
+        isAdvancingRef.current = true;
+        const next = cur + 1;
+        activeIdxRef.current = next;
+        setActiveIdx(next);
+        const scrollable = sec.offsetHeight - window.innerHeight;
+        window.scrollTo({ top: sec.offsetTop + (next / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+        setTimeout(() => { isAdvancingRef.current = false; }, 700);
+      } else if (dir < 0 && cur > 0) {
+        if (isAdvancingRef.current) return;
+        isAdvancingRef.current = true;
+        const prev = cur - 1;
+        activeIdxRef.current = prev;
+        setActiveIdx(prev);
+        const scrollable = sec.offsetHeight - window.innerHeight;
+        window.scrollTo({ top: sec.offsetTop + (prev / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+        setTimeout(() => { isAdvancingRef.current = false; }, 700);
+      }
+    };
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isNarrow]);
+
   const activeCard = CARDS[activeIdx];
 
-  if (isMobile) {
+  if (isNarrow) {
+    const handleMobileScroll = () => {
+      const el = mobileScrollRef.current;
+      if (!el) return;
+      const idx = Math.round(el.scrollLeft / (el.offsetWidth * 0.85 + 16));
+      setMobileActiveIdx(Math.max(0, Math.min(CARDS.length - 1, idx)));
+    };
+    const scrollToCard = (idx: number) => {
+      const el = mobileScrollRef.current;
+      if (!el) return;
+      el.scrollTo({ left: idx * (el.offsetWidth * 0.85 + 16), behavior: 'smooth' });
+    };
     return (
-      <section id="sec-showcase" style={{ background: C.base, height: '100vh', padding: 'clamp(80px, 10vw, 120px) 24px', position: 'relative', overflow: 'hidden' }}>
+      <section id="sec-showcase" style={{ background: C.charcoal, minHeight: '100vh', padding: 'clamp(100px, 12vw, 140px) 0 60px', position: 'relative', overflowY: 'auto' }}>
         <SectionTag name="showcase" />
-        <div ref={leftRef}>
-          <div style={{ marginBottom: 52 }}>
-            <Badge n="06" label="Innovation Hub" />
-            <SplitHeading outline="ai projects" solid="at work" inView={inView} color={C.charcoal} fontSize="clamp(2.8rem, 8vw, 4.5rem)" />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            {CARDS.map((card, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 36 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.75, delay: i * 0.08 }}>
-                <ShowCard card={card} index={i} fullWidth />
-              </motion.div>
-            ))}
-          </div>
+        <div ref={leftRef} style={{ paddingLeft: 24, marginBottom: 32 }}>
+          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(2rem, 6vw, 3.5rem)', color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase', margin: 0 }}>
+            ai projects <span style={{ opacity: 0.45 }}>at work</span>
+          </h2>
+        </div>
+        {/* Horizontal swipe carousel */}
+        <div
+          ref={mobileScrollRef}
+          onScroll={handleMobileScroll}
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            overflowX: 'scroll',
+            scrollSnapType: 'x mandatory',
+            gap: 16,
+            paddingLeft: 24,
+            paddingRight: 24,
+            paddingBottom: 8,
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch' as any,
+          }}
+        >
+          {CARDS.map((card, i) => (
+            <div key={i} style={{ scrollSnapAlign: 'start', flexShrink: 0, width: '85vw' }}>
+              <ShowCard card={card} index={i} fullWidth />
+            </div>
+          ))}
+        </div>
+        {/* Dot indicators */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 20 }}>
+          {CARDS.map((card, i) => (
+            <button
+              key={i}
+              onClick={() => scrollToCard(i)}
+              style={{
+                height: 4,
+                borderRadius: 2,
+                background: i === mobileActiveIdx ? card.color : 'rgba(255,255,255,0.2)',
+                transition: 'width 0.3s ease, background 0.3s ease',
+                width: i === mobileActiveIdx ? 24 : 6,
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            />
+          ))}
         </div>
       </section>
     );
   }
 
   return (
-    <section id="sec-showcase" ref={sectionRef} style={{ background: C.base, height: `${(CARDS.length + 1.5) * 100}vh`, position: 'relative' }}>
-      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex' }}>
+    <section id="sec-showcase" ref={sectionRef} style={{ background: C.charcoal, height: `${(CARDS.length + 1.5) * 100}vh`, position: 'relative' }}>
+      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <SectionTag name="showcase" />
 
-        {/* ── Left panel: heading + card meta + progress ── */}
+        {/* ── Heading ── */}
         <motion.div ref={leftRef}
-          initial={{ opacity: 0, x: -24 }} animate={inView ? { opacity: 1, x: 0 } : {}} transition={{ duration: 0.7 }}
-          style={{ width: 'clamp(280px, 34vw, 440px)', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 48px', borderRight: '1px solid rgba(0,0,0,0.06)', position: 'relative', zIndex: 2 }}
+          initial={{ opacity: 0, y: -16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7 }}
+          style={{ padding: '0 clamp(32px, 6vw, 80px)', marginBottom: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
         >
-          <Badge n="06" label="Innovation Hub" />
-          <SplitHeading outline="ai projects" solid="at work" inView={inView} color={C.charcoal} fontSize="clamp(1.9rem, 2.8vw, 3rem)" />
-
-          {/* Current card details */}
-          <AnimatePresence mode="wait">
-            <motion.div key={activeIdx}
-              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }}
-              transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
-              style={{ marginTop: 32 }}
-            >
-              <span style={{ display: 'inline-block', padding: '5px 14px', borderRadius: 100, background: `${activeCard.color}18`, color: activeCard.color, fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14, fontFamily: 'Inter, sans-serif' }}>
-                {activeCard.tag}
-              </span>
-              <h3 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1rem, 1.5vw, 1.45rem)', color: C.charcoal, lineHeight: 1.2, marginBottom: 12, letterSpacing: '-0.015em' }}>
-                {activeCard.label}
-              </h3>
-              <p style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', lineHeight: 1.75 }}>
-                {activeCard.desc}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Counter + dots + scroll bar */}
-          <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2rem', color: C.charcoal, letterSpacing: '-0.04em', lineHeight: 1 }}>
-                {String(activeIdx + 1).padStart(2, '0')}
-              </span>
-              <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 400, fontSize: '1rem', color: C.muted }}>
-                / {String(CARDS.length).padStart(2, '0')}
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-              {CARDS.map((_, i) => (
-                <div key={i} style={{ height: 4, borderRadius: 2, background: i === activeIdx ? activeCard.color : 'rgba(0,0,0,0.12)', transition: 'width 0.35s ease, background 0.35s ease', width: i === activeIdx ? 28 : 6 }} />
-              ))}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ color: C.muted, fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>scroll to explore</span>
-              <div style={{ flex: 1, height: 1.5, background: 'rgba(0,0,0,0.1)', borderRadius: 1, overflow: 'hidden' }}>
-                <motion.div style={{ height: '100%', background: C.accent, scaleX: scrollYProgress, transformOrigin: 'left' }} />
-              </div>
-            </div>
-          </div>
+          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.9rem, 2.8vw, 3rem)', color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase', margin: 0 }}>
+            ai projects <span style={{ opacity: 0.45 }}>at work</span>
+          </h2>
         </motion.div>
 
-        {/* ── Right panel: card track ── */}
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', padding: '0 40px 0 52px' }}>
-          <motion.div style={{ x: xSpring, display: 'flex', gap: GAP, willChange: 'transform' }}>
+        {/* ── Centered card queue ── */}
+        <div style={{ overflow: 'hidden', position: 'relative' }}>
+          <motion.div style={{ x: xSpring, display: 'flex', gap: GAP, paddingLeft: `calc(50vw - ${CARD_W / 2}px)`, willChange: 'transform' }}>
             {CARDS.map((card, i) => <ShowCard key={String(i)} card={card} index={i} isActive={i === activeIdx} />)}
           </motion.div>
+          {/* ── Arrow buttons ── */}
+          {activeIdx > 0 && (
+            <button onClick={() => handleArrow(-1)} aria-label="Previous project"
+              style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
+              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')}
+              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+          )}
+          {activeIdx < CARDS.length - 1 && (
+            <button onClick={() => handleArrow(1)} aria-label="Next project"
+              style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
+              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')}
+              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
+          )}
+        </div>
+
+        {/* ── Progress: counter + dots + scroll hint ── */}
+        <div style={{ padding: '24px clamp(32px, 6vw, 80px) 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '2rem', color: '#ffffff', letterSpacing: '-0.04em', lineHeight: 1 }}>
+              {String(activeIdx + 1).padStart(2, '0')}
+            </span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 400, fontSize: '1rem', color: 'rgba(255,255,255,0.4)' }}>
+              / {String(CARDS.length).padStart(2, '0')}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+            {CARDS.map((_, i) => (
+              <div key={i} style={{ height: 4, borderRadius: 2, background: i === activeIdx ? activeCard.color : 'rgba(255,255,255,0.15)', transition: 'width 0.35s ease, background 0.35s ease', width: i === activeIdx ? 28 : 6 }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>scroll to explore</span>
+            <div style={{ width: 80, height: 1.5, background: 'rgba(255,255,255,0.1)', borderRadius: 1, overflow: 'hidden' }}>
+              <motion.div style={{ height: '100%', background: C.accent, scaleX: scrollYProgress, transformOrigin: 'left' }} />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -4142,7 +4324,7 @@ export default function AIDayPage({ isAbout = false }: { isAbout?: boolean }) {
   }, []);
 
   return (
-    <>
+    <AboutCtx.Provider value={isAbout}>
       <GrainOverlay />
       {!isAbout && <Preloader onComplete={handlePreloaderComplete} />}
       <div style={isAbout ? { paddingTop: '64px' } : {}}>
@@ -4163,6 +4345,6 @@ export default function AIDayPage({ isAbout = false }: { isAbout?: boolean }) {
         {isAbout && <Closing />}
         <SpecialEndSlide />
       </div>
-    </>
+    </AboutCtx.Provider>
   );
 }

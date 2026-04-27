@@ -428,7 +428,7 @@ function HomeSvcCard({ service, i }: HomeSvcCardProps) {
             {service.features.map((f, j) => (
               <li key={j} className="text-xs text-slate-500 flex items-center">
                 <div className="w-1.5 h-1.5 bg-accent rounded-full mr-2" />
-                {f}
+                {f.title}
               </li>
             ))}
           </ul>
@@ -526,8 +526,8 @@ function StitchedVideoBackground() {
 // ── Sticky Services Section (alternative layout) ─────────────────────────────
 const SERVICE_VIDEOS = [
   '/expertise/research-and-development.mp4',
-  '/expertise/data-science.mp4',
   '/expertise/support-and-operations.mp4',
+  '/expertise/data-science.mp4',
 ];
 
 // Navbar is fixed at ~72px. Box fills viewport below nav with py-4 breathing room.
@@ -591,30 +591,7 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
 
   return (
     <>
-      {/* ── Section 1: Header ─────────────────────────────────────────── */}
-      <section
-        className="h-screen bg-white flex flex-col justify-center px-6"
-        style={{ paddingTop: NAV_H }}
-      >
-        <div className="container mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.21, 1.02, 0.47, 0.98] }}
-          >
-            <span className="text-accent font-bold tracking-widest uppercase text-xs">Our Expertise</span>
-            <h2 className="text-6xl md:text-8xl font-display font-bold mt-4 text-primary leading-none">
-              Services<br />we offer
-            </h2>
-            <p className="mt-6 text-slate-400 text-base max-w-xs leading-relaxed">
-              Scroll to explore how we deliver results for our clients.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Section 2: tall scroll space + sticky viewer ───────────────── */}
+      {/* ── Sticky scroll space + viewer ───────────────────────────────── */}
       {/* Outer: SERVICES.length * 100vh gives scroll room per service */}
       <div
         ref={sectionRef}
@@ -697,18 +674,16 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
               {/* ── Right: animated service content ── */}
               <div className="flex-1 flex flex-col justify-between py-10 overflow-hidden">
 
-                {/* Top: counter */}
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-[11px] text-slate-300 tracking-widest select-none">
-                    0{activeService + 1}
-                  </span>
-                  <div className="flex-1 h-px bg-slate-100" />
-                  <span className="font-mono text-[11px] text-slate-300 tracking-widest select-none">
-                    0{SERVICES.length}
-                  </span>
-                </div>
+                {/* Top: section heading + service content grouped */}
+                <div className="space-y-8">
+                  <div>
+                    <span className="text-accent font-bold tracking-widest uppercase text-xs">Our Expertise</span>
+                    <h2 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mt-2 text-primary leading-none whitespace-nowrap">
+                      Services we offer
+                    </h2>
+                  </div>
 
-                {/* Middle: animated content block */}
+                {/* Animated content block */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeService}
@@ -718,10 +693,9 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
                     transition={{ duration: 0.45, ease: [0.21, 1.02, 0.47, 0.98] }}
                     className="space-y-6"
                   >
-                    {/* Icon + rule */}
-                    <div className="flex items-center gap-3">
+                    {/* Icon */}
+                    <div>
                       {React.cloneElement(service.icon as React.ReactElement<any>, { className: 'w-7 h-7 text-accent flex-shrink-0' })}
-                      <div className="h-px flex-1 bg-slate-100" />
                     </div>
 
                     {/* Title */}
@@ -734,23 +708,38 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
                       {service.description}
                     </p>
 
-                    {/* Feature list — clean, informational */}
-                    <div className="grid grid-cols-3 gap-x-8 gap-y-5 pt-2">
+                    {/* Feature list — icon + title + description */}
+                    <div className="grid grid-cols-3 gap-x-6 gap-y-4 pt-2">
                       {service.features.map((f, j) => (
                         <motion.div
                           key={j}
-                          initial={{ opacity: 0, y: 8 }}
+                          initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: j * 0.07 + 0.12, duration: 0.35 }}
-                          className="flex flex-col gap-2"
+                          transition={{ delay: j * 0.08 + 0.12, duration: 0.35 }}
+                          whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                          className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-transparent hover:border-accent/20 hover:bg-slate-50 transition-colors duration-200 cursor-default"
                         >
-                          <div className="w-5 h-0.5 rounded-full bg-accent" />
-                          <span className="text-slate-600 text-sm leading-snug">{f}</span>
+                          <motion.div
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent/10"
+                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,199,44,0.18)' }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {React.cloneElement(f.icon as React.ReactElement<any>, {
+                              className: 'w-4 h-4 text-accent',
+                              strokeWidth: 1.75,
+                            })}
+                          </motion.div>
+                          <div>
+                            <div className="w-4 h-0.5 rounded-full bg-accent mb-1.5" />
+                            <span className="text-slate-700 text-sm font-semibold leading-snug block">{f.title}</span>
+                            <span className="text-slate-400 text-xs leading-relaxed mt-1 block">{f.description}</span>
+                          </div>
                         </motion.div>
                       ))}
                     </div>
                   </motion.div>
                 </AnimatePresence>
+                </div>
 
                 {/* Bottom: progress + hint */}
                 <div className="flex items-center gap-3">
@@ -792,9 +781,7 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Scroll-to-play sequence ──────────────────────────────────────────────────
-const TOTAL_FRAMES = 151;
-const getFrameUrl = (n: number) =>
-  `/seq/ezgif-frame-${String(n).padStart(3, '0')}.png`;
+const SEQ_VIDEO_SRC = '/we-build-the-future.mp4';
 
 const ParallaxHeading = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -826,14 +813,24 @@ const HeroWithRadius = ({ onReady, ready }: { onReady?: () => void; ready?: bool
     offset: ['start start', 'end start'],
   });
   const borderRadius = useTransform(scrollYProgress, [0, 1], [0, 164]);
+  const headingY = useTransform(scrollYProgress, [0, 1], ['0%', '-75%']);
 
   return (
     <motion.div
       ref={heroRef}
-      className="overflow-hidden"
+      className="overflow-hidden relative"
       style={{ borderBottomLeftRadius: borderRadius, borderBottomRightRadius: borderRadius }}
     >
       <Hero ready={ready ?? false} hideDecorations onReady={onReady} />
+      <motion.h1
+        initial={{ opacity: 0, y: 30 }}
+        animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+        transition={{ delay: 3.2, duration: 1.2, ease: 'easeOut' }}
+        className="absolute bottom-10 left-0 right-0 z-10 text-center"
+        style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'Outfit, sans-serif', fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 500, letterSpacing: '0.04em', margin: 0, y: headingY }}
+      >
+        Making tomorrow&apos;s technology<br /><span style={{ color: '#FFC72C' }}>available today.</span>
+      </motion.h1>
     </motion.div>
   );
 };
@@ -842,38 +839,51 @@ const ScrollSequenceSection = ({ onReady }: { onReady?: () => void }) => {
   const containerRef    = useRef<HTMLDivElement>(null);
   const frameWrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef       = useRef<HTMLCanvasElement>(null);
+  const videoRef        = useRef<HTMLVideoElement>(null);
   const headingRef      = useRef<HTMLHeadingElement>(null);
-  const imagesRef       = useRef<HTMLImageElement[]>([]);
-  const frameRef        = useRef(0);
-  const rafRef          = useRef<number>(0);
+  const seekingRef      = useRef(false);
+  const pendingTimeRef  = useRef<number | null>(null);
 
-  // Draw frame with cover crop
-  const drawFrame = useCallback((index: number) => {
+  // Draw current video frame to canvas with cover-crop
+  const drawFrame = useCallback(() => {
     const canvas = canvasRef.current;
-    const img    = imagesRef.current[index];
-    if (!canvas || !img?.complete || !img.naturalWidth) return;
+    const video  = videoRef.current;
+    if (!canvas || !video || !video.videoWidth) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const cw = canvas.width, ch = canvas.height;
-    const ir = img.naturalWidth / img.naturalHeight;
+    const vr = video.videoWidth / video.videoHeight;
     const cr = cw / ch;
 
     let sx: number, sy: number, sw: number, sh: number;
-    if (ir > cr) {
-      sh = img.naturalHeight;
+    if (vr > cr) {
+      sh = video.videoHeight;
       sw = sh * cr;
-      sx = (img.naturalWidth - sw) / 2;
+      sx = (video.videoWidth - sw) / 2;
       sy = 0;
     } else {
-      sw = img.naturalWidth;
+      sw = video.videoWidth;
       sh = sw / cr;
       sx = 0;
-      sy = (img.naturalHeight - sh) / 2;
+      sy = (video.videoHeight - sh) / 2;
     }
 
     ctx.clearRect(0, 0, cw, ch);
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch);
+  }, []);
+
+  // Seek to a time, serialising requests so they don't pile up
+  const seekTo = useCallback((time: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (seekingRef.current) {
+      // Already mid-seek — stash the latest requested time
+      pendingTimeRef.current = time;
+      return;
+    }
+    seekingRef.current = true;
+    video.currentTime = time;
   }, []);
 
   // Sync canvas pixel size to display size
@@ -884,61 +894,64 @@ const ScrollSequenceSection = ({ onReady }: { onReady?: () => void }) => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width  = canvas.offsetWidth  * dpr;
       canvas.height = canvas.offsetHeight * dpr;
-      drawFrame(frameRef.current);
+      drawFrame();
     };
     resize();
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, [drawFrame]);
 
-  // Preload all frames; render frame 0 as soon as it's ready
+  // Wire up video events: draw on seeked, then flush any pending seek
   useEffect(() => {
-    let stale = false;
-    const images: HTMLImageElement[] = [];
-    for (let i = 1; i <= TOTAL_FRAMES; i++) {
-      const img = new Image();
-      img.src = getFrameUrl(i);
-      const onLoad = () => {
-        if (stale) return;
-        if (i === 1) drawFrame(0);
-        if (onReady) onReady();
-      };
-      img.onload = onLoad;
-      img.onerror = onLoad;
-      images.push(img);
-    }
-    imagesRef.current = images;
-    return () => { stale = true; };
-  }, [drawFrame, onReady]);
+    const video = videoRef.current;
+    if (!video) return;
 
-  // Advance frame based on scroll position
+    const onSeeked = () => {
+      drawFrame();
+      seekingRef.current = false;
+      if (pendingTimeRef.current !== null) {
+        const next = pendingTimeRef.current;
+        pendingTimeRef.current = null;
+        seekTo(next);
+      }
+    };
+
+    const onReady_ = () => {
+      drawFrame();
+      if (onReady) onReady();
+    };
+
+    video.addEventListener('seeked', onSeeked);
+    if (video.readyState >= 2) {
+      onReady_();
+    } else {
+      video.addEventListener('loadeddata', onReady_, { once: true });
+    }
+    return () => {
+      video.removeEventListener('seeked', onSeeked);
+      video.removeEventListener('loadeddata', onReady_);
+    };
+  }, [drawFrame, seekTo, onReady]);
+
+  // Advance video based on scroll position
   useEffect(() => {
     const onScroll = () => {
       const container = containerRef.current;
-      if (!container) return;
+      const video     = videoRef.current;
+      if (!container || !video || !video.duration) return;
+
       const rect       = container.getBoundingClientRect();
       const vh         = window.innerHeight;
       const scrollable = container.offsetHeight - vh;
       const progress   = Math.max(0, Math.min(1, -rect.top / scrollable));
-      // Release phase = how far the sticky has scrolled OUT after its pinned
-      // run ended. 0 while pinned; 0 → 1 as the sticky slides off the top.
       const releaseP   = Math.max(0, Math.min(1, (-rect.top - scrollable) / vh));
 
-      const next = Math.min(TOTAL_FRAMES - 1, Math.floor(progress * TOTAL_FRAMES));
-      if (next !== frameRef.current) {
-        frameRef.current = next;
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => drawFrame(next));
-      }
+      seekTo(progress * video.duration);
 
-      // Expand frame from bottom, then drop the radius once it's full-screen:
-      //   0 %  →  40 %  → scale 0.75 → 1   (radius stays at 48)
-      //  40 %  →  50 %  → radius 48 → 0    (scale stays at 1)
-      // Parallax: during the release phase, translate the frame DOWN so it
-      // scrolls out slower than the heading (~0.7× speed).
+      // Expand frame from bottom, then drop the radius once it's full-screen
       if (frameWrapperRef.current) {
         const expandP   = Math.max(0, Math.min(1, progress / 0.4));
-        const scale     = 0.75 + 0.25 * expandP;
+        const scale     = 0.88 + 0.12 * expandP;
         const radiusP   = Math.max(0, Math.min(1, (progress - 0.4) / 0.1));
         const radius    = 144 * (1 - radiusP);
         const parallaxY = releaseP * vh * 0.3;
@@ -953,27 +966,28 @@ const ScrollSequenceSection = ({ onReady }: { onReady?: () => void }) => {
       }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [drawFrame]);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [seekTo]);
 
   return (
-    // 350 vh of scroll space for 151 frames ≈ comfortable pacing
     <div id="scroll-sequence-section" ref={containerRef} style={{ height: '350vh' }} className="relative">
+      {/* Hidden video element used as frame source */}
+      <video
+        ref={videoRef}
+        src={SEQ_VIDEO_SRC}
+        muted
+        playsInline
+        preload="auto"
+        style={{ display: 'none' }}
+      />
       <div className="sticky top-0 h-screen bg-white overflow-hidden flex items-center justify-center">
-        {/* Anchored at bottom-center, 75 % scale with top-rounded corners; expands upward to fill the screen */}
         <div
           ref={frameWrapperRef}
           className="absolute inset-0 overflow-hidden"
           style={{
-            transform: 'scale(0.75)',
+            transform: 'scale(0.88)',
             transformOrigin: 'bottom center',
             borderRadius: '144px 144px 0 0',
-            // Squircle / superellipse corners (Chrome 139+). Falls back to
-            // regular circular corners on browsers that don't support
-            // corner-shape yet — same border-radius, just sharper-looking.
             ['cornerShape' as any]: 'squircle',
             willChange: 'transform, border-radius',
           }}
@@ -994,11 +1008,88 @@ const ScrollSequenceSection = ({ onReady }: { onReady?: () => void }) => {
               textShadow: '0 2px 32px rgba(0,0,0,0.6)',
             }}
           >
-            Making tomorrow&apos;s technology<br />available today.
+            Let&apos;s build the future today.
           </h2>
           <div className="mt-6 w-12 h-0.5 bg-accent rounded-full" />
         </div>
       </div>
+    </div>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Home page floating nav ────────────────────────────────────────────────────
+function useIsMobileHome() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return mobile;
+}
+
+const HOME_SECTIONS = [
+  { id: 'home-hero',     label: 'Intro' },
+  { id: 'home-quote',    label: 'Mission' },
+  { id: 'home-sequence', label: 'Story' },
+  { id: 'home-services', label: 'Services' },
+  { id: 'sec-showcase',  label: 'Showcase' },
+  { id: 'home-jobs',     label: 'Careers' },
+];
+
+const HomeFloatNav = () => {
+  const [active, setActive] = useState('home-hero');
+  const [onLight, setOnLight] = useState(true);
+  const navRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobileHome();
+  useEffect(() => {
+    if (isMobile) return;
+    const update = () => {
+      const mid = window.scrollY + window.innerHeight * 0.45;
+      let cur = HOME_SECTIONS[0].id;
+      for (const s of HOME_SECTIONS) {
+        const el = document.getElementById(s.id);
+        if (el && el.offsetParent !== null && el.offsetTop <= mid) cur = s.id;
+      }
+      setActive(cur);
+      if (navRef.current) {
+        const rect = navRef.current.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const els = document.elementsFromPoint(x, y);
+        let light = true;
+        for (const el of els) {
+          if (el === navRef.current || navRef.current.contains(el)) continue;
+          const bg = getComputedStyle(el).backgroundColor;
+          if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+            const m = bg.match(/\d+/g);
+            if (m) {
+              const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
+              light = brightness > 160;
+            }
+            break;
+          }
+        }
+        setOnLight(light);
+      }
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [isMobile]);
+  if (isMobile) return null;
+  const activeColor = onLight ? '#0A2A66' : '#FFC72C';
+  const inactiveColor = onLight ? 'rgba(10,42,102,0.25)' : 'rgba(255,199,44,0.28)';
+  return (
+    <div ref={navRef} style={{ position: 'fixed', right: 28, top: '50%', transform: 'translateY(-50%)', zIndex: 100, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+      {HOME_SECTIONS.map(s => (
+        <motion.button key={s.id} onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' })}
+          whileHover={{ scale: 1.6 }} title={s.label}
+          style={{ width: active === s.id ? 10 : 6, height: active === s.id ? 10 : 6, borderRadius: '50%', background: active === s.id ? activeColor : inactiveColor, border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.3s' }}
+        />
+      ))}
     </div>
   );
 };
@@ -1020,8 +1111,8 @@ export default function Home() {
   }, []);
 
   // Track asset loading — report progress and dispatch event when all ready
-  // 1 hero video + 151 seq frames + 3 service videos = 155 total
-  const TOTAL_ASSETS = 1 + TOTAL_FRAMES + SERVICE_VIDEOS.length;
+  // 1 hero video + 1 seq video + 3 service videos = 5 total
+  const TOTAL_ASSETS = 1 + 1 + SERVICE_VIDEOS.length;
   const loadedRef = useRef(0);
   const firedRef = useRef(false);
   // Reset on mount (handles Strict Mode remount and route re-entry)
@@ -1110,14 +1201,49 @@ export default function Home() {
 
   return (
     <div className="space-y-0">
+      <HomeFloatNav />
       {/* Hero Section (AI Day particle hero) */}
-      <HeroWithRadius onReady={reportAssetLoaded} ready={loadingDone} />
+      <div id="home-hero">
+        <HeroWithRadius onReady={reportAssetLoaded} ready={loadingDone} />
+      </div>
 
-      {/* Parallax heading */}
-      <ParallaxHeading />
+      {/* "Brightest Minds" Quote */}
+      <section id="home-quote" className="relative bg-white pt-16 pb-4 px-6 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-0 top-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute right-0 bottom-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="container mx-auto max-w-4xl text-center relative z-10"
+        >
+          <div className="w-10 h-0.5 bg-accent rounded-full mx-auto mb-4" />
+          <blockquote
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: 'clamp(1.5rem, 3vw, 2.5rem)',
+              fontWeight: 600,
+              color: '#0A2A66',
+              lineHeight: 1.35,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Work with the brightest minds, engineers and scientists who push the boundaries of what&apos;s possible to bring your most ambitious technology products to life.
+          </blockquote>
+          <div className="w-10 h-0.5 bg-accent rounded-full mx-auto mt-4" />
+          <p className="mt-3 text-slate-400 text-sm tracking-widest uppercase font-medium">
+            Phitopolis Built for what&apos;s next
+          </p>
+        </motion.div>
+      </section>
 
       {/* Scroll-to-play sequence */}
-      <ScrollSequenceSection onReady={reportAssetLoaded} />
+      <div id="home-sequence">
+        <ScrollSequenceSection onReady={reportAssetLoaded} />
+      </div>
 
       {/* === Video Stitches Section — commented out, may reuse on other section/page ===
       <section className="relative overflow-hidden bg-primary" style={{ height: '100vh' }}>
@@ -1248,220 +1374,59 @@ export default function Home() {
       === */}
 
       {/* Sticky Services Alternative Layout */}
-      <StickyServicesSection onReady={reportAssetLoaded} />
+      <div id="home-services">
+        <StickyServicesSection onReady={reportAssetLoaded} />
+      </div>
 
-      {/* Trust / Credentials Section */}
+      {/* === Trust / Credentials Section — commented out, preserved for later use ===
       <section className="py-24 bg-primary relative overflow-hidden text-white">
-        {/* Animated background elements */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Large watermark background text with pulsing outline */}
           <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-            {/* Glowing outline layer */}
             <motion.div
               className="absolute text-[6rem] sm:text-[8rem] md:text-[12rem] lg:text-[18rem] xl:text-[24rem] 2xl:text-[28rem] font-display font-bold whitespace-nowrap select-none leading-none tracking-tight"
-              style={{
-                WebkitTextStroke: '1px rgba(255,199,44,0.1)',
-                WebkitTextFillColor: 'transparent',
-              }}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              animate={{
-                WebkitTextStroke: [
-                  '1px rgba(255,199,44,0.05)',
-                  '2px rgba(255,199,44,0.15)',
-                  '1px rgba(255,199,44,0.05)',
-                ],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              7 YEARS
-            </motion.div>
-            {/* Main text with subtle pulse */}
+              style={{ WebkitTextStroke: '1px rgba(255,199,44,0.1)', WebkitTextFillColor: 'transparent' }}
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              animate={{ WebkitTextStroke: ['1px rgba(255,199,44,0.05)', '2px rgba(255,199,44,0.15)', '1px rgba(255,199,44,0.05)'] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >7 YEARS</motion.div>
             <motion.div
               className="text-[6rem] sm:text-[8rem] md:text-[12rem] lg:text-[18rem] xl:text-[24rem] 2xl:text-[28rem] font-display font-bold text-white/[0.03] whitespace-nowrap select-none leading-none tracking-tight"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-              animate={{
-                opacity: [0.03, 0.045, 0.03],
-              }}
-              style={{
-                textShadow: '0 0 80px rgba(255,199,44,0.05)',
-              }}
-            >
-              7 YEARS
-            </motion.div>
-            {/* Ambient glow behind text */}
-            <motion.div
-              className="absolute w-full h-full"
-              style={{
-                background: 'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,199,44,0.03) 0%, transparent 70%)',
-              }}
-              animate={{
-                opacity: [0.5, 1, 0.5],
-                scale: [1, 1.05, 1],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+              initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
+              transition={{ duration: 1.5, ease: "easeOut" }} animate={{ opacity: [0.03, 0.045, 0.03] }}
+              style={{ textShadow: '0 0 80px rgba(255,199,44,0.05)' }}
+            >7 YEARS</motion.div>
+            <motion.div className="absolute w-full h-full"
+              style={{ background: 'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,199,44,0.03) 0%, transparent 70%)' }}
+              animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.05, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             />
           </div>
           <div className="absolute inset-0 flex items-end justify-center overflow-hidden pb-4 sm:pb-6 md:pb-8">
-            <motion.div
-              className="text-[0.7rem] sm:text-[1rem] md:text-[1.5rem] lg:text-[2rem] xl:text-[2.5rem] 2xl:text-[3rem] font-display font-bold text-white/[0.04] whitespace-nowrap select-none uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em]"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+            <motion.div className="text-[0.7rem] sm:text-[1rem] md:text-[1.5rem] lg:text-[2rem] xl:text-[2.5rem] 2xl:text-[3rem] font-display font-bold text-white/[0.04] whitespace-nowrap select-none uppercase tracking-[0.15em] sm:tracking-[0.2em] md:tracking-[0.3em]"
+              initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-            >
-              Building Tomorrow's Technology
-            </motion.div>
+            >Building Tomorrow's Technology</motion.div>
           </div>
-
-          {/* Animated gradient orbs */}
-          <motion.div
-            className="absolute w-[500px] h-[500px] rounded-full"
-            style={{
-              background: 'radial-gradient(circle, rgba(255,199,44,0.1) 0%, transparent 70%)',
-              filter: 'blur(80px)',
-              left: '-10%',
-              top: '20%',
-            }}
-            animate={{
-              x: [0, 50, 0],
-              y: [0, -30, 0],
-            }}
-            transition={{
-              duration: 15,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
+          <motion.div className="absolute w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(255,199,44,0.1) 0%, transparent 70%)', filter: 'blur(80px)', left: '-10%', top: '20%' }}
+            animate={{ x: [0, 50, 0], y: [0, -30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
           />
-          <motion.div
-            className="absolute w-[400px] h-[400px] rounded-full"
-            style={{
-              background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)',
-              filter: 'blur(60px)',
-              right: '-5%',
-              bottom: '10%',
-            }}
-            animate={{
-              x: [0, -40, 0],
-              y: [0, 40, 0],
-            }}
-            transition={{
-              duration: 18,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
+          <motion.div className="absolute w-[400px] h-[400px] rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)', filter: 'blur(60px)', right: '-5%', bottom: '10%' }}
+            animate={{ x: [0, -40, 0], y: [0, 40, 0] }} transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
           />
-
-          {/* Floating geometric shapes */}
           <PractitionersFloatingShapes />
-
-          {/* Subtle grid overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)
-              `,
-              backgroundSize: '80px 80px',
-            }}
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '80px 80px' }}
           />
-        </div>
-
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="space-y-8"
-            >
-              <h2 className="text-4xl md:text-5xl font-display font-bold">Built by practitioners, for practitioners.</h2>
-              <p className="text-slate-200 text-lg">
-                Our leadership team brings decades of experience from Morgan Stanley, JPMorgan, and Deutsche Bank.
-                We understand the rigors of high-frequency, data-intensive environments.
-              </p>
-              <Link to="/about" className="inline-flex items-center text-accent font-bold hover:underline group">
-                Our Story <ArrowRight size={18} className="ml-2 group-hover:translate-x-2 transition-transform" />
-              </Link>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="bg-white/5 p-8 rounded-3xl border border-white/10 relative overflow-hidden shadow-2xl backdrop-blur-sm group"
-            >
-              {/* Animated corner glow */}
-              <motion.div
-                className="absolute top-0 right-0 w-32 h-32 bg-accent/20 blur-3xl rounded-full"
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.2, 0.4, 0.2],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/10 blur-2xl rounded-full"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.1, 0.3, 0.1],
-                }}
-                transition={{
-                  duration: 5,
-                  delay: 1,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              <div className="space-y-4 relative z-10">
-                <CredentialCard
-                  iconType="zap"
-                  title="Ultra Low Latency"
-                  description="Sub-microsecond execution systems"
-                  index={0}
-                />
-                <CredentialCard
-                  iconType="shield"
-                  title="Enterprise Security"
-                  description="Military grade encryption standards"
-                  index={1}
-                />
-                <CredentialCard
-                  iconType="trending"
-                  title="Scalable Alpha"
-                  description="Statistical arbitrage & ML strategy"
-                  index={2}
-                />
-              </div>
-            </motion.div>
-          </div>
         </div>
       </section>
+      === */}
 
       {/* Innovation Hub */}
       <Showcase />
 
       {/* Featured Jobs */}
-      <section className="py-24 bg-slate-50">
+      <section id="home-jobs" className="py-24 bg-slate-50">
         <div className="container mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

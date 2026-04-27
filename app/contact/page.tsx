@@ -89,7 +89,7 @@ export default function ContactPage() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              className="group relative bg-slate-50 p-8 md:p-12 rounded-3xl border border-slate-200 shadow-xl overflow-hidden"
+              className="group relative bg-accent/10 p-8 md:p-12 rounded-3xl border border-accent/40 shadow-xl shadow-accent/10 overflow-hidden"
             >
               {/* Interactive spotlight blob */}
               <motion.div
@@ -101,7 +101,7 @@ export default function ContactPage() {
                   translateY: '-50%',
                   width: '600px',
                   height: '600px',
-                  background: 'radial-gradient(circle, rgba(255,199,44,0.15) 0%, rgba(255,199,44,0) 70%)',
+                  background: 'radial-gradient(circle, rgba(255,199,44,0.25) 0%, rgba(255,199,44,0) 70%)',
                   filter: 'blur(80px)',
                 }}
               />
@@ -110,17 +110,17 @@ export default function ContactPage() {
                 <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); alert('Message Sent!'); }}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Name</label>
-                      <input className="w-full bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary transition-all" placeholder="Your Name" required />
+                      <label className="text-xs font-bold text-primary/70 uppercase">Name</label>
+                      <input className="w-full bg-white backdrop-blur-sm border border-accent/30 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary transition-all" placeholder="Your Name" required />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
-                      <input type="email" className="w-full bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary transition-all" placeholder="email@company.com" required />
+                      <label className="text-xs font-bold text-primary/70 uppercase">Email</label>
+                      <input type="email" className="w-full bg-white backdrop-blur-sm border border-accent/30 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary transition-all" placeholder="email@company.com" required />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Inquiry Type</label>
-                    <select className="w-full bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary appearance-none transition-all">
+                    <label className="text-xs font-bold text-primary/70 uppercase">Inquiry Type</label>
+                    <select className="w-full bg-white backdrop-blur-sm border border-accent/30 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent text-primary appearance-none transition-all">
                       <option>Service Inquiry</option>
                       <option>Career Question</option>
                       <option>Partnership</option>
@@ -128,8 +128,8 @@ export default function ContactPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase">Message</label>
-                    <textarea className="w-full bg-white/80 backdrop-blur-sm border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent h-32 text-primary transition-all" placeholder="Tell us about your project..." required />
+                    <label className="text-xs font-bold text-primary/70 uppercase">Message</label>
+                    <textarea className="w-full bg-white backdrop-blur-sm border border-accent/30 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-accent h-32 text-primary transition-all" placeholder="Tell us about your project..." required />
                   </div>
                   <button className="relative overflow-hidden w-full py-4 bg-accent hover:bg-accent-hover text-primary rounded-full font-bold flex items-center justify-center group transition-colors shadow-lg shadow-accent/20 hover:scale-105 active:scale-95">
                     <span className="shimmer-sweep" aria-hidden="true" />
