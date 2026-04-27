@@ -1018,6 +1018,83 @@ const ScrollSequenceSection = ({ onReady }: { onReady?: () => void }) => {
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Home page floating nav ────────────────────────────────────────────────────
+function useIsMobileHome() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return mobile;
+}
+
+const HOME_SECTIONS = [
+  { id: 'home-hero',     label: 'Intro' },
+  { id: 'home-quote',    label: 'Mission' },
+  { id: 'home-sequence', label: 'Story' },
+  { id: 'home-services', label: 'Services' },
+  { id: 'sec-showcase',  label: 'Showcase' },
+  { id: 'home-jobs',     label: 'Careers' },
+];
+
+const HomeFloatNav = () => {
+  const [active, setActive] = useState('home-hero');
+  const [onLight, setOnLight] = useState(true);
+  const navRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobileHome();
+  useEffect(() => {
+    if (isMobile) return;
+    const update = () => {
+      const mid = window.scrollY + window.innerHeight * 0.45;
+      let cur = HOME_SECTIONS[0].id;
+      for (const s of HOME_SECTIONS) {
+        const el = document.getElementById(s.id);
+        if (el && el.offsetParent !== null && el.offsetTop <= mid) cur = s.id;
+      }
+      setActive(cur);
+      if (navRef.current) {
+        const rect = navRef.current.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        const els = document.elementsFromPoint(x, y);
+        let light = true;
+        for (const el of els) {
+          if (el === navRef.current || navRef.current.contains(el)) continue;
+          const bg = getComputedStyle(el).backgroundColor;
+          if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+            const m = bg.match(/\d+/g);
+            if (m) {
+              const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
+              light = brightness > 160;
+            }
+            break;
+          }
+        }
+        setOnLight(light);
+      }
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [isMobile]);
+  if (isMobile) return null;
+  const activeColor = onLight ? '#0A2A66' : '#FFC72C';
+  const inactiveColor = onLight ? 'rgba(10,42,102,0.25)' : 'rgba(255,199,44,0.28)';
+  return (
+    <div ref={navRef} style={{ position: 'fixed', right: 28, top: '50%', transform: 'translateY(-50%)', zIndex: 100, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+      {HOME_SECTIONS.map(s => (
+        <motion.button key={s.id} onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' })}
+          whileHover={{ scale: 1.6 }} title={s.label}
+          style={{ width: active === s.id ? 10 : 6, height: active === s.id ? 10 : 6, borderRadius: '50%', background: active === s.id ? activeColor : inactiveColor, border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.3s' }}
+        />
+      ))}
+    </div>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function Home() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -1124,11 +1201,14 @@ export default function Home() {
 
   return (
     <div className="space-y-0">
+      <HomeFloatNav />
       {/* Hero Section (AI Day particle hero) */}
-      <HeroWithRadius onReady={reportAssetLoaded} ready={loadingDone} />
+      <div id="home-hero">
+        <HeroWithRadius onReady={reportAssetLoaded} ready={loadingDone} />
+      </div>
 
       {/* "Brightest Minds" Quote */}
-      <section className="relative bg-white pt-16 pb-4 px-6 overflow-hidden">
+      <section id="home-quote" className="relative bg-white pt-16 pb-4 px-6 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute left-0 top-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute right-0 bottom-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -1161,7 +1241,9 @@ export default function Home() {
       </section>
 
       {/* Scroll-to-play sequence */}
-      <ScrollSequenceSection onReady={reportAssetLoaded} />
+      <div id="home-sequence">
+        <ScrollSequenceSection onReady={reportAssetLoaded} />
+      </div>
 
       {/* === Video Stitches Section — commented out, may reuse on other section/page ===
       <section className="relative overflow-hidden bg-primary" style={{ height: '100vh' }}>
@@ -1292,7 +1374,9 @@ export default function Home() {
       === */}
 
       {/* Sticky Services Alternative Layout */}
-      <StickyServicesSection onReady={reportAssetLoaded} />
+      <div id="home-services">
+        <StickyServicesSection onReady={reportAssetLoaded} />
+      </div>
 
       {/* === Trust / Credentials Section — commented out, preserved for later use ===
       <section className="py-24 bg-primary relative overflow-hidden text-white">
@@ -1342,7 +1426,7 @@ export default function Home() {
       <Showcase />
 
       {/* Featured Jobs */}
-      <section className="py-24 bg-slate-50">
+      <section id="home-jobs" className="py-24 bg-slate-50">
         <div className="container mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

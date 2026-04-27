@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo, useContext, createContext } from 'react';
 import {
   motion, AnimatePresence,
   useScroll, useTransform, useInView, useVelocity,
@@ -19,6 +19,9 @@ const C = {
   mid:     '#0E2F6E',   // slightly lighter deep blue for card surfaces
   muted:   '#6B7FA8',   // blue-tinted muted gray
 };
+
+// ── About page context — simplifies decorative headings when rendering as /about ─
+const AboutCtx = createContext(false);
 
 // ── Responsive hook ───────────────────────────────────────────────────────────
 function useIsMobile() {
@@ -649,26 +652,32 @@ const SplitText = ({ text, style, inView, delay = 0 }: { text: string; style?: R
 // ── OUTLINE + SOLID SECTION HEADING ──────────────────────────────────────────
 const SplitHeading = ({
   outline, solid, inView, color, fontSize = 'clamp(2.8rem, 5vw, 5rem)', delay = 0,
-}: { outline: string; solid: string; inView: boolean; color: string; fontSize?: string; delay?: number }) => (
-  <div style={{ overflow: 'hidden' }}>
-    <motion.div
-      initial={{ y: '110%' }} animate={inView ? { y: 0 } : {}}
-      transition={{ duration: 0.8, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
-      style={{ display: 'flex', alignItems: 'baseline', gap: '0.22em', flexWrap: 'wrap' }}
-    >
-      <span style={{
-        fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
-        letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
-        WebkitTextStroke: `2px ${color}`, WebkitTextFillColor: 'transparent', display: 'inline-block',
-      }}>{outline}</span>
-      <span style={{
-        fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
-        letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
-        color, display: 'inline-block',
-      }}>{solid}</span>
-    </motion.div>
-  </div>
-);
+}: { outline: string; solid: string; inView: boolean; color: string; fontSize?: string; delay?: number }) => {
+  const isAbout = useContext(AboutCtx);
+  return (
+    <div style={{ overflow: 'hidden' }}>
+      <motion.div
+        initial={{ y: '110%' }} animate={inView ? { y: 0 } : {}}
+        transition={{ duration: 0.8, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
+        style={{ display: 'flex', alignItems: 'baseline', gap: '0.22em', flexWrap: 'wrap' }}
+      >
+        <span style={{
+          fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
+          letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
+          ...(isAbout
+            ? { color, display: 'inline-block' }
+            : { WebkitTextStroke: `2px ${color}`, WebkitTextFillColor: 'transparent', display: 'inline-block' }
+          ),
+        }}>{outline}</span>
+        <span style={{
+          fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize,
+          letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase',
+          color, display: 'inline-block',
+        }}>{solid}</span>
+      </motion.div>
+    </div>
+  );
+};
 
 // ── CANVAS PARTICLE NETWORK ───────────────────────────────────────────────────
 const CanvasBackground = () => {
@@ -1807,6 +1816,7 @@ const HEADING_FONT: React.CSSProperties = {
 };
 
 const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLElement | null> }) => {
+  const isAbout = useContext(AboutCtx);
   const line1Ref = useRef<HTMLDivElement>(null);
   const line2Ref = useRef<HTMLDivElement>(null);
 
@@ -1814,6 +1824,13 @@ const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLE
     if (!line1Ref.current || !line2Ref.current || !triggerRef.current) return;
     const chars1 = line1Ref.current.querySelectorAll<HTMLSpanElement>('.sl-char');
     const chars2 = line2Ref.current.querySelectorAll<HTMLSpanElement>('.sl-char');
+
+    if (isAbout) {
+      // Simple solid styling — no outline/stroke effect on the About page
+      gsap.set(chars1, { webkitTextFillColor: C.charcoal, webkitTextStroke: '0px' });
+      gsap.set(chars2, { webkitTextFillColor: C.charcoal, webkitTextStroke: '0px' });
+      return;
+    }
 
     // Line 1: filled → outline (staggered per letter, sharp snap)
     gsap.set(chars1, { webkitTextStroke: `2px ${C.charcoal}`, webkitTextFillColor: C.charcoal });
@@ -1834,7 +1851,7 @@ const ScrollLetterHeading = ({ triggerRef }: { triggerRef: React.RefObject<HTMLE
     });
 
     return () => { tl1.scrollTrigger?.kill(); tl2.scrollTrigger?.kill(); };
-  }, [triggerRef]);
+  }, [triggerRef, isAbout]);
 
   const renderChars = (text: string, uppercase?: boolean) =>
     text.split('').map((ch, i) => (
@@ -2121,6 +2138,7 @@ const SCROLL_ITEMS = [
 //   Desktop leftThumb: screen(14vw,  6vh) → relative(-11vw, 0)
 //   Mobile leftThumb:  screen(-24vw, 0)   → relative(-24vw, 0)   [off-screen left]
 const ServicesScrollStory = () => {
+  const isAbout      = useContext(AboutCtx);
   const containerRef = useRef<HTMLDivElement>(null);
   const headingRef   = useRef<HTMLDivElement>(null);
   const img1Ref      = useRef<HTMLDivElement>(null);
@@ -2225,7 +2243,7 @@ const ServicesScrollStory = () => {
           whiteSpace: isMobile ? 'normal' : 'nowrap',
           width: isMobile ? '80vw' : 'auto',
         }}>
-          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>
+          <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', ...(isAbout ? { color: C.base } : { WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }) }}>
             what we{' '}
           </span>
           <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>
@@ -2320,6 +2338,7 @@ const PHASE_WIN = [
 ];
 
 const Process = () => {
+  const isAbout      = useContext(AboutCtx);
   const containerRef = useRef<HTMLDivElement>(null);
   // per-phase refs
   const phaseRefs   = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
@@ -2480,7 +2499,7 @@ const Process = () => {
 
           {/* Section heading — fades out as phases take over */}
           <div ref={headRef} style={{ position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)', zIndex: 3, textAlign: 'center', whiteSpace: 'nowrap', pointerEvents: 'none' }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.charcoal}`, WebkitTextFillColor: 'transparent' }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', ...(isAbout ? { color: C.charcoal } : { WebkitTextStroke: `2px ${C.charcoal}`, WebkitTextFillColor: 'transparent' }) }}>
               phitopolis is{' '}
             </span>
             <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2.4rem, 5vw, 5.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.charcoal }}>
@@ -2746,6 +2765,7 @@ const HR_WIN = [
 ];
 
 const OurPeople = () => {
+  const isAbout  = useContext(AboutCtx);
   const sRef     = useRef<HTMLElement>(null);
   const bgRef    = useRef<HTMLDivElement>(null);
 
@@ -2886,7 +2906,7 @@ const OurPeople = () => {
         {/* ── Main stage ───────────────────────────────────────────────────── */}
         <div style={{ flex: 1, position: 'relative', overflow: 'hidden', zIndex: 2 }}>
           <div ref={headRef} style={{ position: 'absolute', top: '10%', left: isMobile ? 20 : 48, zIndex: 3, pointerEvents: 'none', display: 'flex', alignItems: 'baseline', gap: 14 }}>
-            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }}>our</span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', ...(isAbout ? { color: C.base } : { WebkitTextStroke: `2px ${C.base}`, WebkitTextFillColor: 'transparent' }) }}>our</span>
             <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem, 4vw, 4.5rem)', letterSpacing: '-0.03em', textTransform: 'lowercase', color: C.base }}>people</span>
           </div>
 
@@ -3511,6 +3531,34 @@ export const Showcase = () => {
   const activeIdxRef = useRef(0);
   const isAdvancingRef = useRef(false);
 
+  // Mobile swipe carousel state
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const [mobileActiveIdx, setMobileActiveIdx] = useState(0);
+
+  // Desktop arrow navigation
+  const handleArrow = (dir: 1 | -1) => {
+    const sec = sectionRef.current;
+    if (!sec || isAdvancingRef.current) return;
+    const cur = activeIdxRef.current;
+    if (dir > 0 && cur < CARDS.length - 1) {
+      isAdvancingRef.current = true;
+      const next = cur + 1;
+      activeIdxRef.current = next;
+      setActiveIdx(next);
+      const scrollable = sec.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: sec.offsetTop + (next / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+      setTimeout(() => { isAdvancingRef.current = false; }, 700);
+    } else if (dir < 0 && cur > 0) {
+      isAdvancingRef.current = true;
+      const prev = cur - 1;
+      activeIdxRef.current = prev;
+      setActiveIdx(prev);
+      const scrollable = sec.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: sec.offsetTop + (prev / (CARDS.length - 1)) * scrollable, behavior: 'smooth' });
+      setTimeout(() => { isAdvancingRef.current = false; }, 700);
+    }
+  };
+
   // Sync track position whenever activeIdx changes
   useEffect(() => {
     x.set(-(activeIdx * (CARD_W + GAP)));
@@ -3611,20 +3659,66 @@ export const Showcase = () => {
   const activeCard = CARDS[activeIdx];
 
   if (isNarrow) {
+    const handleMobileScroll = () => {
+      const el = mobileScrollRef.current;
+      if (!el) return;
+      const idx = Math.round(el.scrollLeft / (el.offsetWidth * 0.85 + 16));
+      setMobileActiveIdx(Math.max(0, Math.min(CARDS.length - 1, idx)));
+    };
+    const scrollToCard = (idx: number) => {
+      const el = mobileScrollRef.current;
+      if (!el) return;
+      el.scrollTo({ left: idx * (el.offsetWidth * 0.85 + 16), behavior: 'smooth' });
+    };
     return (
-      <section id="sec-showcase" style={{ background: C.charcoal, minHeight: '100vh', padding: 'clamp(100px, 12vw, 140px) 24px 80px', position: 'relative', overflowY: 'auto' }}>
+      <section id="sec-showcase" style={{ background: C.charcoal, minHeight: '100vh', padding: 'clamp(100px, 12vw, 140px) 0 60px', position: 'relative', overflowY: 'auto' }}>
         <SectionTag name="showcase" />
-        <div ref={leftRef}>
-          <div style={{ marginBottom: 40 }}>
-            <SplitHeading outline="ai projects" solid="at work" inView={inView} color="#ffffff" fontSize="clamp(2rem, 6vw, 3.5rem)" />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {CARDS.map((card, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 36 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.75, delay: i * 0.08 }}>
-                <ShowCard card={card} index={i} fullWidth />
-              </motion.div>
-            ))}
-          </div>
+        <div ref={leftRef} style={{ paddingLeft: 24, marginBottom: 32 }}>
+          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(2rem, 6vw, 3.5rem)', color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase', margin: 0 }}>
+            ai projects <span style={{ opacity: 0.45 }}>at work</span>
+          </h2>
+        </div>
+        {/* Horizontal swipe carousel */}
+        <div
+          ref={mobileScrollRef}
+          onScroll={handleMobileScroll}
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            overflowX: 'scroll',
+            scrollSnapType: 'x mandatory',
+            gap: 16,
+            paddingLeft: 24,
+            paddingRight: 24,
+            paddingBottom: 8,
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch' as any,
+          }}
+        >
+          {CARDS.map((card, i) => (
+            <div key={i} style={{ scrollSnapAlign: 'start', flexShrink: 0, width: '85vw' }}>
+              <ShowCard card={card} index={i} fullWidth />
+            </div>
+          ))}
+        </div>
+        {/* Dot indicators */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 20 }}>
+          {CARDS.map((card, i) => (
+            <button
+              key={i}
+              onClick={() => scrollToCard(i)}
+              style={{
+                height: 4,
+                borderRadius: 2,
+                background: i === mobileActiveIdx ? card.color : 'rgba(255,255,255,0.2)',
+                transition: 'width 0.3s ease, background 0.3s ease',
+                width: i === mobileActiveIdx ? 24 : 6,
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            />
+          ))}
         </div>
       </section>
     );
@@ -3640,7 +3734,9 @@ export const Showcase = () => {
           initial={{ opacity: 0, y: -16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7 }}
           style={{ padding: '0 clamp(32px, 6vw, 80px)', marginBottom: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
         >
-          <SplitHeading outline="ai projects" solid="at work" inView={inView} color="#ffffff" fontSize="clamp(1.9rem, 2.8vw, 3rem)" />
+          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: 'clamp(1.9rem, 2.8vw, 3rem)', color: '#ffffff', letterSpacing: '-0.03em', lineHeight: 1.0, textTransform: 'lowercase', margin: 0 }}>
+            ai projects <span style={{ opacity: 0.45 }}>at work</span>
+          </h2>
         </motion.div>
 
         {/* ── Centered card queue ── */}
@@ -3648,6 +3744,25 @@ export const Showcase = () => {
           <motion.div style={{ x: xSpring, display: 'flex', gap: GAP, paddingLeft: `calc(50vw - ${CARD_W / 2}px)`, willChange: 'transform' }}>
             {CARDS.map((card, i) => <ShowCard key={String(i)} card={card} index={i} isActive={i === activeIdx} />)}
           </motion.div>
+          {/* ── Arrow buttons ── */}
+          {activeIdx > 0 && (
+            <button onClick={() => handleArrow(-1)} aria-label="Previous project"
+              style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
+              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')}
+              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+          )}
+          {activeIdx < CARDS.length - 1 && (
+            <button onClick={() => handleArrow(1)} aria-label="Next project"
+              style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
+              onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')}
+              onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
+          )}
         </div>
 
         {/* ── Progress: counter + dots + scroll hint ── */}
@@ -4209,7 +4324,7 @@ export default function AIDayPage({ isAbout = false }: { isAbout?: boolean }) {
   }, []);
 
   return (
-    <>
+    <AboutCtx.Provider value={isAbout}>
       <GrainOverlay />
       {!isAbout && <Preloader onComplete={handlePreloaderComplete} />}
       <div style={isAbout ? { paddingTop: '64px' } : {}}>
@@ -4230,6 +4345,6 @@ export default function AIDayPage({ isAbout = false }: { isAbout?: boolean }) {
         {isAbout && <Closing />}
         <SpecialEndSlide />
       </div>
-    </>
+    </AboutCtx.Provider>
   );
 }
