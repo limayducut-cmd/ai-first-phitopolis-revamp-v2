@@ -27,8 +27,8 @@ const VIEWBOX_H = 1911;
 const SAMPLE_W = 320;
 const SAMPLE_H = Math.round((SAMPLE_W * VIEWBOX_H) / VIEWBOX_W);
 
-const EDGE_STEP = 2;
-const INTERIOR_STEP = 3;
+const EDGE_STEP = 3;
+const INTERIOR_STEP = 4;
 const EXPLODE_DURATION = 1800;
 const EXPLODE_HOLD = 1200;
 const REFORM_DURATION = 2000;
@@ -50,6 +50,7 @@ type Particle = {
   sDistFactor: number;
   initialized: boolean;
   primary: boolean;
+  edge: boolean;
 };
 
 type Phase = 'idle' | 'exploding' | 'holding' | 'reforming';
@@ -123,7 +124,7 @@ const sampleGroup = (cfg: PathConfig, ctx: CanvasRenderingContext2D): Group => {
     y: 0,
     vx: 0,
     vy: 0,
-    r: p.edge ? 0.7 + Math.random() * 0.5 : 0.6 + Math.random() * 0.5,
+    r: 0,
     colorPrefix: cfg.particleColor,
     blink: Math.random() * Math.PI * 2,
     blinkSpeed: 0.6 + Math.random() * 2.0,
@@ -131,6 +132,7 @@ const sampleGroup = (cfg: PathConfig, ctx: CanvasRenderingContext2D): Group => {
     sDistFactor: 0.4 + Math.random() * 0.7,
     initialized: false,
     primary: Math.random() < 0.4,
+    edge: p.edge,
   }));
 
   // Pick a sparse subset of particles as "network nodes" — lines connect these.
@@ -142,6 +144,16 @@ const sampleGroup = (cfg: PathConfig, ctx: CanvasRenderingContext2D): Group => {
       nodeIndices.push(i);
       particles[i].primary = true; // force network nodes to move during explosion
     }
+  }
+
+  // Assign radius after primary is finalized: decorative dots are bigger to compensate for fewer total particles
+  for (const p of particles) {
+    // Edge dots always small for a crisp smooth outline; interior decorative dots fill the body
+    p.r = p.edge
+      ? 0.6 + Math.random() * 0.4
+      : p.primary
+        ? 0.6 + Math.random() * 0.4
+        : 1.5 + Math.random() * 0.7;
   }
 
   const CONNECT_DIST = 30;
@@ -292,15 +304,24 @@ const FooterLogoExplode: React.FC<FooterLogoExplodeProps> = ({ className }) => {
 
           if (!isIdle) {
             if (p.primary) {
-              const sDist = p.sDistFactor * logoW;
-              const goalX = p.tx + Math.cos(p.sAngle) * strength * sDist;
-              const goalY = p.ty + Math.sin(p.sAngle) * strength * sDist;
-              const springForce = 0.035 - strength * 0.031;
-              p.vx += (goalX - p.x) * springForce;
-              p.vy += (goalY - p.y) * springForce;
-              const damping = 0.88 - strength * 0.08;
-              p.vx *= damping;
-              p.vy *= damping;
+              if (g.phase === 'reforming') {
+                // Strong overdamped spring straight back to target — settles well before phase ends
+                p.vx += (p.tx - p.x) * 0.09;
+                p.vy += (p.ty - p.y) * 0.09;
+                p.vx *= 0.78;
+                p.vy *= 0.78;
+              } else {
+                // Exploding / holding: spring toward scattered goal
+                const sDist = p.sDistFactor * logoW;
+                const goalX = p.tx + Math.cos(p.sAngle) * strength * sDist;
+                const goalY = p.ty + Math.sin(p.sAngle) * strength * sDist;
+                const springForce = 0.035 - strength * 0.031;
+                p.vx += (goalX - p.x) * springForce;
+                p.vy += (goalY - p.y) * springForce;
+                const damping = 0.88 - strength * 0.08;
+                p.vx *= damping;
+                p.vy *= damping;
+              }
               p.x += p.vx;
               p.y += p.vy;
               drawX = p.x;

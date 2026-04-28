@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { ArrowRight, Github, Linkedin, Twitter } from 'lucide-react';
+import { ArrowRight, Github, Linkedin, Twitter, Mail, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Pages
@@ -16,6 +16,7 @@ import NotFound from './app/not-found/page.tsx';
 import MobileNavigation from './components/MobileNavigation.tsx';
 import PhitopolisLogo from './components/PhitopolisLogo.tsx';
 import FooterLogoExplode from './components/FooterLogoExplode.tsx';
+import FooterParticles from './components/FooterParticles.tsx';
 import AIDayPage from './app/ai-day/page.tsx';
 import PlaygroundPage from './app/playground/page.tsx';
 
@@ -150,9 +151,23 @@ const Header = () => {
       return;
     }
 
+    const isLightUnderNav = (navH: number): boolean => {
+      // Sample the element stack just below the navbar, skipping fixed elements
+      const els = document.elementsFromPoint(window.innerWidth * 0.5, navH + 4) as HTMLElement[];
+      for (const el of els) {
+        if (window.getComputedStyle(el).position === 'fixed') continue;
+        const bg = window.getComputedStyle(el).backgroundColor;
+        if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') continue;
+        const m = bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (!m) continue;
+        const luminance = (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255;
+        return luminance > 0.6;
+      }
+      return false;
+    };
+
     const update = () => {
       const seqSection = document.getElementById('scroll-sequence-section');
-      const headingSection = document.getElementById('parallax-heading');
       if (!seqSection) {
         bg.style.opacity = '0';
         setDarkText(false);
@@ -160,21 +175,11 @@ const Header = () => {
       }
       const seqRect = seqSection.getBoundingClientRect();
       const vh = window.innerHeight;
-      // rect.bottom travels from ~vh (section bottom entering from below) to 0
-      // (section fully scrolled past). Fade 0 → 1 as it approaches 0.
       const t = Math.max(0, Math.min(1, 1 - seqRect.bottom / vh));
       bg.style.opacity = String(t);
 
-      // Dark text when the bottom edge of the navbar touches a white section.
-      // Navbar height is ~72px; trigger when section top scrolls above that line.
       const navH = 72;
-      const overSeq = seqRect.top <= navH && seqRect.bottom > 0;
-      const headingRect = headingSection?.getBoundingClientRect();
-      const overHeading = headingRect
-        ? headingRect.top <= navH && headingRect.bottom > 0
-        : false;
-      const overLightArea = overSeq || overHeading;
-      const next = overLightArea && t < 0.5;
+      const next = isLightUnderNav(navH) && t < 0.5;
       setDarkText(prev => (prev !== next ? next : prev));
     };
 
@@ -246,9 +251,9 @@ const Header = () => {
 
 const Footer = () => {
   return (
-    <footer className="bg-primary border-t border-primary-light py-16 text-white">
-      <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+    <footer className="bg-primary border-t border-primary-light text-white min-h-[75vh] flex flex-col relative">
+      <div className="container mx-auto px-6 flex flex-col flex-1 py-16 justify-between">
+        <div className="flex flex-col md:flex-row justify-between gap-12">
           <div className="space-y-4">
             <div>
               <FooterLogoExplode className="h-28 w-auto" />
@@ -270,32 +275,75 @@ const Footer = () => {
             </div>
           </div>
 
+          <div className="flex flex-col sm:flex-row gap-12 md:gap-20">
           <div>
             <h4 className="text-accent font-bold mb-6">Company</h4>
             <ul className="space-y-3 text-slate-100 text-sm">
-              <li><Link to="/about" className="hover:text-accent transition-colors">About Us</Link></li>
-              <li><Link to="/careers" className="hover:text-accent transition-colors">Careers</Link></li>
-              <li><Link to="/contact" className="hover:text-accent transition-colors">Contact</Link></li>
+              {[
+                { label: 'About Us', to: '/about' },
+                { label: 'Careers', to: '/careers', badge: "We're hiring" },
+                { label: 'Contact', to: '/contact' },
+              ].map(({ label, to, badge }) => (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className="group inline-flex items-center gap-1.5 hover:text-accent transition-colors"
+                  >
+                    <span>{label}</span>
+                    {badge && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-accent text-primary leading-none">
+                        {badge}
+                      </span>
+                    )}
+                    <ArrowRight
+                      size={13}
+                      className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
+                    />
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
             <h4 className="text-accent font-bold mb-6">Contact</h4>
-            <div className="text-slate-100 text-sm space-y-2">
-              <p>info@phitopolis.com</p>
-              <p className="leading-snug">27/F Ecotower Building, 32nd St. cor. 9th Avenue, Bonifacio Global City, Taguig, Philippines, 1634</p>
+            <div className="text-slate-100 text-sm space-y-4">
+              <a
+                href="mailto:info@phitopolis.com"
+                className="flex items-start gap-3 hover:text-accent transition-colors group"
+              >
+                <Mail size={16} className="mt-0.5 shrink-0 text-accent/70 group-hover:text-accent transition-colors" />
+                <span>info@phitopolis.com</span>
+              </a>
+              <a
+                href="https://maps.google.com/?q=27F+Ecotower+Building,+32nd+St,+Bonifacio+Global+City,+Taguig,+Philippines"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 hover:text-accent transition-colors group"
+              >
+                <MapPin size={16} className="mt-0.5 shrink-0 text-accent/70 group-hover:text-accent transition-colors" />
+                <span className="leading-snug">27/F Ecotower Building, 32nd St. cor. 9th Avenue,<br />Bonifacio Global City, Taguig, Philippines, 1634</span>
+              </a>
             </div>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded border border-accent text-accent text-sm font-medium hover:bg-accent hover:text-primary transition-colors duration-200"
+            >
+              Contact us <ArrowRight size={14} />
+            </Link>
+          </div>
           </div>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-primary-light flex flex-col md:flex-row justify-between items-center text-slate-300 text-xs gap-4">
-          <p>© 2024 Phitopolis Private Limited. All rights reserved.</p>
+        <div className="mt-auto pt-8 border-t border-primary-light flex flex-col md:flex-row justify-between items-center text-slate-300 text-xs gap-4">
+          <p>© 2026 Phitopolis Private Limited. All rights reserved.</p>
           <div className="flex space-x-6">
             <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-white">Terms of Service</Link>
           </div>
         </div>
       </div>
+      <FooterParticles />
     </footer>
   );
 };
