@@ -569,12 +569,15 @@ const FloatNav = () => {
           if (el === navRef.current || navRef.current.contains(el)) continue;
           const bg = getComputedStyle(el).backgroundColor;
           if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-            const m = bg.match(/\d+/g);
+            const m = bg.match(/[\d.]+/g);
             if (m) {
-              const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
-              light = brightness > 160;
+              const alpha = m.length >= 4 ? parseFloat(m[3]) : 1;
+              if (alpha >= 0.15) {
+                const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
+                light = brightness > 160;
+                break;
+              }
             }
-            break;
           }
         }
         setOnLight(light);
@@ -3770,7 +3773,7 @@ export const Showcase = () => {
           )}
           {activeIdx < CARDS.length - 1 && (
             <button onClick={() => handleArrow(1)} aria-label="Next project"
-              style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
+              style={{ position: 'absolute', right: 60, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
               onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')}
               onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
             >

@@ -1071,12 +1071,15 @@ const HomeFloatNav = () => {
           if (el === navRef.current || navRef.current.contains(el)) continue;
           const bg = getComputedStyle(el).backgroundColor;
           if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-            const m = bg.match(/\d+/g);
+            const m = bg.match(/[\d.]+/g);
             if (m) {
-              const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
-              light = brightness > 160;
+              const alpha = m.length >= 4 ? parseFloat(m[3]) : 1;
+              if (alpha >= 0.15) {
+                const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
+                light = brightness > 160;
+                break;
+              }
             }
-            break;
           }
         }
         setOnLight(light);
@@ -1218,7 +1221,6 @@ export default function Home() {
       <section id="home-quote" className="relative bg-white pt-16 pb-4 px-6 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute left-0 top-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute right-0 bottom-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         </div>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
