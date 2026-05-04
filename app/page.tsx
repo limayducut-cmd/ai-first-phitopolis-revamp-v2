@@ -672,13 +672,13 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
               </div>
 
               {/* ── Right: animated service content ── */}
-              <div className="flex-1 flex flex-col justify-between py-10 overflow-hidden">
+              <div className="flex-1 flex flex-col justify-between py-4 md:py-10 overflow-hidden min-w-0">
 
                 {/* Top: section heading + service content grouped */}
-                <div className="space-y-8">
+                <div className="space-y-4 md:space-y-8">
                   <div>
                     <span className="text-accent font-bold tracking-widest uppercase text-xs">Our Expertise</span>
-                    <h2 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mt-2 text-primary leading-none whitespace-nowrap">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-display font-bold mt-2 text-primary leading-[1.05] xl:whitespace-nowrap">
                       Services we offer
                     </h2>
                   </div>
@@ -691,25 +691,31 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -16 }}
                     transition={{ duration: 0.45, ease: [0.21, 1.02, 0.47, 0.98] }}
-                    className="space-y-6"
+                    className="space-y-3 md:space-y-6"
                   >
                     {/* Icon */}
                     <div>
-                      {React.cloneElement(service.icon as React.ReactElement<any>, { className: 'w-7 h-7 text-accent flex-shrink-0' })}
+                      {React.cloneElement(service.icon as React.ReactElement<any>, { className: 'w-6 h-6 md:w-7 md:h-7 text-accent flex-shrink-0' })}
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-4xl md:text-5xl font-display font-bold text-primary leading-tight">
+                    <h3 className="text-2xl sm:text-3xl md:text-5xl font-display font-bold text-primary leading-tight">
                       {service.title}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-slate-500 text-lg leading-relaxed">
+                    <p className="text-slate-500 text-sm md:text-lg leading-relaxed">
                       {service.description}
                     </p>
 
-                    {/* Feature list — icon + title + description */}
-                    <div className="grid grid-cols-3 gap-x-6 gap-y-4 pt-2">
+                    {/* Feature list — swipeable carousel on mobile, grid on desktop */}
+                    <div className="relative">
+                      {/* Right-edge fade hint (mobile only) to suggest swipability */}
+                      <div className="md:hidden pointer-events-none absolute top-0 bottom-0 right-0 w-6 bg-gradient-to-l from-white to-transparent z-10 rounded-r-xl" />
+                      <div
+                        className="flex md:grid md:grid-cols-3 gap-3 md:gap-x-6 md:gap-y-4 pt-2 pb-1 overflow-x-auto md:overflow-visible snap-x snap-proximity md:snap-none"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                      >
                       {service.features.map((f, j) => (
                         <motion.div
                           key={j}
@@ -717,25 +723,26 @@ function StickyServicesSection({ onReady }: { onReady?: () => void }) {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: j * 0.08 + 0.12, duration: 0.35 }}
                           whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                          className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-transparent hover:border-accent/20 hover:bg-slate-50 transition-colors duration-200 cursor-default"
+                          className={`flex flex-col gap-1.5 md:gap-2.5 p-3 md:p-3.5 rounded-xl border border-slate-200 md:border-transparent hover:border-accent/20 hover:bg-slate-50 transition-colors duration-200 cursor-default flex-shrink-0 w-[72%] sm:w-[48%] md:w-auto ${j === service.features.length - 1 ? 'snap-end' : 'snap-start'}`}
                         >
                           <motion.div
-                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-accent/10"
+                            className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-accent/10"
                             whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,199,44,0.18)' }}
                             transition={{ duration: 0.2 }}
                           >
                             {React.cloneElement(f.icon as React.ReactElement<any>, {
-                              className: 'w-4 h-4 text-accent',
+                              className: 'w-3.5 h-3.5 md:w-4 md:h-4 text-accent',
                               strokeWidth: 1.75,
                             })}
                           </motion.div>
                           <div>
-                            <div className="w-4 h-0.5 rounded-full bg-accent mb-1.5" />
-                            <span className="text-slate-700 text-sm font-semibold leading-snug block">{f.title}</span>
-                            <span className="text-slate-400 text-xs leading-relaxed mt-1 block">{f.description}</span>
+                            <div className="w-4 h-0.5 rounded-full bg-accent mb-1 md:mb-1.5" />
+                            <span className="text-slate-700 text-xs md:text-sm font-semibold leading-snug block">{f.title}</span>
+                            <span className="text-slate-400 text-[11px] md:text-xs leading-relaxed mt-0.5 md:mt-1 block">{f.description}</span>
                           </div>
                         </motion.div>
                       ))}
+                      </div>
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -1064,12 +1071,15 @@ const HomeFloatNav = () => {
           if (el === navRef.current || navRef.current.contains(el)) continue;
           const bg = getComputedStyle(el).backgroundColor;
           if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-            const m = bg.match(/\d+/g);
+            const m = bg.match(/[\d.]+/g);
             if (m) {
-              const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
-              light = brightness > 160;
+              const alpha = m.length >= 4 ? parseFloat(m[3]) : 1;
+              if (alpha >= 0.15) {
+                const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
+                light = brightness > 160;
+                break;
+              }
             }
-            break;
           }
         }
         setOnLight(light);
@@ -1211,7 +1221,6 @@ export default function Home() {
       <section id="home-quote" className="relative bg-white pt-16 pb-4 px-6 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute left-0 top-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute right-0 bottom-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         </div>
         <motion.div
           initial={{ opacity: 0, y: 24 }}

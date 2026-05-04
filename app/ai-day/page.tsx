@@ -569,12 +569,15 @@ const FloatNav = () => {
           if (el === navRef.current || navRef.current.contains(el)) continue;
           const bg = getComputedStyle(el).backgroundColor;
           if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-            const m = bg.match(/\d+/g);
+            const m = bg.match(/[\d.]+/g);
             if (m) {
-              const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
-              light = brightness > 160;
+              const alpha = m.length >= 4 ? parseFloat(m[3]) : 1;
+              if (alpha >= 0.15) {
+                const brightness = (parseInt(m[0]) * 299 + parseInt(m[1]) * 587 + parseInt(m[2]) * 114) / 1000;
+                light = brightness > 160;
+                break;
+              }
             }
-            break;
           }
         }
         setOnLight(light);
@@ -690,7 +693,7 @@ const CanvasBackground = () => {
     type P = { x: number; y: number; hx: number; hy: number; vx: number; vy: number; r: number; blink: number; blinkSpeed: number; anchored: boolean };
     let pts: P[] = [];
     const W = () => canvas.offsetWidth, H = () => canvas.offsetHeight;
-    const init = () => { pts = Array.from({ length: 260 }, () => { const big = Math.random() < 0.12; const hx = Math.random() * W(), hy = Math.random() * H(); return { x: hx, y: hy, hx, hy, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, r: big ? 2.0 + Math.random() * 2.5 : Math.random() * 1.4 + 0.6, blink: Math.random() * Math.PI * 2, blinkSpeed: 0.8 + Math.random() * 2.5, anchored: Math.random() < 0.4 }; }); };
+    const init = () => { const count = window.innerWidth < 768 ? 70 : window.innerWidth < 1280 ? 190 : 260; pts = Array.from({ length: count }, () => { const big = Math.random() < 0.12; const hx = Math.random() * W(), hy = Math.random() * H(); return { x: hx, y: hy, hx, hy, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, r: big ? 2.0 + Math.random() * 2.5 : Math.random() * 1.4 + 0.6, blink: Math.random() * Math.PI * 2, blinkSpeed: 0.8 + Math.random() * 2.5, anchored: Math.random() < 0.4 }; }); };
     // ── Text outline sampling — extracts edge points from "future" & "with" ──
     type TextTarget = { el: Element; anchors: { x: number; y: number }[] };
     let textTargets: TextTarget[] = [];
@@ -1349,7 +1352,7 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
       const shuffle = <T,>(a: T[]) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
       shuffle(edgePixels);
       shuffle(interiorPixels);
-      const maxParticles = 1600;
+      const maxParticles = window.innerWidth < 768 ? 1000 : window.innerWidth < 1280 ? 1300 : 1600;
       const edgeCount = Math.min(edgePixels.length, Math.round(maxParticles * 0.8));
       const interiorCount = Math.min(interiorPixels.length, maxParticles - edgeCount);
       const selected = [...edgePixels.slice(0, edgeCount), ...interiorPixels.slice(0, interiorCount)];
@@ -1403,7 +1406,8 @@ const ParticleLogo = ({ scrollProgress, mouseX, mouseY, containerRef, ready }: {
     let bgDots: BgDot[] = [];
     const initBgDots = () => {
       const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
-      bgDots = Array.from({ length: 120 }, () => ({
+      const bgCount = window.innerWidth < 768 ? 35 : window.innerWidth < 1280 ? 85 : 120;
+      bgDots = Array.from({ length: bgCount }, () => ({
         x: Math.random() * cw,
         y: Math.random() * ch,
         vx: (Math.random() - 0.5) * 0.25,
@@ -1719,9 +1723,11 @@ export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hide
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] });
   const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
 
-  // Cursor-driven parallax: track mouse position as -1 to 1 range
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  // Cursor-driven parallax: track mouse position as -1 to 1 range.
+  // Initialize far off-screen so the ParticleLogo magnet stays inactive
+  // until a real mousemove arrives (touch devices never fire one).
+  const mouseX = useMotionValue(99);
+  const mouseY = useMotionValue(99);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -1793,12 +1799,13 @@ export const Hero = ({ ready, hideDecorations, onReady }: { ready: boolean; hide
         </motion.div>
       )}
 
-      {/* Scroll cue — bottom right */}
+      {/* Scroll cue — bottom right (hidden on mobile to avoid overlapping the centered hero heading) */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.85, duration: 0.7 }}
-        style={{ position: 'absolute', bottom: 'clamp(32px, 5vh, 48px)', right: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, zIndex: 10 }}
+        className="hidden md:flex"
+        style={{ position: 'absolute', bottom: 'clamp(32px, 5vh, 48px)', right: 56, flexDirection: 'column', alignItems: 'center', gap: 10, zIndex: 10 }}
       >
         <span style={{ color: C.accent, fontFamily: 'Inter, sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.35em', textTransform: 'uppercase' }}>scroll</span>
         <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}>
@@ -2602,7 +2609,7 @@ const ShowCard = ({ card, index, isActive = true, fullWidth = false }: { key?: R
     >
       <div style={{ perspective: 1000 }}>
         <motion.div ref={cardRef} onMouseMove={onMove} onMouseEnter={() => setHovered(true)} onMouseLeave={onLeave}
-          style={{ rotateX: rxS, rotateY: ryS, background: C.mid, borderRadius: 56, padding: '52px 44px', height: fullWidth ? 'auto' : 470, minHeight: fullWidth ? 300 : undefined, display: 'flex', flexDirection: 'column', border: `1px solid ${hovered && isActive ? card.color : 'rgba(255,255,255,0.06)'}`, position: 'relative', overflow: 'hidden', transition: 'border-color 0.3s' }}
+          style={{ rotateX: rxS, rotateY: ryS, background: C.mid, borderRadius: 56, padding: '52px 44px', height: fullWidth ? 520 : 470, display: 'flex', flexDirection: 'column', border: `1px solid ${hovered && isActive ? card.color : 'rgba(255,255,255,0.06)'}`, position: 'relative', overflow: 'hidden', transition: 'border-color 0.3s' }}
         >
           <motion.div style={{ position: 'absolute', top: -20, right: -20, width: 240, height: 240, borderRadius: '50%', background: `radial-gradient(circle, ${card.color}25 0%, transparent 70%)`, filter: 'blur(40px)' }}
             animate={{ scale: hovered && isActive ? 1.5 : 1, opacity: hovered && isActive ? 1 : 0.3 }} transition={{ duration: 0.45 }}
@@ -3701,24 +3708,35 @@ export const Showcase = () => {
             </div>
           ))}
         </div>
-        {/* Dot indicators */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 20 }}>
-          {CARDS.map((card, i) => (
-            <button
-              key={i}
-              onClick={() => scrollToCard(i)}
-              style={{
-                height: 4,
-                borderRadius: 2,
-                background: i === mobileActiveIdx ? card.color : 'rgba(255,255,255,0.2)',
-                transition: 'width 0.3s ease, background 0.3s ease',
-                width: i === mobileActiveIdx ? 24 : 6,
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            />
-          ))}
+        {/* Progress: counter + dots + swipe hint */}
+        <div style={{ padding: '24px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, fontSize: '1.5rem', color: '#ffffff', letterSpacing: '-0.04em', lineHeight: 1 }}>
+              {String(mobileActiveIdx + 1).padStart(2, '0')}
+            </span>
+            <span style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 400, fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>
+              / {String(CARDS.length).padStart(2, '0')}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+            {CARDS.map((card, i) => (
+              <button
+                key={i}
+                onClick={() => scrollToCard(i)}
+                style={{
+                  height: 4,
+                  borderRadius: 2,
+                  background: i === mobileActiveIdx ? card.color : 'rgba(255,255,255,0.2)',
+                  transition: 'width 0.3s ease, background 0.3s ease',
+                  width: i === mobileActiveIdx ? 24 : 6,
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+          <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>swipe to explore</span>
         </div>
       </section>
     );
@@ -3727,7 +3745,6 @@ export const Showcase = () => {
   return (
     <section id="sec-showcase" ref={sectionRef} style={{ background: C.charcoal, height: `${(CARDS.length + 1.5) * 100}vh`, position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <SectionTag name="showcase" />
 
         {/* ── Heading ── */}
         <motion.div ref={leftRef}
@@ -3756,7 +3773,7 @@ export const Showcase = () => {
           )}
           {activeIdx < CARDS.length - 1 && (
             <button onClick={() => handleArrow(1)} aria-label="Next project"
-              style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
+              style={{ position: 'absolute', right: 60, top: '50%', transform: 'translateY(-50%)', zIndex: 10, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', transition: 'background 0.2s' }}
               onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.18)')}
               onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
             >
